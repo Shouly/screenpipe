@@ -6,12 +6,9 @@ from datetime import datetime
 class OcrText(BaseModel):
     text: str
     text_json: str
-    app_name: str
     ocr_engine: str
-    window_name: Optional[str] = None
-    focused: bool
     text_length: Optional[int] = Field(default=0)
-
+    
 # 屏幕帧模型
 class Frame(BaseModel):
     id: int
@@ -19,7 +16,10 @@ class Frame(BaseModel):
     offset_index: int
     timestamp: datetime
     name: str
+    app_name: str
+    window_name: Optional[str] = None
     browser_url: Optional[str] = None
+    focused: bool
     ocr_text: OcrText
 
 # 音频转录模型

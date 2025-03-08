@@ -4,7 +4,6 @@ data/
 screenpipe-app-tauri/public 
 screenpipe-app-tauri/src-tauri/capabilities
 screenpipe-app-tauri/src-tauri/gen
-models/
 
 
 package-lock.json
