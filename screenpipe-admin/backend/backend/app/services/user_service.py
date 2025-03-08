@@ -20,24 +20,28 @@ class UserService:
     @staticmethod
     async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
         """通过email获取用户"""
-        result = await db.execute(select(User).where(User.email == email))
+        from sqlalchemy.orm import selectinload
+        stmt = select(User).options(selectinload(User.devices)).where(User.email == email)
+        result = await db.execute(stmt)
         return result.scalars().first()
     
     @staticmethod
     async def get_user_by_id(db: AsyncSession, user_id: str) -> Optional[User]:
         """通过ID获取用户"""
-        result = await db.execute(select(User).where(User.id == user_id))
+        from sqlalchemy.orm import selectinload
+        stmt = select(User).options(selectinload(User.devices)).where(User.id == user_id)
+        result = await db.execute(stmt)
         return result.scalars().first()
     
     @staticmethod
     async def get_user_by_oauth(db: AsyncSession, provider: str, oauth_id: str) -> Optional[User]:
         """通过OAuth信息获取用户"""
-        result = await db.execute(
-            select(User).where(
-                User.oauth_provider == provider,
-                User.oauth_id == oauth_id
-            )
+        from sqlalchemy.orm import selectinload
+        stmt = select(User).options(selectinload(User.devices)).where(
+            User.oauth_provider == provider,
+            User.oauth_id == oauth_id
         )
+        result = await db.execute(stmt)
         return result.scalars().first()
     
     @staticmethod
@@ -205,52 +209,88 @@ class UserService:
         """通过邮箱登录或注册用户"""
         try:
             logger.info(f"尝试通过邮箱登录或注册用户: email={email}")
-            
-            # 尝试通过邮箱查找用户
-            user = await UserService.get_user_by_email(db, email)
             is_new_user = False
             
-            if user:
-                # 用户存在，更新登录信息
-                logger.info(f"用户已存在，更新登录信息: email={email}")
-                user.last_login_at = datetime.now()
-                user.last_login_ip = ip_address
-                user.updated_at = datetime.now()
-            else:
-                # 用户不存在，创建新用户
-                logger.info(f"用户不存在，创建新用户: email={email}")
-                user = User(
-                    id=str(uuid.uuid4()),
-                    email=email,
-                    name=email.split('@')[0],  # 使用邮箱前缀作为默认名称
-                    last_login_at=datetime.now(),
-                    last_login_ip=ip_address,
-                    created_at=datetime.now(),
-                    updated_at=datetime.now()
-                )
-                db.add(user)
-                is_new_user = True
+            # 使用事务包装所有操作，确保原子性
+            async with db.begin():
+                # 尝试通过邮箱查找用户
+                user = await UserService.get_user_by_email(db, email)
+                
+                if user:
+                    # 用户存在，更新登录信息
+                    logger.info(f"用户已存在，更新登录信息: email={email}")
+                    user.last_login_at = datetime.now()
+                    user.last_login_ip = ip_address
+                    user.updated_at = datetime.now()
+                else:
+                    # 用户不存在，尝试创建新用户
+                    try:
+                        logger.info(f"用户不存在，尝试创建新用户: email={email}")
+                        user = User(
+                            id=str(uuid.uuid4()),
+                            email=email,
+                            name=email.split('@')[0],  # 使用邮箱前缀作为默认名称
+                            last_login_at=datetime.now(),
+                            last_login_ip=ip_address,
+                            created_at=datetime.now(),
+                            updated_at=datetime.now()
+                        )
+                        db.add(user)
+                        is_new_user = True
+                    except Exception as e:
+                        # 如果创建失败，可能是并发请求已经创建了用户
+                        if "Duplicate entry" in str(e) and "idx_users_email" in str(e):
+                            logger.warning(f"创建用户时发生唯一键冲突，尝试重新查询: email={email}")
+                            # 重新查询用户
+                            user = await UserService.get_user_by_email(db, email)
+                            if not user:
+                                logger.error(f"唯一键冲突后仍然找不到用户: email={email}")
+                                raise Exception(f"数据库一致性错误: 邮箱 {email} 已存在但无法查询到")
+                            
+                            # 更新登录信息
+                            user.last_login_at = datetime.now()
+                            user.last_login_ip = ip_address
+                            user.updated_at = datetime.now()
+                        else:
+                            # 其他错误，直接抛出
+                            raise
+                
+                # 添加设备信息（如果提供）
+                if device_info and user.id:
+                    try:
+                        await UserService._add_device(db, user.id, device_info, ip_address)
+                    except Exception as e:
+                        logger.error(f"添加设备信息失败: {str(e)}")
+                        # 设备信息添加失败不影响用户登录
             
-            # 添加设备信息（如果提供）
-            if device_info and user.id:
-                try:
-                    await UserService._add_device(db, user.id, device_info, ip_address)
-                except Exception as e:
-                    logger.error(f"添加设备信息失败: {str(e)}")
-                    # 设备信息添加失败不影响用户登录
-            
-            await db.commit()
-            if user.id:
-                await db.refresh(user)
+            # 事务已提交，现在重新加载用户及其设备
+            try:
+                # 使用新的会话查询用户，确保看到最新数据
+                from sqlalchemy.orm import selectinload
+                stmt = select(User).options(selectinload(User.devices)).where(User.email == email)
+                result = await db.execute(stmt)
+                loaded_user = result.scalars().first()
+                
+                if not loaded_user:
+                    logger.error(f"无法加载用户及其设备: email={email}")
+                    # 这种情况不应该发生，因为我们刚刚创建或更新了用户
+                    raise Exception(f"数据库一致性错误: 无法加载刚刚创建/更新的用户 {email}")
+                
+                user = loaded_user
+            except Exception as e:
+                logger.error(f"加载用户设备失败: {str(e)}")
+                # 尝试不带设备关系重新加载用户
+                stmt = select(User).where(User.email == email)
+                result = await db.execute(stmt)
+                user = result.scalars().first()
+                if not user:
+                    raise Exception(f"无法加载用户: {str(e)}")
             
             logger.info(f"用户登录或注册成功: email={email}, is_new_user={is_new_user}")
             return user, is_new_user
         except Exception as e:
             logger.error(f"登录或注册用户失败: {str(e)}")
-            try:
-                await db.rollback()
-            except:
-                pass
+            # 不需要显式回滚，因为我们使用了 async with db.begin()
             raise
     
     @staticmethod
@@ -265,58 +305,135 @@ class UserService:
         ip_address: Optional[str] = None
     ) -> Tuple[User, bool]:
         """通过OAuth登录或注册用户"""
-        # 先尝试通过OAuth信息查找用户
-        user = await UserService.get_user_by_oauth(db, provider, oauth_id)
-        
-        # 如果没找到，再尝试通过邮箱查找
-        if not user:
-            user = await UserService.get_user_by_email(db, email)
+        try:
+            logger.info(f"尝试通过OAuth登录或注册用户: provider={provider}, oauth_id={oauth_id}, email={email}")
+            is_new_user = False
             
-        is_new_user = False
-        
-        if user:
-            # 用户存在，更新登录信息
-            user.last_login_at = datetime.now()
-            user.last_login_ip = ip_address
-            
-            # 如果是通过邮箱找到的用户，更新OAuth信息
-            if not user.oauth_provider or not user.oauth_id:
-                user.oauth_provider = provider
-                user.oauth_id = oauth_id
-            
-            # 如果提供了新的名称或头像，更新用户信息
-            if name and name != user.name:
-                user.name = name
-            if avatar and avatar != user.avatar:
-                user.avatar = avatar
+            # 使用事务包装所有操作，确保原子性
+            async with db.begin():
+                # 尝试通过OAuth信息查找用户
+                user = await UserService.get_user_by_oauth(db, provider, oauth_id)
                 
-            user.updated_at = datetime.now()
-        else:
-            # 用户不存在，创建新用户
-            user = User(
-                id=str(uuid.uuid4()),
-                email=email,
-                name=name,
-                avatar=avatar,
-                oauth_provider=provider,
-                oauth_id=oauth_id,
-                last_login_at=datetime.now(),
-                last_login_ip=ip_address,
-                created_at=datetime.now(),
-                updated_at=datetime.now()
-            )
-            db.add(user)
-            is_new_user = True
-        
-        # 添加设备信息（如果提供）
-        if device_info and user.id:
-            await UserService._add_device(db, user.id, device_info, ip_address)
-        
-        await db.commit()
-        if user.id:
-            await db.refresh(user)
-        
-        return user, is_new_user
+                if user:
+                    # 用户存在，更新登录信息
+                    logger.info(f"OAuth用户已存在，更新登录信息: provider={provider}, oauth_id={oauth_id}")
+                    user.last_login_at = datetime.now()
+                    user.last_login_ip = ip_address
+                    user.updated_at = datetime.now()
+                    
+                    # 更新用户信息（如果有变化）
+                    if user.name != name:
+                        user.name = name
+                    if avatar and user.avatar != avatar:
+                        user.avatar = avatar
+                else:
+                    # 尝试通过邮箱查找用户
+                    user = await UserService.get_user_by_email(db, email)
+                    
+                    if user:
+                        # 用户存在但未关联OAuth，更新OAuth信息
+                        logger.info(f"用户已存在但未关联OAuth，更新OAuth信息: email={email}, provider={provider}")
+                        user.oauth_provider = provider
+                        user.oauth_id = oauth_id
+                        user.last_login_at = datetime.now()
+                        user.last_login_ip = ip_address
+                        user.updated_at = datetime.now()
+                        
+                        # 更新用户信息（如果有变化）
+                        if user.name != name:
+                            user.name = name
+                        if avatar and user.avatar != avatar:
+                            user.avatar = avatar
+                    else:
+                        # 用户不存在，尝试创建新用户
+                        try:
+                            logger.info(f"用户不存在，尝试创建新OAuth用户: provider={provider}, oauth_id={oauth_id}, email={email}")
+                            user = User(
+                                id=str(uuid.uuid4()),
+                                email=email,
+                                name=name,
+                                avatar=avatar,
+                                oauth_provider=provider,
+                                oauth_id=oauth_id,
+                                last_login_at=datetime.now(),
+                                last_login_ip=ip_address,
+                                created_at=datetime.now(),
+                                updated_at=datetime.now()
+                            )
+                            db.add(user)
+                            is_new_user = True
+                        except Exception as e:
+                            # 如果创建失败，可能是并发请求已经创建了用户
+                            if "Duplicate entry" in str(e) and "idx_users_email" in str(e):
+                                logger.warning(f"创建OAuth用户时发生唯一键冲突，尝试重新查询: email={email}")
+                                # 重新查询用户
+                                user = await UserService.get_user_by_email(db, email)
+                                if not user:
+                                    logger.error(f"唯一键冲突后仍然找不到用户: email={email}")
+                                    raise Exception(f"数据库一致性错误: 邮箱 {email} 已存在但无法查询到")
+                                
+                                # 更新OAuth信息
+                                user.oauth_provider = provider
+                                user.oauth_id = oauth_id
+                                user.last_login_at = datetime.now()
+                                user.last_login_ip = ip_address
+                                user.updated_at = datetime.now()
+                                
+                                # 更新用户信息（如果有变化）
+                                if user.name != name:
+                                    user.name = name
+                                if avatar and user.avatar != avatar:
+                                    user.avatar = avatar
+                            else:
+                                # 其他错误，直接抛出
+                                raise
+                
+                # 添加设备信息（如果提供）
+                if device_info and user.id:
+                    try:
+                        await UserService._add_device(db, user.id, device_info, ip_address)
+                    except Exception as e:
+                        logger.error(f"添加设备信息失败: {str(e)}")
+                        # 设备信息添加失败不影响用户登录
+            
+            # 事务已提交，现在重新加载用户及其设备
+            try:
+                # 使用新的会话查询用户，确保看到最新数据
+                from sqlalchemy.orm import selectinload
+                stmt = select(User).options(selectinload(User.devices)).where(
+                    (User.email == email) & 
+                    ((User.oauth_provider == provider) | (User.oauth_provider == None))
+                )
+                result = await db.execute(stmt)
+                loaded_user = result.scalars().first()
+                
+                if not loaded_user:
+                    logger.error(f"无法加载OAuth用户及其设备: email={email}, provider={provider}")
+                    # 尝试只通过邮箱查询
+                    stmt = select(User).options(selectinload(User.devices)).where(User.email == email)
+                    result = await db.execute(stmt)
+                    loaded_user = result.scalars().first()
+                    
+                    if not loaded_user:
+                        # 这种情况不应该发生，因为我们刚刚创建或更新了用户
+                        raise Exception(f"数据库一致性错误: 无法加载刚刚创建/更新的OAuth用户 {email}")
+                
+                user = loaded_user
+            except Exception as e:
+                logger.error(f"加载OAuth用户设备失败: {str(e)}")
+                # 尝试不带设备关系重新加载用户
+                stmt = select(User).where(User.email == email)
+                result = await db.execute(stmt)
+                user = result.scalars().first()
+                if not user:
+                    raise Exception(f"无法加载OAuth用户: {str(e)}")
+            
+            logger.info(f"OAuth用户登录或注册成功: provider={provider}, oauth_id={oauth_id}, is_new_user={is_new_user}")
+            return user, is_new_user
+        except Exception as e:
+            logger.error(f"OAuth登录或注册用户失败: {str(e)}")
+            # 不需要显式回滚，因为我们使用了 async with db.begin()
+            raise
     
     @staticmethod
     async def _add_device(

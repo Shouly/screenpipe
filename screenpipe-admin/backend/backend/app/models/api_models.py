@@ -240,10 +240,13 @@ class UserInDB(UserBase):
     last_login_ip: Optional[str] = None
     oauth_provider: Optional[str] = None
     oauth_id: Optional[str] = None
-    devices: List[UserDeviceInDB] = []
+    devices: List[UserDeviceInDB] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
+        # 确保不会尝试加载未加载的关系
+        orm_mode = True
+        arbitrary_types_allowed = True
 
 
 # 邮箱登录请求
