@@ -197,32 +197,18 @@ class PluginUpdateCheckResponse(BaseModel):
     results: List[PluginUpdateCheckResultItem]
 
 
-# 用户设备API模型 - 仅用于展示，不提供管理接口
-class UserDeviceBase(BaseModel):
-    name: str
-    device_type: str
-    os: str
-    os_version: Optional[str] = None
-    browser: Optional[str] = None
-    browser_version: Optional[str] = None
-    ip_address: Optional[str] = None
-    is_current: bool = False
-
-
-class UserDeviceInDB(UserDeviceBase):
-    id: str
-    user_id: str
-    last_active_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
 # 用户API模型
 class UserBase(BaseModel):
     email: EmailStr
     name: str
     avatar: Optional[str] = None
+    # 设备信息 - 整合到用户模型中
+    device_name: Optional[str] = None
+    device_type: Optional[str] = None
+    device_os: Optional[str] = None
+    device_os_version: Optional[str] = None
+    device_browser: Optional[str] = None
+    device_browser_version: Optional[str] = None
 
 
 class UserUpdate(UserBase):
@@ -230,6 +216,12 @@ class UserUpdate(UserBase):
     name: Optional[str] = None
     last_login_at: Optional[datetime] = None
     last_login_ip: Optional[str] = None
+    device_name: Optional[str] = None
+    device_type: Optional[str] = None
+    device_os: Optional[str] = None
+    device_os_version: Optional[str] = None
+    device_browser: Optional[str] = None
+    device_browser_version: Optional[str] = None
 
 
 class UserInDB(UserBase):
@@ -240,7 +232,7 @@ class UserInDB(UserBase):
     last_login_ip: Optional[str] = None
     oauth_provider: Optional[str] = None
     oauth_id: Optional[str] = None
-    devices: List[UserDeviceInDB] = Field(default_factory=list)
+    device_last_active_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -249,17 +241,28 @@ class UserInDB(UserBase):
         arbitrary_types_allowed = True
 
 
+# 设备信息模型 - 仅用于登录请求
+class DeviceInfo(BaseModel):
+    name: str
+    device_type: str
+    os: str
+    os_version: Optional[str] = None
+    browser: Optional[str] = None
+    browser_version: Optional[str] = None
+    ip_address: Optional[str] = None
+
+
 # 邮箱登录请求
 class EmailLoginRequest(BaseModel):
     email: EmailStr
-    device_info: Optional[UserDeviceBase] = None
+    device_info: Optional[DeviceInfo] = None
 
 
 # OAuth登录请求
 class OAuthLoginRequest(BaseModel):
     provider: str  # "google", "github", etc.
     token: str
-    device_info: Optional[UserDeviceBase] = None
+    device_info: Optional[DeviceInfo] = None
 
 
 # 登录响应

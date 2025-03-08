@@ -49,25 +49,18 @@ export type User = {
   last_login_at?: string; // ISO格式的日期字符串
   last_login_ip?: string;
   
-  // 设备信息
-  devices?: UserDevice[];
+  // OAuth相关
+  oauth_provider?: string;
+  oauth_id?: string;
   
-  // 认证相关
-  token?: string;
-};
-
-// 用户设备信息
-export type UserDevice = {
-  id: string;
-  name: string;
-  device_type: "desktop" | "mobile" | "tablet" | "other";
-  os: string;
-  os_version?: string;
-  browser?: string;
-  browser_version?: string;
-  ip_address?: string;
-  last_active_at: string; // ISO格式的日期字符串
-  is_current: boolean;
+  // 设备信息 - 整合到用户表中
+  device_name?: string;
+  device_type?: string;
+  device_os?: string;
+  device_os_version?: string;
+  device_browser?: string;
+  device_browser_version?: string;
+  device_last_active_at?: string; // ISO格式的日期字符串
 };
 
 export type Settings = {

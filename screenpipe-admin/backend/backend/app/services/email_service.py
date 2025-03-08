@@ -78,4 +78,70 @@ class EmailService:
             return True
         except Exception as e:
             logger.error(f"发送登录邮件失败: {str(e)}")
+            return False
+    
+    @staticmethod
+    async def send_login_code(email: EmailStr, code: str) -> bool:
+        """发送登录验证码邮件"""
+        try:
+            # 如果是开发环境，只打印邮件内容而不实际发送
+            if settings.DEBUG:
+                logger.info(f"[开发模式] 发送登录验证码到 {email}: {code}")
+                return True
+            
+            # 创建邮件
+            message = MIMEMultipart("alternative")
+            message["Subject"] = "ScreenPipe 登录验证码"
+            message["From"] = settings.EMAIL_SENDER
+            message["To"] = email
+            
+            # 创建HTML内容
+            html = f"""
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ text-align: center; margin-bottom: 20px; }}
+                    .logo {{ font-size: 24px; font-weight: bold; color: #e25822; }}
+                    .content {{ background-color: #f9f9f9; padding: 20px; border-radius: 5px; }}
+                    .code {{ font-size: 32px; font-weight: bold; text-align: center; 
+                            letter-spacing: 8px; margin: 30px 0; color: #e25822; }}
+                    .footer {{ margin-top: 20px; font-size: 12px; color: #999; text-align: center; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">ScreenPipe</div>
+                    </div>
+                    <div class="content">
+                        <p>您好，</p>
+                        <p>您的ScreenPipe登录验证码是：</p>
+                        <div class="code">{code}</div>
+                        <p>请在登录页面输入此验证码完成登录。</p>
+                        <p>此验证码将在1小时后过期。</p>
+                        <p>如果您没有请求此邮件，请忽略它。</p>
+                    </div>
+                    <div class="footer">
+                        <p>此邮件由系统自动发送，请勿回复。</p>
+                        <p>&copy; {settings.PROJECT_NAME}</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # 添加HTML内容
+            message.attach(MIMEText(html, "html"))
+            
+            # 发送邮件
+            with smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
+                server.login(settings.EMAIL_USERNAME, settings.EMAIL_PASSWORD)
+                server.sendmail(settings.EMAIL_SENDER, email, message.as_string())
+            
+            logger.info(f"成功发送登录验证码到 {email}")
+            return True
+        except Exception as e:
+            logger.error(f"发送登录验证码邮件失败: {str(e)}")
             return False 

@@ -39,34 +39,17 @@ class User(Base):
     oauth_provider = Column(String(50), nullable=True)  # 'google', 'github', etc.
     oauth_id = Column(String(255), nullable=True)
     
-    # 关联设备
-    devices = relationship("UserDevice", back_populates="user", cascade="all, delete-orphan")
+    # 设备信息 - 整合到用户表中
+    device_name = Column(String(255), nullable=True)
+    device_type = Column(Enum("desktop", "mobile", "tablet", "other"), nullable=True)
+    device_os = Column(String(255), nullable=True)
+    device_os_version = Column(String(255), nullable=True)
+    device_browser = Column(String(255), nullable=True)
+    device_browser_version = Column(String(255), nullable=True)
+    device_last_active_at = Column(DateTime, nullable=True)
 
     def __repr__(self):
         return f"<User {self.email}>"
-
-
-class UserDevice(Base):
-    """用户设备模型 - 仅作为用户信息的一部分，不提供单独的管理接口"""
-    __tablename__ = "user_devices"
-
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    name = Column(String(255), nullable=False)
-    device_type = Column(Enum("desktop", "mobile", "tablet", "other"), nullable=False)
-    os = Column(String(255), nullable=False)
-    os_version = Column(String(255), nullable=True)
-    browser = Column(String(255), nullable=True)
-    browser_version = Column(String(255), nullable=True)
-    ip_address = Column(String(255), nullable=True)
-    last_active_at = Column(DateTime, default=func.now(), nullable=False)
-    is_current = Column(Boolean, default=False, nullable=False)
-    
-    # 关联用户
-    user = relationship("User", back_populates="devices")
-
-    def __repr__(self):
-        return f"<UserDevice {self.name} ({self.device_type})>"
 
 
 class LoginCode(Base):

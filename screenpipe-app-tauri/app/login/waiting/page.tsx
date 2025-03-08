@@ -3,13 +3,21 @@
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, ArrowLeft, Bug } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Mail, ArrowLeft, Bug, CheckCircle } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { UserApi } from "@/lib/api";
+import { useSettings } from "@/lib/hooks/use-settings";
 
 export default function WaitingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { toast } = useToast();
+  const { updateSettings } = useSettings();
   const email = searchParams.get("email") || "";
   const [isDevMode, setIsDevMode] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
   
   // 处理返回登录页面
   const handleBackToLogin = () => {
@@ -23,12 +31,60 @@ export default function WaitingPage() {
     router.push(`/login?email=${encodeURIComponent(email)}`);
   };
   
+  // 处理验证码提交
+  const handleVerifyCode = async () => {
+    if (!verificationCode.trim()) {
+      toast({
+        title: "验证码不能为空",
+        description: "请输入您收到的验证码",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsVerifying(true);
+    
+    try {
+      const userApi = new UserApi();
+      const response = await userApi.verifyEmailLogin(email, verificationCode);
+      
+      // 更新设置中的用户数据和令牌
+      updateSettings({ 
+        user: response.user,
+        authToken: response.access_token
+      });
+      
+      toast({
+        title: "登录成功",
+        description: "欢迎回到ScreenPipe",
+      });
+      
+      // 登录成功后跳转到主页
+      router.push("/");
+    } catch (error) {
+      console.error("验证登录失败:", error);
+      toast({
+        title: "验证失败",
+        description: "验证码无效或已过期，请重新获取",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+  
   // 开发模式直接验证
   const handleDevModeVerify = () => {
     // 生成一个随机的验证码
-    const mockCode = crypto.randomUUID();
-    // 直接跳转到验证页面
-    router.push(`/login/verify?email=${encodeURIComponent(email)}&code=${mockCode}`);
+    const mockCode = "ABC123";
+    // 直接使用模拟验证码
+    setVerificationCode(mockCode);
+    // 提示用户
+    toast({
+      title: "开发模式",
+      description: `已自动填入模拟验证码：${mockCode}`,
+      variant: "default",
+    });
   };
   
   // 切换开发模式
@@ -49,8 +105,39 @@ export default function WaitingPage() {
           </h1>
           
           <p className="text-zinc-600 dark:text-zinc-300 mb-6">
-            我们已向 <span className="font-medium">{email}</span> 发送了一封包含登录链接的邮件。请点击邮件中的链接完成登录。
+            我们已向 <span className="font-medium">{email}</span> 发送了一封包含6位验证码的邮件。请在下方输入验证码完成登录。
           </p>
+          
+          {/* 验证码输入区域 */}
+          <div className="space-y-4 mb-6">
+            <div className="flex flex-col space-y-2">
+              <label htmlFor="verification-code" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 text-left">
+                验证码
+              </label>
+              <div className="flex space-x-2">
+                <Input
+                  id="verification-code"
+                  type="text"
+                  placeholder="请输入验证码"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  className="flex-1"
+                  disabled={isVerifying}
+                />
+                <Button 
+                  onClick={handleVerifyCode}
+                  disabled={isVerifying || !verificationCode.trim()}
+                  className="bg-[#e25822] hover:bg-[#d24812] text-white"
+                >
+                  {isVerifying ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
           
           <div className="flex items-center justify-center space-x-2 text-sm text-zinc-500 dark:text-zinc-400 mb-8">
             <Loader2 className="h-4 w-4 animate-spin" />

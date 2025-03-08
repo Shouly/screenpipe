@@ -68,10 +68,9 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       // 获取设备信息
-      const currentDate = new Date().toISOString();
       const os = await platform();
       
-      // 创建设备信息
+      // 创建设备信息 - 适配新的用户模型
       const deviceInfo = {
         name: "我的Mac电脑",
         device_type: "desktop",
@@ -79,7 +78,7 @@ export default function LoginPage() {
         os_version: "14.0",
         browser: "Tauri App",
         browser_version: "1.0",
-        is_current: true
+        ip_address: "127.0.0.1"
       };
       
       // 调用后端API发送登录链接
@@ -94,8 +93,8 @@ export default function LoginPage() {
         
         // 显示登录链接已发送的提示
         toast({
-          title: "登录链接已发送",
-          description: "请检查您的邮箱，点击登录链接完成登录",
+          title: "验证码已发送",
+          description: "请检查您的邮箱，输入6位验证码完成登录",
         });
         
         // 跳转到等待页面
@@ -141,13 +140,12 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       // 获取设备信息
-      const currentDate = new Date().toISOString();
       const os = await platform();
       
       // 创建一个随机的Google令牌
       const googleToken = "google-token-" + Date.now();
       
-      // 创建设备信息
+      // 创建设备信息 - 适配新的用户模型
       const deviceInfo = {
         name: "我的Mac电脑",
         device_type: "desktop",
@@ -155,7 +153,7 @@ export default function LoginPage() {
         os_version: "14.0",
         browser: "Tauri App",
         browser_version: "1.0",
-        is_current: true
+        ip_address: "127.0.0.1"
       };
       
       // 调用后端API登录
@@ -174,6 +172,7 @@ export default function LoginPage() {
         // 如果后端API调用失败，使用本地模拟数据（作为备用方案）
         if (process.env.NODE_ENV === 'development' || !navigator.onLine) {
           console.log("使用本地模拟数据作为备用");
+          const currentDate = new Date().toISOString();
           response = {
             user: {
               id: "google-user-" + Date.now(),
@@ -184,9 +183,16 @@ export default function LoginPage() {
               updated_at: currentDate,
               last_login_at: currentDate,
               last_login_ip: "127.0.0.1",
-              token: googleToken,
-              devices: [deviceInfo]
+              device_name: deviceInfo.name,
+              device_type: deviceInfo.device_type,
+              device_os: deviceInfo.os,
+              device_os_version: deviceInfo.os_version,
+              device_browser: deviceInfo.browser,
+              device_browser_version: deviceInfo.browser_version,
+              device_last_active_at: currentDate
             },
+            access_token: googleToken,
+            token_type: "bearer",
             message: "Google本地登录成功（离线模式）"
           };
         } else {
@@ -197,7 +203,8 @@ export default function LoginPage() {
       
       // 更新设置中的用户数据
       updateSettings({ 
-        user: response.user
+        user: response.user,
+        authToken: response.access_token
       });
       
       toast({

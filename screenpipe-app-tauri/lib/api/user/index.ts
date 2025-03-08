@@ -37,25 +37,29 @@ export class UserApi {
   }
   
   /**
-   * 验证邮箱登录链接
+   * 验证邮箱登录验证码
    */
   async verifyEmailLogin(email: string, code: string) {
     try {
-      const response = await fetch(`${this.baseUrl}/user/login/verify?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`, {
+      const response = await fetch(`${this.baseUrl}/user/login/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({
+          email,
+          code
+        })
       });
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || '验证登录链接失败');
+        throw new Error(errorData.detail || '验证登录验证码失败');
       }
       
       return await response.json();
     } catch (error) {
-      console.error('验证登录链接失败:', error);
+      console.error('验证登录验证码失败:', error);
       throw error;
     }
   }
