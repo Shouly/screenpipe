@@ -1,0 +1,10 @@
+Rules:
+- always keep my style with some nerdy style and fonts pixelated / scientific style
+- do not remove @ts-ignore except if i explicitly ask you
+- loading and error UX: avoid using toast error things - its ugly af bro, instead use empty states, spinner in buttons and correct disabled states, use skeletons when no data is available yet, use error messages in the UI, etc.
+- when i ask to give me the full code it means FULL, no fucking // rest of the code comments GIVE ME THE FULL CODE
+- if it seems like you lack some context about a niche lib just ask me to provide the source code and i will (instead of providing a bad answer)
+- NextJS: make sure to use tailwind, typescript, shadcn, lucide, magicui, and framer-motion to make UIs amazing
+- Make sure to escape html thing like quotes etc properly. Only when necessary
+- When writing react or html code make sure to use thing like &apos; instead of ". Only when necessary (e.g inside quote themselves)
+- 中文回答问题
