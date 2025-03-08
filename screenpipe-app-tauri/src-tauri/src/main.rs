@@ -35,6 +35,7 @@ use crate::analytics::start_analytics;
 mod commands;
 mod disk_usage;
 mod permissions;
+mod remote_control;
 mod server;
 mod sidecar;
 mod store;
@@ -43,7 +44,7 @@ mod updates;
 mod window_api;
 
 pub use server::*;
-
+pub use remote_control::*;
 pub use sidecar::*;
 
 pub use icons::*;
@@ -72,6 +73,11 @@ use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
 use tauri_plugin_sentry::sentry;
 mod health;
 use health::start_health_check;
+
+mod reporting;
+
+use reporting::{ReportingConfig, ReportingService};
+use crate::permissions::OSPermission;
 
 // New struct to hold shortcut configuration
 #[derive(Debug, Default)]
@@ -591,6 +597,17 @@ fn parse_shortcut(shortcut_str: &str) -> Result<Shortcut, String> {
     Ok(Shortcut::new(Some(modifiers), code))
 }
 
+// 添加到应用状态
+pub struct ReportingState(pub Arc<ReportingService>);
+
+// 在应用启动时预先请求所需权限
+fn request_necessary_permissions(_app: &tauri::AppHandle) {
+    // 请求系统控制权限（用于锁屏和关机命令）
+    tokio::spawn(async move {
+        request_permission(OSPermission::SystemControl).await;
+    });
+}
+
 #[tokio::main]
 async fn main() {
     let _ = fix_path_env::fix();
@@ -902,6 +919,57 @@ async fn main() {
                     warn!("Failed to initialize global shortcuts: {}", e);
                 }
             });
+
+            // 初始化上报服务
+            let app_handle = app.handle().clone();
+            
+            // 使用tokio::spawn来处理异步操作
+            tauri::async_runtime::spawn(async move {
+                // 使用默认配置创建上报服务
+                let config = ReportingConfig::default();
+                info!("使用默认上报配置");
+                let service = ReportingService::new(config);
+                
+                // 启动定时上报
+                if let Err(e) = service.start_scheduler().await {
+                    error!("failed to start reporting scheduler: {}", e);
+                } else {
+                    info!("reporting scheduler started");
+                }
+                
+                // 将服务添加到应用状态
+                let reporting_state = ReportingState(Arc::new(service));
+                app_handle.manage(reporting_state);
+            });
+
+            // 初始化远程控制服务
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                // 获取远程控制配置（使用硬编码的默认配置）
+                match get_remote_control_config(&app_handle) {
+                    Ok(config) => {
+                        info!("远程控制服务已启用，客户端ID: {}", config.client_id);
+                        
+                        // 启动远程控制服务
+                        match start_remote_control(app_handle.clone(), config).await {
+                            Ok(remote_control_state) => {
+                                info!("远程控制服务启动成功");
+                                app_handle.manage(remote_control_state);
+                            }
+                            Err(e) => {
+                                error!("启动远程控制服务失败: {}", e);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        error!("获取远程控制配置失败: {}", e);
+                    }
+                }
+            });
+
+            // 请求必要的权限
+            request_necessary_permissions(&app.handle());
+
             Ok(())
         })
         .build(tauri::generate_context!())

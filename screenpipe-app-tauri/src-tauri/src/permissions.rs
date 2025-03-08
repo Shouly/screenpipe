@@ -14,6 +14,7 @@ pub enum OSPermission {
     ScreenRecording,
     Microphone,
     Accessibility,
+    SystemControl,
 }
 
 #[tauri::command(async)]
@@ -39,6 +40,12 @@ pub fn open_permission_settings(permission: OSPermission) {
                 )
                 .spawn()
                 .expect("Failed to open Accessibility settings"),
+            OSPermission::SystemControl => Command::new("open")
+                .arg(
+                    "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+                )
+                .spawn()
+                .expect("Failed to open System Control settings"),
         };
     }
 }
@@ -54,6 +61,7 @@ pub async fn request_permission(permission: OSPermission) {
             }
             OSPermission::Microphone => request_av_permission(AVMediaType::Audio),
             OSPermission::Accessibility => request_accessibility_permission(),
+            OSPermission::SystemControl => request_accessibility_permission(),
         }
     }
 }
@@ -97,11 +105,16 @@ pub struct OSPermissionsCheck {
     pub screen_recording: OSPermissionStatus,
     pub microphone: OSPermissionStatus,
     pub accessibility: OSPermissionStatus,
+    pub system_control: OSPermissionStatus,
 }
 
 impl OSPermissionsCheck {
     pub fn necessary_granted(&self) -> bool {
         self.screen_recording.permitted() && self.accessibility.permitted()
+    }
+    
+    pub fn remote_control_granted(&self) -> bool {
+        self.system_control.permitted()
     }
 }
 
@@ -136,6 +149,7 @@ pub fn do_permissions_check(initial_check: bool) -> OSPermissionsCheck {
             },
             microphone: check_av_permission(AVMediaType::Audio),
             accessibility: { check_accessibility_permission() },
+            system_control: { check_system_control_permission() },
         }
     }
 
@@ -145,6 +159,7 @@ pub fn do_permissions_check(initial_check: bool) -> OSPermissionsCheck {
             screen_recording: OSPermissionStatus::NotNeeded,
             microphone: OSPermissionStatus::NotNeeded,
             accessibility: OSPermissionStatus::NotNeeded,
+            system_control: OSPermissionStatus::NotNeeded,
         }
     }
 }
@@ -181,5 +196,24 @@ pub fn request_accessibility_permission() {
         unsafe {
             AXIsProcessTrustedWithOptions(options.as_concrete_TypeRef());
         }
+    }
+}
+
+pub fn check_system_control_permission() -> OSPermissionStatus {
+    #[cfg(target_os = "macos")]
+    {
+        check_accessibility_permission()
+    }
+    #[cfg(target_os = "windows")]
+    {
+        OSPermissionStatus::Granted
+    }
+    #[cfg(target_os = "linux")]
+    {
+        OSPermissionStatus::Granted
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
+    {
+        OSPermissionStatus::NotNeeded
     }
 }
