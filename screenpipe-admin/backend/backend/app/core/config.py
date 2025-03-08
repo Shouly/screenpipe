@@ -1,5 +1,6 @@
 import os
 import logging
+import secrets
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
@@ -12,7 +13,13 @@ load_dotenv()
 class Settings(BaseSettings):
     # API配置
     API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "Time Glass API"
+    PROJECT_NAME: str = "ScreenPipe API"
+    
+    # 前端URL
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    
+    # JWT配置
+    JWT_SECRET: str = os.getenv("JWT_SECRET", secrets.token_urlsafe(32))
     
     # Elasticsearch配置
     ES_URL: str = os.getenv("ES_URL", "http://es-sg-6l13oji530003k7jw.public.elasticsearch.aliyuncs.com:9200")
@@ -29,6 +36,13 @@ class Settings(BaseSettings):
     MYSQL_PORT: str = os.getenv("MYSQL_PORT", "3306")
     MYSQL_DATABASE: str = os.getenv("MYSQL_DATABASE", "timeglass")
     MYSQL_DATABASE_URL: str = f"mysql+aiomysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
+    
+    # 邮件配置
+    EMAIL_HOST: str = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+    EMAIL_PORT: int = int(os.getenv("EMAIL_PORT", "465"))
+    EMAIL_USERNAME: str = os.getenv("EMAIL_USERNAME", "your-email@gmail.com")
+    EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD", "your-password")
+    EMAIL_SENDER: str = os.getenv("EMAIL_SENDER", "noreply@screenpipe.com")
     
     # 定时任务配置
     ENABLE_SCHEDULED_TASKS: bool = os.getenv("ENABLE_SCHEDULED_TASKS", "True").lower() == "true"

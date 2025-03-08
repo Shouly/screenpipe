@@ -197,7 +197,7 @@ class PluginUpdateCheckResponse(BaseModel):
     results: List[PluginUpdateCheckResultItem]
 
 
-# 用户设备API模型
+# 用户设备API模型 - 仅用于展示，不提供管理接口
 class UserDeviceBase(BaseModel):
     name: str
     device_type: str
@@ -207,17 +207,6 @@ class UserDeviceBase(BaseModel):
     browser_version: Optional[str] = None
     ip_address: Optional[str] = None
     is_current: bool = False
-
-
-class UserDeviceCreate(UserDeviceBase):
-    pass
-
-
-class UserDeviceUpdate(UserDeviceBase):
-    name: Optional[str] = None
-    device_type: Optional[str] = None
-    os: Optional[str] = None
-    last_active_at: Optional[datetime] = None
 
 
 class UserDeviceInDB(UserDeviceBase):
@@ -236,10 +225,6 @@ class UserBase(BaseModel):
     avatar: Optional[str] = None
 
 
-class UserCreate(UserBase):
-    token: str
-
-
 class UserUpdate(UserBase):
     email: Optional[EmailStr] = None
     name: Optional[str] = None
@@ -253,22 +238,37 @@ class UserInDB(UserBase):
     updated_at: datetime
     last_login_at: Optional[datetime] = None
     last_login_ip: Optional[str] = None
-    token: str
+    oauth_provider: Optional[str] = None
+    oauth_id: Optional[str] = None
     devices: List[UserDeviceInDB] = []
 
     class Config:
         from_attributes = True
 
 
-# 登录请求模型
-class LoginRequest(BaseModel):
+# 邮箱登录请求
+class EmailLoginRequest(BaseModel):
+    email: EmailStr
+    device_info: Optional[UserDeviceBase] = None
+
+
+# OAuth登录请求
+class OAuthLoginRequest(BaseModel):
+    provider: str  # "google", "github", etc.
     token: str
-    email: Optional[EmailStr] = None
-    name: Optional[str] = None
-    device_info: Optional[UserDeviceCreate] = None
+    device_info: Optional[UserDeviceBase] = None
 
 
-# 登录响应模型
+# 登录响应
 class LoginResponse(BaseModel):
     user: UserInDB
+    access_token: str
+    token_type: str = "bearer"
     message: str = "登录成功"
+
+
+# 令牌响应
+class TokenResponse(BaseModel):
+    success: bool
+    message: str
+    requires_verification: bool = False

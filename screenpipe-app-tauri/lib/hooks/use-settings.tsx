@@ -108,6 +108,7 @@ export type Settings = {
   platform: string; // Add this line
   disabledShortcuts: Shortcut[];
   user: User;
+  authToken: string; // JWT令牌
   showScreenpipeShortcut: string;
   startRecordingShortcut: string;
   stopRecordingShortcut: string;
@@ -173,6 +174,7 @@ const DEFAULT_SETTINGS: Settings = {
     email: "",
     name: "",
   },
+  authToken: "", // JWT令牌
   showScreenpipeShortcut: "Super+Alt+S",
   startRecordingShortcut: "Super+Alt+R",
   stopRecordingShortcut: "Super+Alt+X",

@@ -8,10 +8,11 @@ CREATE TABLE IF NOT EXISTS `users` (
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `last_login_at` DATETIME DEFAULT NULL,
     `last_login_ip` VARCHAR(255) DEFAULT NULL,
-    `token` VARCHAR(255) NOT NULL,
+    `oauth_provider` VARCHAR(50) DEFAULT NULL,
+    `oauth_id` VARCHAR(255) DEFAULT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `idx_users_email` (`email`),
-    UNIQUE KEY `idx_users_token` (`token`),
+    KEY `idx_users_oauth` (`oauth_provider`, `oauth_id`),
     KEY `idx_users_created_at` (`created_at`),
     KEY `idx_users_last_login_at` (`last_login_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -35,14 +36,16 @@ CREATE TABLE IF NOT EXISTS `user_devices` (
     CONSTRAINT `fk_user_devices_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 添加一个初始管理员用户（可选）
--- 密码/令牌: admin-token-123456
-INSERT INTO `users` (`id`, `email`, `name`, `token`, `created_at`, `updated_at`)
-VALUES (
-    UUID(),
-    'admin@screenpipe.com',
-    '管理员',
-    'admin-token-123456',
-    NOW(),
-    NOW()
-) ON DUPLICATE KEY UPDATE `updated_at` = NOW(); 
+-- 登录码表（用于无密码登录）
+CREATE TABLE IF NOT EXISTS `login_codes` (
+    `id` VARCHAR(36) NOT NULL,
+    `email` VARCHAR(255) NOT NULL,
+    `code` VARCHAR(255) NOT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `expires_at` DATETIME NOT NULL,
+    `used` BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (`id`),
+    KEY `idx_login_codes_email` (`email`),
+    KEY `idx_login_codes_code` (`code`),
+    KEY `idx_login_codes_expires_at` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci; 

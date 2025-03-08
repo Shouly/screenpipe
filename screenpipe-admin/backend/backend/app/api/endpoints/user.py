@@ -1,55 +1,194 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
+import secrets
+import time
+from datetime import datetime, timedelta
+import jwt
+from pydantic import EmailStr
 
 from ...db.mysql import get_db
 from ...models.api_models import (
-    LoginRequest, 
+    EmailLoginRequest, 
+    OAuthLoginRequest,
     LoginResponse, 
+    TokenResponse,
     UserInDB, 
-    UserDeviceInDB,
-    UserDeviceCreate,
-    UserDeviceUpdate
+    UserUpdate
 )
 from ...services.user_service import UserService
+from ...services.email_service import EmailService
+from ...core.config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-@router.post("/login", response_model=LoginResponse)
-async def login(
+# JWT相关配置
+JWT_SECRET = settings.JWT_SECRET
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION = 60 * 24 * 30  # 30天过期
+
+def create_jwt_token(user_id: str, email: str) -> str:
+    """创建JWT令牌"""
+    payload = {
+        "sub": user_id,
+        "email": email,
+        "exp": datetime.utcnow() + timedelta(minutes=JWT_EXPIRATION),
+        "iat": datetime.utcnow()
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def verify_jwt_token(token: str) -> dict:
+    """验证JWT令牌"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的认证令牌"
+        )
+
+@router.post("/login/email", response_model=TokenResponse)
+async def email_login(
     request: Request,
-    login_data: LoginRequest,
+    login_data: EmailLoginRequest,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
     """
-    用户登录或注册接口
+    邮箱登录接口
     
-    如果用户不存在，将自动创建新用户
+    发送一次性登录链接到邮箱
     """
     try:
         # 获取客户端IP
         client_ip = request.client.host if request.client else None
         
+        # 创建登录码
+        login_code = await UserService.create_login_code(db, login_data.email)
+        
+        # 发送登录链接到邮箱
+        login_url = f"{settings.FRONTEND_URL}/login/verify?code={login_code}&email={login_data.email}"
+        background_tasks.add_task(
+            EmailService.send_login_email,
+            login_data.email,
+            login_url
+        )
+        
+        return TokenResponse(
+            success=True,
+            message="登录链接已发送到您的邮箱",
+            requires_verification=True
+        )
+    except Exception as e:
+        logger.error(f"邮箱登录失败: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"登录失败: {str(e)}"
+        )
+
+@router.post("/login/verify", response_model=LoginResponse)
+async def verify_email_login(
+    request: Request,
+    email: EmailStr,
+    code: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """验证邮箱登录链接"""
+    try:
+        # 获取客户端IP
+        client_ip = request.client.host if request.client else None
+        
+        # 验证登录码
+        is_valid = await UserService.verify_login_code(db, email, code)
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="无效或已过期的登录链接"
+            )
+        
         # 登录或注册用户
-        user, is_new_user = await UserService.login_or_register(
+        user, is_new_user = await UserService.login_or_register_by_email(
             db=db,
-            token=login_data.token,
-            email=login_data.email,
-            name=login_data.name,
-            device_info=login_data.device_info,
+            email=email,
+            device_info=None,  # 设备信息在前端收集
             ip_address=client_ip
         )
+        
+        # 创建JWT令牌
+        access_token = create_jwt_token(user.id, user.email)
         
         # 构建响应
         message = "注册成功" if is_new_user else "登录成功"
         return LoginResponse(
             user=user,
+            access_token=access_token,
             message=message
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"登录失败: {str(e)}")
+        logger.error(f"验证邮箱登录失败: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"登录失败: {str(e)}"
+        )
+
+@router.post("/login/oauth", response_model=LoginResponse)
+async def oauth_login(
+    request: Request,
+    login_data: OAuthLoginRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    OAuth登录接口
+    
+    支持Google、GitHub等第三方登录
+    """
+    try:
+        # 获取客户端IP
+        client_ip = request.client.host if request.client else None
+        
+        # 验证OAuth令牌
+        oauth_info = await UserService.verify_oauth_token(
+            provider=login_data.provider,
+            token=login_data.token
+        )
+        
+        if not oauth_info:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="无效的OAuth令牌"
+            )
+        
+        # 登录或注册用户
+        user, is_new_user = await UserService.login_or_register_by_oauth(
+            db=db,
+            provider=login_data.provider,
+            oauth_id=oauth_info["id"],
+            email=oauth_info["email"],
+            name=oauth_info["name"],
+            avatar=oauth_info.get("avatar"),
+            device_info=login_data.device_info,
+            ip_address=client_ip
+        )
+        
+        # 创建JWT令牌
+        access_token = create_jwt_token(user.id, user.email)
+        
+        # 构建响应
+        message = "注册成功" if is_new_user else "登录成功"
+        return LoginResponse(
+            user=user,
+            access_token=access_token,
+            message=message
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"OAuth登录失败: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"登录失败: {str(e)}"
@@ -58,175 +197,60 @@ async def login(
 @router.get("/me", response_model=UserInDB)
 async def get_current_user(
     request: Request,
-    token: str,
+    token: str = Depends(lambda x: x.headers.get("Authorization").split("Bearer ")[1] if x.headers.get("Authorization") else None),
     db: AsyncSession = Depends(get_db)
 ):
     """获取当前用户信息"""
-    user = await UserService.get_user_by_token(db, token)
-    if not user:
+    try:
+        # 验证JWT令牌
+        payload = verify_jwt_token(token)
+        user_id = payload["sub"]
+        
+        # 获取用户信息
+        user = await UserService.get_user_by_id(db, user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="用户不存在"
+            )
+        
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"获取用户信息失败: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证令牌"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取用户信息失败: {str(e)}"
         )
-    return user
 
-@router.get("/devices", response_model=List[UserDeviceInDB])
-async def get_user_devices(
-    token: str,
-    db: AsyncSession = Depends(get_db)
-):
-    """获取用户的所有设备"""
-    user = await UserService.get_user_by_token(db, token)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证令牌"
-        )
-    
-    devices = await UserService.get_user_devices(db, user.id)
-    return devices
-
-@router.post("/devices", response_model=UserDeviceInDB)
-async def add_device(
+@router.put("/me", response_model=UserInDB)
+async def update_current_user(
     request: Request,
-    token: str,
-    device_data: UserDeviceCreate,
+    user_data: UserUpdate,
+    token: str = Depends(lambda x: x.headers.get("Authorization").split("Bearer ")[1] if x.headers.get("Authorization") else None),
     db: AsyncSession = Depends(get_db)
 ):
-    """添加新设备"""
-    user = await UserService.get_user_by_token(db, token)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证令牌"
-        )
-    
-    # 获取客户端IP
-    client_ip = request.client.host if request.client else None
-    
-    # 登录或注册用户，添加新设备
-    updated_user, _ = await UserService.login_or_register(
-        db=db,
-        token=token,
-        device_info=device_data,
-        ip_address=client_ip
-    )
-    
-    # 获取新添加的设备（当前设备）
-    devices = await UserService.get_user_devices(db, updated_user.id)
-    current_device = next((d for d in devices if d.is_current), None)
-    
-    if not current_device:
+    """更新当前用户信息"""
+    try:
+        # 验证JWT令牌
+        payload = verify_jwt_token(token)
+        user_id = payload["sub"]
+        
+        # 更新用户信息
+        updated_user = await UserService.update_user(db, user_id, user_data)
+        if not updated_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="用户不存在"
+            )
+        
+        return updated_user
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"更新用户信息失败: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="添加设备失败"
-        )
-    
-    return current_device
-
-@router.put("/devices/{device_id}", response_model=UserDeviceInDB)
-async def update_device(
-    device_id: str,
-    token: str,
-    device_data: UserDeviceUpdate,
-    db: AsyncSession = Depends(get_db)
-):
-    """更新设备信息"""
-    user = await UserService.get_user_by_token(db, token)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证令牌"
-        )
-    
-    # 检查设备是否属于该用户
-    devices = await UserService.get_user_devices(db, user.id)
-    if not any(d.id == device_id for d in devices):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权操作此设备"
-        )
-    
-    updated_device = await UserService.update_device(db, device_id, device_data)
-    if not updated_device:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="设备不存在"
-        )
-    
-    return updated_device
-
-@router.delete("/devices/{device_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_device(
-    device_id: str,
-    token: str,
-    db: AsyncSession = Depends(get_db)
-):
-    """删除设备"""
-    user = await UserService.get_user_by_token(db, token)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证令牌"
-        )
-    
-    # 检查设备是否属于该用户
-    devices = await UserService.get_user_devices(db, user.id)
-    device = next((d for d in devices if d.id == device_id), None)
-    
-    if not device:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="设备不存在"
-        )
-    
-    # 不允许删除当前设备
-    if device.is_current:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="不能删除当前使用的设备"
-        )
-    
-    success = await UserService.delete_device(db, device_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="删除设备失败"
-        )
-
-@router.post("/devices/{device_id}/set-current", response_model=UserDeviceInDB)
-async def set_current_device(
-    device_id: str,
-    token: str,
-    db: AsyncSession = Depends(get_db)
-):
-    """设置当前设备"""
-    user = await UserService.get_user_by_token(db, token)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证令牌"
-        )
-    
-    # 检查设备是否属于该用户
-    devices = await UserService.get_user_devices(db, user.id)
-    device = next((d for d in devices if d.id == device_id), None)
-    
-    if not device:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="设备不存在"
-        )
-    
-    success = await UserService.set_current_device(db, user.id, device_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="设置当前设备失败"
-        )
-    
-    # 获取更新后的设备
-    updated_devices = await UserService.get_user_devices(db, user.id)
-    current_device = next((d for d in updated_devices if d.id == device_id), None)
-    
-    return current_device 
+            detail=f"更新用户信息失败: {str(e)}"
+        ) 

@@ -34,7 +34,10 @@ class User(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
     last_login_at = Column(DateTime, nullable=True)
     last_login_ip = Column(String(255), nullable=True)
-    token = Column(String(255), unique=True, index=True, nullable=False)
+    
+    # OAuth相关
+    oauth_provider = Column(String(50), nullable=True)  # 'google', 'github', etc.
+    oauth_id = Column(String(255), nullable=True)
     
     # 关联设备
     devices = relationship("UserDevice", back_populates="user", cascade="all, delete-orphan")
@@ -44,7 +47,7 @@ class User(Base):
 
 
 class UserDevice(Base):
-    """用户设备模型"""
+    """用户设备模型 - 仅作为用户信息的一部分，不提供单独的管理接口"""
     __tablename__ = "user_devices"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
@@ -63,4 +66,19 @@ class UserDevice(Base):
     user = relationship("User", back_populates="devices")
 
     def __repr__(self):
-        return f"<UserDevice {self.name} ({self.device_type})>" 
+        return f"<UserDevice {self.name} ({self.device_type})>"
+
+
+class LoginCode(Base):
+    """登录码模型 - 用于无密码登录"""
+    __tablename__ = "login_codes"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    email = Column(String(255), nullable=False, index=True)
+    code = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Boolean, default=False, nullable=False)
+
+    def __repr__(self):
+        return f"<LoginCode {self.email}>" 
