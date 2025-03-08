@@ -17,7 +17,7 @@
 <!-- ScreenPipe Title and Subtitle -->
 <p align="center" style="font-family: 'Press Start 2P', monospace;">
    <h1 align="center">[ screenpipe ]</h1>
-   <p align="center">AI app store powered by 24/7 desktop history</p>
+   <p align="center">the context layer for AGI</p>
    <p align="center">open source | 100% local | dev friendly | 24/7 screen, mic recording</p>
 </p>
 
@@ -55,7 +55,7 @@
 <p align="center">
    
 
-<img width="1312" alt="Screenshot 2025-02-15 at 7 51 18 PM" src="https://github.com/user-attachments/assets/5a9f29ce-69ae-463f-b338-186b8cdb2d12" />
+<img width="1312" alt="Screenshot 2025-02-15 at 7 51 18 PM" src="https://github.com/user-attachments/assets/5a9f29ce-69ae-463f-b338-186b8cdb2d12" />
 
 ![image](https://github.com/user-attachments/assets/dec2e07c-b3d5-46dd-9f36-c0c26a82c9fb)
 
@@ -89,26 +89,95 @@ https://github.com/user-attachments/assets/973ee8e5-5240-4d36-83fe-d38c53efe6a9
 
 ---
 
-# how it works?
+# [ what is screenpipe? ]
 
-- we record everything 24/7, 100% locally, uses 10% CPU, 4 GB ram, 15 gb/m
-- we index it into an api
-- dev build ai apps w user's full context, desktop native, nextjs, publish, monetize
+screenpipe is the context layer for AGI - a bridge between dull context-free AI and context-aware super intelligence. it's a:
+
+- **desktop app** - records your screen & mic 24/7, extracts text & speech, saves to local db
+- **developer platform** - build context-aware AI apps with user's full history
+- **plugin ecosystem** - install, create, share & monetize plugins ("pipes")
 
 <img src="./content/diagram2.png" width="800" />
 
 <img src="https://github.com/user-attachments/assets/da5b8583-550f-4a1f-b211-058e7869bc91" width="400" />
 
+# [ why screenpipe? ]
 
+- **ai models are commoditized** - the real value is in the context
+- **context is king** - ai is only as good as the context it has
+- **screen = ultimate context** - your screen contains your entire digital life
+- **privacy matters** - 100% local processing, your data stays on your device
+- **developer friendly** - build & monetize context-aware ai apps easily
 
-# why?
+# [ core components ]
 
-- ai models are commoditized 
-- ai is as good as its context
-- the most valuable context is all contained in your screen
+screenpipe consists of several interconnected components:
 
+- **screenpipe-core** - rust engine for screen/audio capture, llm integration, plugin system
+- **screenpipe-vision** - ocr, image processing, visual content analysis
+- **screenpipe-audio** - speech-to-text, audio processing, voice recognition
+- **screenpipe-app-tauri** - cross-platform desktop app (macos, windows, linux)
+- **screenpipe-js** - javascript sdk & cli tools for developers
+- **pipes** - plugin system for extending functionality
+- **screenpipe-admin** - enterprise management platform
 
-## get started
+# [ key features ]
+
+## 24/7 recording & indexing
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  screen capture │    │  audio capture  │    │  text extraction│
+│  (screenshots)  │───>│  (microphone)   │───>│  (ocr + stt)    │
+└─────────────────┘    └─────────────────┘    └────────┬────────┘
+                                                       │
+                                                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  local storage  │<───│  indexing       │<───│  processing     │
+│  (sqlite)       │    │  (embeddings)   │    │  (filtering)    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+- captures screen content every few seconds
+- records microphone audio (optional)
+- extracts text using ocr & speech-to-text
+- indexes everything locally in sqlite
+- uses only ~10% cpu, 4gb ram, 15gb/month storage
+- works offline, no cloud dependency
+
+## plugin system ("pipes")
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  pipe creation  │    │  pipe store     │    │  monetization   │
+│  (nextjs + bun) │───>│  (distribution) │───>│  (subscriptions)│
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+- create desktop apps with nextjs in a sandboxed environment
+- access user's screen history through simple apis
+- publish to pipe store for others to discover
+- monetize your pipes with subscription pricing
+- install community-created pipes with one click
+
+## enterprise features
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  remote control │    │  productivity   │    │  compliance     │
+│  (management)   │───>│  (analytics)    │───>│  (monitoring)   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+- remote device management
+- productivity analytics
+- application usage tracking
+- team collaboration insights
+- compliance monitoring
+
+# [ get started ]
+
+## install screenpipe
 
 macos, linux:
 
@@ -116,13 +185,13 @@ macos, linux:
 curl -fsSL get.screenpi.pe/cli | sh
 ```
 
-or on windows
+windows:
 
 ```bash
 iwr get.screenpi.pe/cli.ps1 | iex
 ```
 
-then
+then:
 
 ```bash
 screenpipe
@@ -130,37 +199,62 @@ screenpipe
 
 make sure to allow permissions on macos (screen, mic)
 
-- [get the desktop app](https://screenpi.pe/)
+- [download desktop app](https://screenpi.pe/)
 - [docs & build from source](https://docs.screenpi.pe/docs/getting-started)
 
-## create plugins
+## create your own pipe
 
 ```bash
 bunx --bun @screenpipe/dev@latest pipe create
 ```
 
-screenpipe has a plugin system called "pipe" which lets you create desktop app in nextjs in a sandboxed environment within our Rust code, [read more](https://docs.screenpi.pe/docs/plugins)
-
-you can then publish these to our store and make money:
+publish and monetize:
 
 ```bash
-cd foo
-bunx --bun @screenpipe/dev@latest pipe register --name foo [--paid --price 50] # subscription
+cd your-pipe
+bunx --bun @screenpipe/dev@latest pipe register --name your-pipe [--paid --price 50]
 bun run build
-bunx --bun @screenpipe/dev@latest pipe publish --name foo
+bunx --bun @screenpipe/dev@latest pipe publish --name your-pipe
 ```
 
-## community 
+# [ technical details ]
 
-- [template to build screenpipe-powered desktop native app using Tauri](https://github.com/LorenzoBloedow/screenpipe-tauri-template-dev)
-- [template to build screenpipe-powered desktop native app using Electron](https://github.com/neo773/screenpipe-electron)
+## architecture
+
+screenpipe is built with a hybrid architecture:
+
+- **core engine**: rust + tokio for high-performance async processing
+- **desktop app**: tauri + next.js + react for cross-platform ui
+- **plugins**: typescript + bun for rapid development
+- **admin platform**: python + fastapi + react for enterprise management
+
+## data storage
+
+- all data stored locally in `$HOME/.screenpipe/db.sqlite`
+- media files in `$HOME/.screenpipe/*.mp4`
+- embeddings for semantic search
+- structured data for fast querying
+
+## security & privacy
+
+- 100% local processing
+- no data leaves your device
+- optional pii removal
+- sandboxed plugin execution
+- permission-based access control
+
+# [ community & ecosystem ]
+
+- [template for tauri apps](https://github.com/LorenzoBloedow/screenpipe-tauri-template-dev)
+- [template for electron apps](https://github.com/neo773/screenpipe-electron)
+- [discord community](https://discord.gg/dU9EBuw7Uq)
+- [documentation](https://docs.screenpi.pe/)
 
 ## star history
 
 ![Star History Nov 24 2024](https://github.com/user-attachments/assets/c7e4de14-0771-4bbb-9a4c-7f2102a1a6cd)
 
-
-## contributing
+# [ contributing ]
 
 contributions are welcome! if you'd like to contribute, please read [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -170,3 +264,7 @@ contributions are welcome! if you'd like to contribute, please read [CONTRIBUTIN
    <a href="https://console.algora.io/org/mediar-ai/bounties?status=open">
        <img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fconsole.algora.io%2Fapi%2Fshields%2Fmediar-ai%2Fbounties%3Fstatus%3Dopen" alt="Open Bounties">
    </a>
+
+# [ license ]
+
+this project is licensed under MIT or Apache-2.0 license.

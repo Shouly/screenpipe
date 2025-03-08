@@ -337,9 +337,10 @@ impl ReportingService {
         let result = tokio::task::spawn_blocking(move || -> Result<serde_json::Value> {
             let conn = Self::get_db_connection()?;
             
-            // 查询帧数据
+            // 查询帧数据，包括app_name、window_name和focused字段
             let mut stmt = conn.prepare(
-                "SELECT f.id, f.video_chunk_id, f.offset_index, f.timestamp, f.name, f.browser_url 
+                "SELECT f.id, f.video_chunk_id, f.offset_index, f.timestamp, f.name, f.browser_url, 
+                        f.app_name, f.window_name, f.focused
                  FROM frames f 
                  WHERE f.timestamp > ?1 AND f.timestamp <= ?2 
                  ORDER BY f.timestamp ASC"
@@ -353,16 +354,19 @@ impl ReportingService {
                     row.get::<_, String>(3)?, // timestamp
                     row.get::<_, Option<String>>(4)?, // name
                     row.get::<_, Option<String>>(5)?, // browser_url
+                    row.get::<_, Option<String>>(6)?, // app_name
+                    row.get::<_, Option<String>>(7)?, // window_name
+                    row.get::<_, Option<bool>>(8)?, // focused
                 ))
             }).context("failed to execute frames query")?;
             
             let mut frames = Vec::new();
             for frame_row in frame_rows {
-                let (id, video_chunk_id, offset_index, timestamp, name, browser_url) = frame_row?;
+                let (id, video_chunk_id, offset_index, timestamp, name, browser_url, app_name, window_name, focused) = frame_row?;
                 
-                // 查询关联的OCR文本
+                // 查询关联的OCR文本，不再包含app_name、window_name和focused字段
                 let mut ocr_stmt = conn.prepare(
-                    "SELECT text, text_json, app_name, ocr_engine, window_name, focused, text_length 
+                    "SELECT text, text_json, ocr_engine, text_length 
                      FROM ocr_text 
                      WHERE frame_id = ?"
                 ).context("failed to prepare ocr statement")?;
@@ -371,11 +375,8 @@ impl ReportingService {
                     Ok(json!({
                         "text": row.get::<_, String>(0)?,
                         "text_json": row.get::<_, String>(1)?,
-                        "app_name": row.get::<_, String>(2)?,
-                        "ocr_engine": row.get::<_, String>(3)?,
-                        "window_name": row.get::<_, Option<String>>(4)?,
-                        "focused": row.get::<_, bool>(5)?,
-                        "text_length": row.get::<_, Option<i64>>(6)?
+                        "ocr_engine": row.get::<_, String>(2)?,
+                        "text_length": row.get::<_, Option<i64>>(3)?
                     }))
                 }).context("failed to execute ocr query")?;
                 
@@ -392,6 +393,9 @@ impl ReportingService {
                     "timestamp": timestamp,
                     "name": name,
                     "browser_url": browser_url,
+                    "app_name": app_name,
+                    "window_name": window_name,
+                    "focused": focused,
                     "ocr_text": ocr_data
                 }));
             }
@@ -509,7 +513,7 @@ impl ReportingService {
             
             // 获取应用数量
             let mut stmt = conn.prepare(
-                "SELECT COUNT(DISTINCT app_name) FROM ocr_text WHERE app_name IS NOT NULL AND app_name != ''"
+                "SELECT COUNT(DISTINCT app_name) FROM frames WHERE app_name IS NOT NULL AND app_name != ''"
             ).context("failed to prepare app count statement")?;
             
             let app_count: i64 = stmt.query_row([], |row| row.get(0))
