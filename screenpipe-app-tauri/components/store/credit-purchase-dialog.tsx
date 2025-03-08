@@ -1,15 +1,15 @@
-import React, { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useSettings } from "@/lib/hooks/use-settings";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { Loader2 } from "lucide-react";
-import { useSettings } from "@/lib/hooks/use-settings";
+import { useState } from "react";
 
 interface CreditPurchaseDialogProps {
   open: boolean;

@@ -1,22 +1,19 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 
-import { CodeBlock } from "@/components/ui/codeblock";
-import { platform } from "@tauri-apps/plugin-os";
-import { Label } from "./ui/label";
-import { Switch } from "./ui/switch";
 import { useSettings } from "@/lib/hooks/use-settings";
 import { invoke } from "@tauri-apps/api/core";
-import { useToast } from "./ui/use-toast";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardFooter } from "./ui/card";
+import { Label } from "./ui/label";
+import { Switch } from "./ui/switch";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { Button } from "./ui/button";
-import { Separator } from "./ui/separator";
-import { Card, CardContent, CardFooter } from "./ui/card";
+import { useToast } from "./ui/use-toast";
 
 import { CliCommandDialog } from "./cli-command-dialog";
 

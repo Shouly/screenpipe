@@ -1,32 +1,29 @@
 "use client";
-import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useSettings } from "@/lib/hooks/use-settings";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/use-toast";
+import { useSettings } from "@/lib/hooks/use-settings";
 import { cn } from "@/lib/utils";
+import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
+import { open as openUrl } from "@tauri-apps/plugin-shell";
 import {
-  RefreshCw,
-  UserCog,
-  ExternalLinkIcon,
-  Key,
-  EyeOff,
-  Eye,
   ArrowUpRight,
   BookOpen,
+  ExternalLinkIcon,
+  Eye,
+  EyeOff,
+  Key,
+  RefreshCw,
+  UserCog,
   X,
 } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
-import { open as openUrl } from "@tauri-apps/plugin-shell";
-import { Card } from "../ui/card";
-import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
-import { invoke } from "@tauri-apps/api/core";
-import { PricingToggle } from "./pricing-toggle";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import posthog from "posthog-js";
-import { platform } from "@tauri-apps/plugin-os";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
+import { Card } from "../ui/card";
+import { PricingToggle } from "./pricing-toggle";
 
 function PlanCard({
   title,
@@ -151,40 +148,40 @@ export function AccountSection() {
       price: settings.user?.cloud_subscribed
         ? "active"
         : isAnnual
-        ? "$200/year"
-        : "$20/mo",
+          ? "$200/year"
+          : "$20/mo",
       features: settings.user?.cloud_subscribed
         ? [
-            "unlimited screenpipe cloud",
-            "priority support",
-            <a
-              key="portal"
-              href={`https://billing.stripe.com/p/login/3cs6pT8Qbd846yc9AA?email=${encodeURIComponent(
-                settings.user?.email || ""
-              )}`}
-              className="text-primary hover:underline cursor-pointer"
-              onClick={(e) => {
-                e.preventDefault();
-                openUrl(
-                  `https://billing.stripe.com/p/login/3cs6pT8Qbd846yc9AA?email=${encodeURIComponent(
-                    settings.user?.email || ""
-                  )}`
-                );
-              }}
-            >
-              manage subscription
-            </a>,
-          ]
+          "unlimited screenpipe cloud",
+          "priority support",
+          <a
+            key="portal"
+            href={`https://billing.stripe.com/p/login/3cs6pT8Qbd846yc9AA?email=${encodeURIComponent(
+              settings.user?.email || ""
+            )}`}
+            className="text-primary hover:underline cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              openUrl(
+                `https://billing.stripe.com/p/login/3cs6pT8Qbd846yc9AA?email=${encodeURIComponent(
+                  settings.user?.email || ""
+                )}`
+              );
+            }}
+          >
+            manage subscription
+          </a>,
+        ]
         : [
-            "unlimited screenpipe cloud",
-            "priority support",
-            isAnnual ? "17% discount applied" : "switch to annual for 17% off",
-          ],
+          "unlimited screenpipe cloud",
+          "priority support",
+          isAnnual ? "17% discount applied" : "switch to annual for 17% off",
+        ],
       url: isAnnual
         ? "https://buy.stripe.com/eVadRzfOCgAi5W0fZu" +
-          `?client_reference_id=${clientRefId}`
+        `?client_reference_id=${clientRefId}`
         : "https://buy.stripe.com/7sIdRzbym4RA98c7sX" +
-          `?client_reference_id=${clientRefId}`,
+        `?client_reference_id=${clientRefId}`,
     },
     {
       title: "enterprise",

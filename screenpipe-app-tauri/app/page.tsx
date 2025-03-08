@@ -2,25 +2,23 @@
 
 import { getStore, useSettings } from "@/lib/hooks/use-settings";
 
-import React, { useEffect, useState } from "react";
-import NotificationHandler from "@/components/notification-handler";
-import Header from "@/components/header";
-import { useToast } from "@/components/ui/use-toast";
 import { ChangelogDialog } from "@/components/changelog-dialog";
-import { BreakingChangesInstructionsDialog } from "@/components/breaking-changes-instructions-dialog";
+import Header from "@/components/header";
+import NotificationHandler from "@/components/notification-handler";
+import { useToast } from "@/components/ui/use-toast";
 import { useChangelogDialog } from "@/lib/hooks/use-changelog-dialog";
-import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
 import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
+import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
+import React, { useEffect } from "react";
 
+import { LoginDialog } from "@/components/login-dialog";
 import { PipeStore } from "@/components/pipe-store";
+import { PipeApi } from "@/lib/api";
+import { useProfiles } from "@/lib/hooks/use-profiles";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { useProfiles } from "@/lib/hooks/use-profiles";
-import { relaunch } from "@tauri-apps/plugin-process";
-import { PipeApi } from "@/lib/api";
-import localforage from "localforage";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
-import { LoginDialog } from "@/components/login-dialog";
+import { relaunch } from "@tauri-apps/plugin-process";
 
 export default function Home() {
   const { settings, updateSettings, loadUser, reloadStore } = useSettings();

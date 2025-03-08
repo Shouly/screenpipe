@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -6,11 +6,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Trash2, Loader2 } from "lucide-react";
-import localforage from "localforage";
 import { useToast } from "@/components/ui/use-toast";
-import { Command } from "@tauri-apps/plugin-shell";
+import localforage from "localforage";
+import { Loader2, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function BreakingChangesInstructionsDialog() {
   const { toast } = useToast();
@@ -51,7 +50,7 @@ export function BreakingChangesInstructionsDialog() {
         body: JSON.stringify({
         }),
       });
-      if(!response.ok){
+      if (!response.ok) {
         toast({
           title: "failed to purge pipes",
           description: `error: ${(await response.json()).error}...`,
@@ -80,7 +79,7 @@ export function BreakingChangesInstructionsDialog() {
   if (!hasPipes) return null;
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={() => { }}>
       <DialogContent
         className="sm:max-w-[525px] [&>button]:hidden"
         onPointerDownOutside={(e) => e.preventDefault()}

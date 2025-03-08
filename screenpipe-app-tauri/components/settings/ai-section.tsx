@@ -1,45 +1,41 @@
 /* eslint-disable @next/next/no-img-element */
-import { AIProviderType, useSettings } from "@/lib/hooks/use-settings";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import {
-  HelpCircle,
-  EyeOff,
-  Eye,
-  RefreshCw,
-  Loader2,
-  ChevronsUpDown,
-} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import React, { useState, useEffect } from "react";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
-import { Button } from "../ui/button";
-import { cn } from "@/lib/utils";
-import { Card, CardContent } from "../ui/card";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
-  CommandSeparator,
+  CommandList
 } from "@/components/ui/command";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import posthog from "posthog-js";
+import { Slider } from "@/components/ui/slider";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { AIProviderType, useSettings } from "@/lib/hooks/use-settings";
+import { cn } from "@/lib/utils";
+import {
+  ChevronsUpDown,
+  Eye,
+  EyeOff,
+  HelpCircle,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 
 interface AIProviderCardProps {
   type: "screenpipe-cloud" | "openai" | "native-ollama" | "custom" | "embedded";
@@ -94,7 +90,7 @@ const AIProviderCard = ({
             className={cn(
               "rounded-lg shrink-0 size-8",
               type === "native-ollama" &&
-                "outline outline-gray-300 outline-1 outline-offset-2",
+              "outline outline-gray-300 outline-1 outline-offset-2",
               imageClassName
             )}
           />
@@ -286,8 +282,8 @@ const AISection = () => {
               !settings.user
                 ? "login required"
                 : !settings.user?.credits?.amount
-                ? "requires credits"
-                : undefined
+                  ? "requires credits"
+                  : undefined
             }
           />
 

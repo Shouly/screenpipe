@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Lock, Settings, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { invoke } from "@tauri-apps/api/core";
 import { usePlatform } from "@/lib/hooks/use-platform";
 import { useSettings } from "@/lib/hooks/use-settings";
+import { invoke } from "@tauri-apps/api/core";
 import localforage from "localforage";
+import { Check, Settings, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 // You can add this to a types.ts file in your lib directory
 export enum OSPermissionStatus {
@@ -69,8 +69,8 @@ export const PermissionButtons: React.FC<PermissionButtonsProps> = ({
         type === "screen"
           ? "screenRecording"
           : type === "audio"
-          ? "microphone"
-          : "accessibility";
+            ? "microphone"
+            : "accessibility";
 
       await invoke("request_permission", {
         permission: permissionType,
@@ -110,8 +110,8 @@ export const PermissionButtons: React.FC<PermissionButtonsProps> = ({
         type === "screen"
           ? "screenRecording"
           : type === "audio"
-          ? "microphone"
-          : "accessibility";
+            ? "microphone"
+            : "accessibility";
 
       await invoke("open_permission_settings", {
         permission: permissionType,
@@ -137,8 +137,8 @@ export const PermissionButtons: React.FC<PermissionButtonsProps> = ({
     type === "screen"
       ? permissions?.screenRecording
       : type === "audio"
-      ? permissions?.microphone
-      : permissions?.accessibility;
+        ? permissions?.microphone
+        : permissions?.accessibility;
 
   const isDisabled = type === "audio" && settings.disableAudio;
 
@@ -163,8 +163,8 @@ export const PermissionButtons: React.FC<PermissionButtonsProps> = ({
         {type === "screen"
           ? "screen"
           : type === "audio"
-          ? "audio"
-          : "accessibility"}{" "}
+            ? "audio"
+            : "accessibility"}{" "}
         access
       </Button>
       <Button
