@@ -5,7 +5,10 @@ import logging
 import secrets
 import time
 from datetime import datetime, timedelta
+
+# 导入PyJWT库
 import jwt
+
 from pydantic import EmailStr
 
 from ...db.mysql import get_db
@@ -37,17 +40,34 @@ def create_jwt_token(user_id: str, email: str) -> str:
         "exp": datetime.utcnow() + timedelta(minutes=JWT_EXPIRATION),
         "iat": datetime.utcnow()
     }
-    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    if isinstance(token, bytes):
+        return token.decode('utf-8')
+    return token
 
 def verify_jwt_token(token: str) -> dict:
     """验证JWT令牌"""
     try:
+        # 确保使用正确的JWT解码方法
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         return payload
-    except jwt.PyJWTError:
+    except jwt.ExpiredSignatureError:
+        logger.warning("JWT令牌已过期")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="认证令牌已过期"
+        )
+    except jwt.InvalidTokenError as e:
+        logger.warning(f"无效的JWT令牌: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="无效的认证令牌"
+        )
+    except Exception as e:
+        logger.error(f"验证JWT令牌时发生错误: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="认证失败"
         )
 
 @router.post("/login/email", response_model=TokenResponse)
@@ -102,23 +122,45 @@ async def verify_email_login(
         client_ip = request.client.host if request.client else None
         
         # 验证登录码
-        is_valid = await UserService.verify_login_code(db, email, code)
-        if not is_valid:
+        try:
+            is_valid = await UserService.verify_login_code(db, email, code)
+            if not is_valid:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="无效或已过期的登录链接"
+                )
+        except Exception as e:
+            logger.error(f"验证登录码失败: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="无效或已过期的登录链接"
+                detail="验证登录链接时出错"
             )
         
         # 登录或注册用户
-        user, is_new_user = await UserService.login_or_register_by_email(
-            db=db,
-            email=email,
-            device_info=None,  # 设备信息在前端收集
-            ip_address=client_ip
-        )
+        try:
+            user, is_new_user = await UserService.login_or_register_by_email(
+                db=db,
+                email=email,
+                device_info=None,  # 设备信息在前端收集
+                ip_address=client_ip
+            )
+        except Exception as e:
+            logger.error(f"登录或注册用户失败: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="登录或注册用户时出错"
+            )
         
         # 创建JWT令牌
-        access_token = create_jwt_token(user.id, user.email)
+        try:
+            access_token = create_jwt_token(user.id, user.email)
+            logger.info(f"成功创建JWT令牌: user_id={user.id}")
+        except Exception as e:
+            logger.error(f"创建JWT令牌失败: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="创建认证令牌失败"
+            )
         
         # 构建响应
         message = "注册成功" if is_new_user else "登录成功"
@@ -152,31 +194,53 @@ async def oauth_login(
         client_ip = request.client.host if request.client else None
         
         # 验证OAuth令牌
-        oauth_info = await UserService.verify_oauth_token(
-            provider=login_data.provider,
-            token=login_data.token
-        )
-        
-        if not oauth_info:
+        try:
+            oauth_info = await UserService.verify_oauth_token(
+                provider=login_data.provider,
+                token=login_data.token
+            )
+            
+            if not oauth_info:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="无效的OAuth令牌"
+                )
+        except Exception as e:
+            logger.error(f"验证OAuth令牌失败: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="无效的OAuth令牌"
+                detail=f"验证OAuth令牌失败: {str(e)}"
             )
         
         # 登录或注册用户
-        user, is_new_user = await UserService.login_or_register_by_oauth(
-            db=db,
-            provider=login_data.provider,
-            oauth_id=oauth_info["id"],
-            email=oauth_info["email"],
-            name=oauth_info["name"],
-            avatar=oauth_info.get("avatar"),
-            device_info=login_data.device_info,
-            ip_address=client_ip
-        )
+        try:
+            user, is_new_user = await UserService.login_or_register_by_oauth(
+                db=db,
+                provider=login_data.provider,
+                oauth_id=oauth_info["id"],
+                email=oauth_info["email"],
+                name=oauth_info["name"],
+                avatar=oauth_info.get("avatar"),
+                device_info=login_data.device_info,
+                ip_address=client_ip
+            )
+        except Exception as e:
+            logger.error(f"OAuth登录或注册用户失败: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"OAuth登录或注册用户失败: {str(e)}"
+            )
         
         # 创建JWT令牌
-        access_token = create_jwt_token(user.id, user.email)
+        try:
+            access_token = create_jwt_token(user.id, user.email)
+            logger.info(f"成功创建OAuth用户JWT令牌: user_id={user.id}")
+        except Exception as e:
+            logger.error(f"创建OAuth用户JWT令牌失败: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="创建认证令牌失败"
+            )
         
         # 构建响应
         message = "注册成功" if is_new_user else "登录成功"

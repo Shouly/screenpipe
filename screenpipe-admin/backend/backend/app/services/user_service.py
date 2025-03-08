@@ -85,25 +85,38 @@ class UserService:
     @staticmethod
     async def verify_login_code(db: AsyncSession, email: str, code: str) -> bool:
         """验证登录码"""
-        # 查询登录码
-        result = await db.execute(
-            select(LoginCode).where(
-                LoginCode.email == email,
-                LoginCode.code == code,
-                LoginCode.used == False,
-                LoginCode.expires_at > datetime.now()
+        try:
+            # 查询登录码
+            logger.info(f"尝试验证登录码: email={email}, code={code}")
+            
+            result = await db.execute(
+                select(LoginCode).where(
+                    LoginCode.email == email,
+                    LoginCode.code == code,
+                    LoginCode.used == False,
+                    LoginCode.expires_at > datetime.now()
+                )
             )
-        )
-        login_code = result.scalars().first()
-        
-        if not login_code:
-            return False
-        
-        # 标记为已使用
-        login_code.used = True
-        await db.commit()
-        
-        return True
+            login_code = result.scalars().first()
+            
+            if not login_code:
+                logger.warning(f"登录码验证失败: email={email}, code={code}")
+                return False
+            
+            # 标记为已使用
+            login_code.used = True
+            await db.commit()
+            logger.info(f"登录码验证成功: email={email}")
+            
+            return True
+        except Exception as e:
+            logger.error(f"验证登录码时发生错误: {str(e)}")
+            # 确保在异常情况下也能正确关闭会话
+            try:
+                await db.rollback()
+            except:
+                pass
+            raise
     
     @staticmethod
     async def verify_oauth_token(provider: str, token: str) -> Optional[Dict[str, Any]]:
@@ -190,38 +203,55 @@ class UserService:
         ip_address: Optional[str] = None
     ) -> Tuple[User, bool]:
         """通过邮箱登录或注册用户"""
-        # 尝试通过邮箱查找用户
-        user = await UserService.get_user_by_email(db, email)
-        is_new_user = False
-        
-        if user:
-            # 用户存在，更新登录信息
-            user.last_login_at = datetime.now()
-            user.last_login_ip = ip_address
-            user.updated_at = datetime.now()
-        else:
-            # 用户不存在，创建新用户
-            user = User(
-                id=str(uuid.uuid4()),
-                email=email,
-                name=email.split('@')[0],  # 使用邮箱前缀作为默认名称
-                last_login_at=datetime.now(),
-                last_login_ip=ip_address,
-                created_at=datetime.now(),
-                updated_at=datetime.now()
-            )
-            db.add(user)
-            is_new_user = True
-        
-        # 添加设备信息（如果提供）
-        if device_info and user.id:
-            await UserService._add_device(db, user.id, device_info, ip_address)
-        
-        await db.commit()
-        if user.id:
-            await db.refresh(user)
-        
-        return user, is_new_user
+        try:
+            logger.info(f"尝试通过邮箱登录或注册用户: email={email}")
+            
+            # 尝试通过邮箱查找用户
+            user = await UserService.get_user_by_email(db, email)
+            is_new_user = False
+            
+            if user:
+                # 用户存在，更新登录信息
+                logger.info(f"用户已存在，更新登录信息: email={email}")
+                user.last_login_at = datetime.now()
+                user.last_login_ip = ip_address
+                user.updated_at = datetime.now()
+            else:
+                # 用户不存在，创建新用户
+                logger.info(f"用户不存在，创建新用户: email={email}")
+                user = User(
+                    id=str(uuid.uuid4()),
+                    email=email,
+                    name=email.split('@')[0],  # 使用邮箱前缀作为默认名称
+                    last_login_at=datetime.now(),
+                    last_login_ip=ip_address,
+                    created_at=datetime.now(),
+                    updated_at=datetime.now()
+                )
+                db.add(user)
+                is_new_user = True
+            
+            # 添加设备信息（如果提供）
+            if device_info and user.id:
+                try:
+                    await UserService._add_device(db, user.id, device_info, ip_address)
+                except Exception as e:
+                    logger.error(f"添加设备信息失败: {str(e)}")
+                    # 设备信息添加失败不影响用户登录
+            
+            await db.commit()
+            if user.id:
+                await db.refresh(user)
+            
+            logger.info(f"用户登录或注册成功: email={email}, is_new_user={is_new_user}")
+            return user, is_new_user
+        except Exception as e:
+            logger.error(f"登录或注册用户失败: {str(e)}")
+            try:
+                await db.rollback()
+            except:
+                pass
+            raise
     
     @staticmethod
     async def login_or_register_by_oauth(

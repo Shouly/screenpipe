@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSettings } from "@/lib/hooks/use-settings";
 import { useToast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, ExternalLink, MonitorX } from "lucide-react";
@@ -16,11 +16,18 @@ export default function LoginPage() {
   const { updateSettings } = useSettings();
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
-  const [apiKey, setApiKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  // 从URL参数中获取邮箱地址
+  useEffect(() => {
+    const emailParam = searchParams.get("email");
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [searchParams]);
 
   // 检测系统主题
   useEffect(() => {
@@ -49,10 +56,10 @@ export default function LoginPage() {
   };
 
   const handleLogin = async () => {
-    if (!apiKey) {
+    if (!email) {
       toast({
-        title: "API密钥必填",
-        description: "请输入您的API密钥以继续",
+        title: "邮箱必填",
+        description: "请输入您的邮箱以继续",
         variant: "destructive",
       });
       return;
@@ -75,60 +82,34 @@ export default function LoginPage() {
         is_current: true
       };
       
-      // 调用后端API登录
+      // 调用后端API发送登录链接
       const userApi = new UserApi();
       let response;
       try {
-        // 使用oauthLogin方法，将API密钥作为token传递
-        response = await userApi.oauthLogin(
-          "api_key", // 使用api_key作为provider
-          apiKey,    // 使用apiKey作为token
-          deviceInfo // 设备信息
+        // 使用邮箱登录方法
+        response = await userApi.emailLogin(
+          email,      // 使用邮箱
+          deviceInfo  // 设备信息
         );
+        
+        // 显示登录链接已发送的提示
+        toast({
+          title: "登录链接已发送",
+          description: "请检查您的邮箱，点击登录链接完成登录",
+        });
+        
+        // 跳转到等待页面
+        router.push(`/login/waiting?email=${encodeURIComponent(email)}`);
+        
       } catch (apiError) {
         console.error("API调用失败:", apiError);
-        
-        // 如果后端API调用失败，使用本地模拟数据（作为备用方案）
-        if (process.env.NODE_ENV === 'development' || !navigator.onLine) {
-          console.log("使用本地模拟数据作为备用");
-          response = {
-            user: {
-              id: "local-user-" + Date.now(),
-              email: email || "user@example.com",
-              name: email ? email.split('@')[0] : "本地用户",
-              avatar: null,
-              created_at: currentDate,
-              updated_at: currentDate,
-              last_login_at: currentDate,
-              last_login_ip: "127.0.0.1",
-              token: apiKey,
-              devices: [deviceInfo]
-            },
-            message: "本地登录成功（离线模式）"
-          };
-        } else {
-          // 在生产环境中，重新抛出错误
-          throw apiError;
-        }
+        throw apiError;
       }
-      
-      // 更新设置中的用户数据
-      updateSettings({ 
-        user: response.user
-      });
-      
-      toast({
-        title: "登录成功",
-        description: "欢迎回到ScreenPipe",
-      });
-      
-      // 登录成功后跳转到主页
-      router.push("/");
     } catch (error) {
       console.error("登录失败:", error);
       
       // 提供更具体的错误信息
-      let errorMessage = "请检查您的API密钥是否正确";
+      let errorMessage = "发送登录链接失败";
       if (!navigator.onLine) {
         errorMessage = "网络连接失败，请检查您的网络连接";
       } else if (error instanceof Error) {
@@ -146,6 +127,17 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    // 显示功能尚未完全实现的提示
+    toast({
+      title: "功能开发中",
+      description: "Google登录功能尚未完全实现，请使用邮箱登录",
+      variant: "default",
+    });
+    
+    // 暂时不执行实际的登录逻辑
+    return;
+    
+    // 以下是原有的Google登录逻辑，暂时保留但不执行
     setIsLoading(true);
     try {
       // 获取设备信息
@@ -215,7 +207,7 @@ export default function LoginPage() {
       
       // 登录成功后跳转到主页
       router.push("/");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Google登录失败:", error);
       
       // 提供更具体的错误信息
@@ -342,31 +334,6 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="h-12 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#e25822]/20 rounded-md"
                   />
-                </div>
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Input
-                      id="apiKey"
-                      placeholder="API密钥"
-                      type={showApiKey ? "text" : "password"}
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      className="h-12 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#e25822]/20 rounded-md"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                    >
-                      {showApiKey ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
                 </div>
                 <Button 
                   className="w-full h-12 bg-[#e25822] hover:bg-[#d24812] text-white transition-colors rounded-md font-medium" 
