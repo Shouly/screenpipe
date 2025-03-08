@@ -356,6 +356,25 @@ export function useSettings() {
   );
   const resetSetting = store.useStoreActions((actions) => actions.resetSetting);
 
+  // 在组件挂载时从存储中加载设置
+  useEffect(() => {
+    const initializeSettings = async () => {
+      try {
+        // 获取存储实例
+        const store = await getStore();
+        
+        // 确保存储已加载
+        await store.reload();
+        
+        console.log("Tauri存储已初始化");
+      } catch (error) {
+        console.error("初始化Tauri存储失败:", error);
+      }
+    };
+    
+    initializeSettings();
+  }, []);
+
   useEffect(() => {
     if (settings.user?.id) {
       posthog.identify(settings.user?.id, {
@@ -444,9 +463,30 @@ export function useSettings() {
     setSettings(unflattenObject(values));
   };
 
+  // 添加一个函数来确保设置被保存到本地存储
+  const saveSettings = async (newSettings: Partial<Settings>) => {
+    // 更新状态
+    setSettings(newSettings);
+    
+    // 获取存储实例
+    const store = await getStore();
+    
+    // 将设置扁平化并保存到存储中
+    const flattenedSettings = flattenObject(newSettings);
+    for (const [key, value] of Object.entries(flattenedSettings)) {
+      await store.set(key, value);
+    }
+    
+    // 保存更改
+    await store.save();
+    
+    console.log("设置已保存到本地存储", newSettings);
+  };
+
   return {
     settings,
     updateSettings: setSettings,
+    saveSettings, // 添加新函数到返回对象
     resetSettings,
     reloadStore,
     loadUser,

@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useChangelogDialog } from "@/lib/hooks/use-changelog-dialog";
 import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
 import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import { LoginDialog } from "@/components/login-dialog";
 import { PipeStore } from "@/components/pipe-store";
@@ -30,13 +30,45 @@ export default function Home() {
   const { setIsOpen: setSettingsOpen } = useSettingsDialog();
   const isProcessingRef = React.useRef(false);
   const router = useRouter();
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // 在页面加载时从本地存储中恢复设置
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        console.log("开始从Tauri存储中加载设置...");
+        await reloadStore();
+        console.log("设置已从Tauri存储中恢复", {
+          hasAuthToken: !!settings.authToken,
+          hasUser: !!settings.user
+        });
+        setIsInitialized(true);
+      } catch (error) {
+        console.error("恢复设置失败:", error);
+        setIsInitialized(true); // 即使失败也标记为已初始化，以便进行后续检查
+      }
+    };
+    
+    loadSettings();
+  }, []);
 
   // 检查用户是否已登录，如果未登录则重定向到登录页面
+  // 只有在设置初始化完成后才进行检查
   useEffect(() => {
-    if (!settings.authToken) {
-      router.push("/login");
+    if (isInitialized) {
+      console.log("检查认证状态...", {
+        hasAuthToken: !!settings.authToken,
+        hasUser: !!settings.user
+      });
+      
+      if (!settings.authToken) {
+        console.log("未找到认证令牌，重定向到登录页面");
+        router.push("/login");
+      } else {
+        console.log("认证令牌有效，保持在主页");
+      }
     }
-  }, [settings.authToken, router]);
+  }, [isInitialized, settings.authToken, router]);
 
   useEffect(() => {
     if (settings.authToken) {
