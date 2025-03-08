@@ -28,7 +28,7 @@ async def report_data(
 
         # 异步处理专门数据
         report_id = str(uuid.uuid4())
-        await data_service.extract_and_store_specialized_data(report)
+        await data_service.extract_and_store_specialized_data(report, report_id)
 
         # 返回成功响应
         return DataReportResponse(
