@@ -2,7 +2,7 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 
 from .plugin import PluginStatus, PluginVisibility
 
@@ -195,3 +195,80 @@ class PluginUpdateCheckResultItem(BaseModel):
 # 插件更新检查响应模型
 class PluginUpdateCheckResponse(BaseModel):
     results: List[PluginUpdateCheckResultItem]
+
+
+# 用户设备API模型
+class UserDeviceBase(BaseModel):
+    name: str
+    device_type: str
+    os: str
+    os_version: Optional[str] = None
+    browser: Optional[str] = None
+    browser_version: Optional[str] = None
+    ip_address: Optional[str] = None
+    is_current: bool = False
+
+
+class UserDeviceCreate(UserDeviceBase):
+    pass
+
+
+class UserDeviceUpdate(UserDeviceBase):
+    name: Optional[str] = None
+    device_type: Optional[str] = None
+    os: Optional[str] = None
+    last_active_at: Optional[datetime] = None
+
+
+class UserDeviceInDB(UserDeviceBase):
+    id: str
+    user_id: str
+    last_active_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# 用户API模型
+class UserBase(BaseModel):
+    email: EmailStr
+    name: str
+    avatar: Optional[str] = None
+
+
+class UserCreate(UserBase):
+    token: str
+
+
+class UserUpdate(UserBase):
+    email: Optional[EmailStr] = None
+    name: Optional[str] = None
+    last_login_at: Optional[datetime] = None
+    last_login_ip: Optional[str] = None
+
+
+class UserInDB(UserBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+    last_login_at: Optional[datetime] = None
+    last_login_ip: Optional[str] = None
+    token: str
+    devices: List[UserDeviceInDB] = []
+
+    class Config:
+        from_attributes = True
+
+
+# 登录请求模型
+class LoginRequest(BaseModel):
+    token: str
+    email: Optional[EmailStr] = None
+    name: Optional[str] = None
+    device_info: Optional[UserDeviceCreate] = None
+
+
+# 登录响应模型
+class LoginResponse(BaseModel):
+    user: UserInDB
+    message: str = "登录成功"

@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, ExternalLink, MonitorX } from "lucide-react";
+import { UserApi } from "@/lib/api";
+import { platform } from "@tauri-apps/plugin-os";
 
 export default function LoginPage() {
   const { updateSettings } = useSettings();
@@ -58,37 +60,33 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // 创建一个模拟的用户数据，使用新的用户模型
+      // 获取设备信息
       const currentDate = new Date().toISOString();
-      const mockUserData = {
-        id: "mock-user-id-" + Date.now(),
-        email: email || "user@example.com",
-        name: "测试用户",
-        avatar: "https://ui-avatars.com/api/?name=测试用户&background=random",
-        created_at: currentDate,
-        updated_at: currentDate,
-        last_login_at: currentDate,
-        last_login_ip: "127.0.0.1",
-        token: apiKey,
-        devices: [
-          {
-            id: "device-" + Date.now(),
-            name: "我的Mac电脑",
-            device_type: "desktop" as "desktop" | "mobile" | "tablet" | "other",
-            os: "macOS",
-            os_version: "14.0",
-            browser: "Chrome",
-            browser_version: "120.0",
-            ip_address: "127.0.0.1",
-            last_active_at: currentDate,
-            is_current: true
-          }
-        ]
+      const os = await platform();
+      
+      // 创建设备信息
+      const deviceInfo = {
+        name: "我的Mac电脑",
+        device_type: "desktop",
+        os: os || "macOS",
+        os_version: "14.0",
+        browser: "Tauri App",
+        browser_version: "1.0",
+        is_current: true
       };
+      
+      // 调用后端API登录
+      const userApi = new UserApi();
+      const response = await userApi.loginOrRegister(
+        apiKey,
+        email || undefined,
+        email ? email.split('@')[0] : undefined,
+        deviceInfo
+      );
       
       // 更新设置中的用户数据
       updateSettings({ 
-        user: mockUserData
+        user: response.user
       });
       
       toast({

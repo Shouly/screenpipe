@@ -15,6 +15,7 @@ import { flattenObject, unflattenObject } from "../utils";
 import { useEffect } from "react";
 import posthog from "posthog-js";
 import localforage from "localforage";
+import { UserApi } from "@/lib/api";
 
 export type VadSensitivity = "low" | "medium" | "high";
 
@@ -408,32 +409,9 @@ export function useSettings() {
         }
       }
 
-      const response = await fetch(`https://screenpi.pe/api/user`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      if (!response.ok) {
-        throw new Error("failed to verify token");
-      }
-
-      const data = await response.json();
-      // 确保userData包含所有必填字段
-      const userData = {
-        id: data.user?.id || "unknown-id",
-        email: data.user?.email || "unknown@example.com",
-        name: data.user?.name || "未知用户",
-        avatar: data.user?.avatar,
-        created_at: data.user?.created_at,
-        updated_at: data.user?.updated_at,
-        last_login_at: new Date().toISOString(),
-        last_login_ip: data.user?.last_login_ip,
-        token: token,
-        devices: data.user?.devices || []
-      } as User;
+      // 使用后端API获取用户信息
+      const userApi = new UserApi();
+      const userData = await userApi.getCurrentUser(token);
 
       // if user was not logged in, send posthog event app_login with email
       if (!settings.user?.id) {
