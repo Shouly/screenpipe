@@ -38,23 +38,35 @@ export enum Shortcut {
 }
 
 export type User = {
-  id?: string;
-  email?: string;
-  name?: string;
-  image?: string;
+  // 基本信息
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  created_at?: string; // ISO格式的日期字符串
+  updated_at?: string; // ISO格式的日期字符串
+  last_login_at?: string; // ISO格式的日期字符串
+  last_login_ip?: string;
+  
+  // 设备信息
+  devices?: UserDevice[];
+  
+  // 认证相关
   token?: string;
-  clerk_id?: string;
-  api_key?: string;
-  credits?: {
-    amount: number;
-  };
-  stripe_connected?: boolean;
-  stripe_account_status?: "active" | "pending";
-  github_username?: string;
-  bio?: string;
-  website?: string;
-  contact?: string;
-  cloud_subscribed?: boolean;
+};
+
+// 用户设备信息
+export type UserDevice = {
+  id: string;
+  name: string;
+  device_type: "desktop" | "mobile" | "tablet" | "other";
+  os: string;
+  os_version?: string;
+  browser?: string;
+  browser_version?: string;
+  ip_address?: string;
+  last_active_at: string; // ISO格式的日期字符串
+  is_current: boolean;
 };
 
 export type Settings = {
@@ -155,7 +167,11 @@ const DEFAULT_SETTINGS: Settings = {
   enableUiMonitoring: false, // Change from true to false
   platform: "unknown", // Add this line
   disabledShortcuts: [],
-  user: {},
+  user: {
+    id: "",
+    email: "",
+    name: "",
+  },
   showScreenpipeShortcut: "Super+Alt+S",
   startRecordingShortcut: "Super+Alt+R",
   stopRecordingShortcut: "Super+Alt+X",
@@ -349,9 +365,6 @@ export function useSettings() {
       posthog.identify(settings.user?.id, {
         email: settings.user?.email,
         name: settings.user?.name,
-        github_username: settings.user?.github_username,
-        website: settings.user?.website,
-        contact: settings.user?.contact,
       });
     }
   }, [settings.user?.id]);
@@ -408,8 +421,18 @@ export function useSettings() {
       }
 
       const data = await response.json();
+      // 确保userData包含所有必填字段
       const userData = {
-        ...data.user,
+        id: data.user?.id || "unknown-id",
+        email: data.user?.email || "unknown@example.com",
+        name: data.user?.name || "未知用户",
+        avatar: data.user?.avatar,
+        created_at: data.user?.created_at,
+        updated_at: data.user?.updated_at,
+        last_login_at: new Date().toISOString(),
+        last_login_ip: data.user?.last_login_ip,
+        token: token,
+        devices: data.user?.devices || []
       } as User;
 
       // if user was not logged in, send posthog event app_login with email

@@ -107,7 +107,14 @@ export default function Header() {
   };
 
   const handleLogout = () => {
-    updateSettings({ user: { token: "" } });
+    updateSettings({ 
+      user: { 
+        id: "",
+        email: "",
+        name: "",
+        token: "" 
+      } 
+    });
     toast({
       title: "已登出",
       description: "您已成功登出ScreenPipe",

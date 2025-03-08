@@ -58,8 +58,38 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // 更新设置中的用户令牌
-      updateSettings({ user: { token: apiKey } });
+      // 创建一个模拟的用户数据，使用新的用户模型
+      const currentDate = new Date().toISOString();
+      const mockUserData = {
+        id: "mock-user-id-" + Date.now(),
+        email: email || "user@example.com",
+        name: "测试用户",
+        avatar: "https://ui-avatars.com/api/?name=测试用户&background=random",
+        created_at: currentDate,
+        updated_at: currentDate,
+        last_login_at: currentDate,
+        last_login_ip: "127.0.0.1",
+        token: apiKey,
+        devices: [
+          {
+            id: "device-" + Date.now(),
+            name: "我的Mac电脑",
+            device_type: "desktop" as "desktop" | "mobile" | "tablet" | "other",
+            os: "macOS",
+            os_version: "14.0",
+            browser: "Chrome",
+            browser_version: "120.0",
+            ip_address: "127.0.0.1",
+            last_active_at: currentDate,
+            is_current: true
+          }
+        ]
+      };
+      
+      // 更新设置中的用户数据
+      updateSettings({ 
+        user: mockUserData
+      });
       
       toast({
         title: "登录成功",
@@ -81,7 +111,58 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    openUrl("https://screenpi.pe/login/google");
+    // 创建一个模拟的Google用户数据，使用新的用户模型
+    setIsLoading(true);
+    try {
+      const currentDate = new Date().toISOString();
+      const mockGoogleUserData = {
+        id: "google-user-id-" + Date.now(),
+        email: "google-user@example.com",
+        name: "Google用户",
+        avatar: "https://lh3.googleusercontent.com/a/default-user",
+        created_at: currentDate,
+        updated_at: currentDate,
+        last_login_at: currentDate,
+        last_login_ip: "127.0.0.1",
+        token: "google-mock-token-" + Date.now(),
+        devices: [
+          {
+            id: "device-" + Date.now(),
+            name: "我的Mac电脑",
+            device_type: "desktop" as "desktop" | "mobile" | "tablet" | "other",
+            os: "macOS",
+            os_version: "14.0",
+            browser: "Chrome",
+            browser_version: "120.0",
+            ip_address: "127.0.0.1",
+            last_active_at: currentDate,
+            is_current: true
+          }
+        ]
+      };
+      
+      // 更新设置中的用户数据
+      updateSettings({ 
+        user: mockGoogleUserData
+      });
+      
+      toast({
+        title: "Google登录成功",
+        description: "欢迎回到ScreenPipe",
+      });
+      
+      // 登录成功后跳转到主页
+      router.push("/");
+    } catch (error) {
+      console.error("Google登录失败:", error);
+      toast({
+        title: "登录失败",
+        description: "Google登录过程中出现错误",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

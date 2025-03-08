@@ -3,727 +3,166 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useSettings } from "@/lib/hooks/use-settings";
-import { cn } from "@/lib/utils";
-import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
-import { open as openUrl } from "@tauri-apps/plugin-shell";
-import {
-  ArrowUpRight,
-  BookOpen,
-  ExternalLinkIcon,
-  Eye,
-  EyeOff,
-  Key,
-  RefreshCw,
-  UserCog,
-  X,
-} from "lucide-react";
-import posthog from "posthog-js";
-import { useEffect, useState } from "react";
+import { Eye, EyeOff, Trash2, UserCog } from "lucide-react";
+import { useState } from "react";
 import { Card } from "../ui/card";
-import { PricingToggle } from "./pricing-toggle";
-
-function PlanCard({
-  title,
-  price,
-  features,
-  isActive,
-  isSelected,
-  onSelect,
-}: {
-  title: string;
-  price: string;
-  features: (string | JSX.Element)[];
-  isActive?: boolean;
-  isSelected?: boolean;
-  onSelect?: () => void;
-}) {
-  return (
-    <Card
-      className={cn(
-        "rounded-xl border px-6 py-4 flex items-start gap-6 cursor-pointer transition-all",
-        isActive
-          ? "border-gray-500/50 bg-gray-500/5"
-          : "border-border/50 bg-secondary/5",
-        isSelected && !isActive && "border-primary ring-1 ring-primary",
-        !isActive && "hover:border-primary/50"
-      )}
-      onClick={onSelect}
-    >
-      <div className="space-y-2 min-w-[200px]">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-medium opacity-80">{title}</h3>
-        </div>
-        <p className="text-lg">{price}</p>
-      </div>
-
-      <ul className="flex-grow space-y-2">
-        {features.map((feature, i) => (
-          <li
-            key={i}
-            className="flex items-center text-sm text-muted-foreground"
-          >
-            <span className="mr-2">•</span>
-            {feature}
-          </li>
-        ))}
-      </ul>
-    </Card>
-  );
-}
 
 export function AccountSection() {
-  const { settings, updateSettings, loadUser } = useSettings();
-  const [isConnectingStripe, setIsConnectingStripe] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [isAnnual, setIsAnnual] = useState(true);
-  const [profileForm, setProfileForm] = useState({
-    bio: settings.user?.bio || "",
-    github_username: settings.user?.github_username || "",
-    website: settings.user?.website || "",
-    contact: settings.user?.contact || "",
-  });
+  const { settings } = useSettings();
+  const [showToken, setShowToken] = useState(false);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    if (!settings.user?.email) {
-      posthog.capture("app_login", {
-        email: settings.user?.email,
-      });
-    }
-
-    const setupDeepLink = async () => {
-      const unsubscribeDeepLink = await onOpenUrl(async (urls) => {
-        console.log("received deep link urls:", urls);
-        for (const url of urls) {
-          // eg stripe / dev flow
-          if (url.includes("stripe-connect")) {
-            console.log("stripe connect url:", url);
-            if (url.includes("/return")) {
-              if (settings.user) {
-                updateSettings({
-                  user: {
-                    ...settings.user,
-                    stripe_connected: true,
-                  },
-                });
-                loadUser(settings.user.token!, true);
-              }
-              toast({
-                title: "stripe connected!",
-                description: "your account is now set up for payments",
-              });
-            } else if (url.includes("/refresh")) {
-              toast({
-                title: "stripe setup incomplete",
-                description: "please complete the stripe onboarding process",
-              });
-            }
-          }
-        }
-      });
-      return unsubscribeDeepLink;
-    };
-
-    let deepLinkUnsubscribe: (() => void) | undefined;
-    setupDeepLink().then((unsubscribe) => {
-      deepLinkUnsubscribe = unsubscribe;
-    });
-
-    return () => {
-      if (deepLinkUnsubscribe) deepLinkUnsubscribe();
-    };
-  }, [settings.user?.token, updateSettings]);
-
-  const clientRefId = `${settings.user?.id}&customer_email=${encodeURIComponent(
-    settings.user?.email ?? ""
-  )}`;
-
-  const plans = [
-    {
-      title: settings.user?.cloud_subscribed
-        ? "your subscription"
-        : "subscription",
-      price: settings.user?.cloud_subscribed
-        ? "active"
-        : isAnnual
-          ? "$200/year"
-          : "$20/mo",
-      features: settings.user?.cloud_subscribed
-        ? [
-          "unlimited screenpipe cloud",
-          "priority support",
-          <a
-            key="portal"
-            href={`https://billing.stripe.com/p/login/3cs6pT8Qbd846yc9AA?email=${encodeURIComponent(
-              settings.user?.email || ""
-            )}`}
-            className="text-primary hover:underline cursor-pointer"
-            onClick={(e) => {
-              e.preventDefault();
-              openUrl(
-                `https://billing.stripe.com/p/login/3cs6pT8Qbd846yc9AA?email=${encodeURIComponent(
-                  settings.user?.email || ""
-                )}`
-              );
-            }}
-          >
-            manage subscription
-          </a>,
-        ]
-        : [
-          "unlimited screenpipe cloud",
-          "priority support",
-          isAnnual ? "17% discount applied" : "switch to annual for 17% off",
-        ],
-      url: isAnnual
-        ? "https://buy.stripe.com/eVadRzfOCgAi5W0fZu" +
-        `?client_reference_id=${clientRefId}`
-        : "https://buy.stripe.com/7sIdRzbym4RA98c7sX" +
-        `?client_reference_id=${clientRefId}`,
-    },
-    {
-      title: "enterprise",
-      price: "book a call",
-      features: [
-        "enterprise screen search engine",
-        "dedicated support",
-        "consulting",
-        "custom features",
-      ],
-      url: "https://cal.com/louis030195/screenpipe-for-businesses",
-    },
-  ];
-
-  const handleConnectStripe = async () => {
-    setIsConnectingStripe(true);
-    try {
-      // const host = `${BASE_URL}/api/dev-stripe`;
-      const host = `https://screenpi.pe/api/dev/stripe-connect`;
-      const response = await fetch(host, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${settings.user?.token}`,
-        },
-      });
-
-      const { url } = await response.json();
-      await openUrl(url);
-    } catch (error) {
-      console.warn("failed to connect stripe", error);
-      toast({
-        title: "failed to connect stripe",
-        description: "please try again later",
-        variant: "destructive",
-      });
-    } finally {
-      setIsConnectingStripe(false);
-    }
+  // 格式化日期显示
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "未知";
+    return new Date(dateString).toLocaleString();
   };
 
-  const updateProfile = async (updates: Partial<typeof settings.user>) => {
-    if (!settings.user?.token) return;
-
-    try {
-      const response = await fetch(
-        "https://screenpi.pe/api/plugins/dev-profile",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${settings.user.api_key}`,
-          },
-          body: JSON.stringify(updates),
-        }
-      );
-
-      if (!response.ok) throw new Error("failed to update profile");
-    } catch (error) {
-      console.error("failed to update profile:", error);
+  // 复制令牌到剪贴板
+  const copyTokenToClipboard = () => {
+    if (settings.user?.token) {
+      navigator.clipboard.writeText(settings.user.token);
       toast({
-        title: "update failed",
-        description: "couldn't save your profile changes",
-        variant: "destructive",
+        title: "已复制",
+        description: "令牌已复制到剪贴板",
       });
     }
   };
-
-  // Initialize form only once when user data first loads
-  useEffect(() => {
-    if (
-      settings.user &&
-      !profileForm.bio &&
-      !profileForm.github_username &&
-      !profileForm.website &&
-      !profileForm.contact
-    ) {
-      setProfileForm({
-        bio: settings.user.bio || "",
-        github_username: settings.user.github_username || "",
-        website: settings.user.website || "",
-        contact: settings.user.contact || "",
-      });
-    }
-  }, [settings.user]); // Only run when settings.user changes
 
   return (
-    <div className="w-full space-y-6 py-4">
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold">account settings</h1>
-          {settings.user?.token ? (
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <span className="inline-flex h-2 w-2 rounded-full bg-green-500" />
-              logged in as {settings.user.email}
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <span className="inline-flex h-2 w-2 rounded-full bg-yellow-500" />
-              not logged in - some features will be limited
-            </p>
-          )}
-        </div>
-        <div className="flex gap-2">
-          {settings.user?.token ? (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => openUrl("https://accounts.screenpi.pe/user")}
-                className="hover:bg-secondary/80"
-              >
-                manage account <UserCog className="w-4 h-4 ml-2" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  updateSettings({ user: { token: undefined } });
-                  toast({
-                    title: "logged out",
-                    description: "you have been logged out",
-                  });
-                }}
-                className="hover:bg-secondary/80"
-              >
-                logout <ExternalLinkIcon className="w-4 h-4 ml-2" />
-              </Button>
-            </>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => openUrl("https://screenpi.pe/login")}
-              className="hover:bg-secondary/80"
-            >
-              login <ExternalLinkIcon className="w-4 h-4 ml-2" />
-            </Button>
-          )}
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium">账户信息</h3>
+        <p className="text-sm text-muted-foreground">
+          管理您的账户信息和设备
+        </p>
       </div>
-
-      <div className="space-y-8">
-        <div className="space-y-6">
-          <div className="grid gap-4">
-            <div className="space-y-6">
-              <h4 className="text-lg font-medium">plans</h4>
-
-              <PricingToggle isAnnual={isAnnual} onToggle={setIsAnnual} />
-
-              <div className="flex flex-col gap-4">
-                {plans.map((plan) => (
-                  <PlanCard
-                    key={plan.title}
-                    title={plan.title}
-                    price={plan.price}
-                    features={plan.features}
-                    onSelect={async () => {
-                      if (plan.title.toLowerCase() === "enterprise") {
-                        posthog.capture("enterprise_plan_selected");
-                        openUrl(plan.url);
-                        return;
-                      }
-
-                      if (!settings.user?.id) {
-                        toast({
-                          title: "not logged in",
-                          description: "please login first to subscribe",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-                      if (!settings.user?.cloud_subscribed) {
-                        posthog.capture("cloud_plan_selected");
-                        openUrl(plan.url);
-                      }
-                    }}
-                  />
-                ))}
+      
+      <Separator />
+      
+      {/* 用户基本信息 */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-4">
+          <div className="h-16 w-16 rounded-full overflow-hidden">
+            {settings.user?.avatar ? (
+              <img 
+                src={settings.user.avatar} 
+                alt={settings.user.name} 
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+                <UserCog className="h-8 w-8 text-primary/40" />
               </div>
-            </div>
+            )}
+          </div>
+          <div>
+            <h4 className="text-xl font-medium">{settings.user?.name || "未知用户"}</h4>
+            <p className="text-sm text-muted-foreground">{settings.user?.email || "无邮箱"}</p>
           </div>
         </div>
-
-        {settings.user?.token && (
-          <>
-            <Separator className="my-6" />
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-1.5">
-                <h4 className="text-lg font-medium">developer access</h4>
-                <p className="text-sm text-muted-foreground">
-                  get api key to start building pipes
-                </p>
-              </div>
-            </div>
-
-            <div className="p-5 border border-border/50 rounded-lg bg-background/50 hover:bg-background/80 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 flex items-center justify-center bg-gray-900/10 rounded-md">
-                    <Key className="w-4 h-4 text-gray-900/60" />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <div className="text-sm font-medium">api key</div>
-                      {settings.user?.api_key && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-4 w-4 hover:bg-transparent"
-                          onClick={() => setShowApiKey(!showApiKey)}
-                        >
-                          {showApiKey ? (
-                            <EyeOff className="h-3 w-3" />
-                          ) : (
-                            <Eye className="h-3 w-3" />
-                          )}
-                        </Button>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>用户ID</Label>
+            <div className="text-sm text-muted-foreground truncate">{settings.user?.id || "未知"}</div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>创建时间</Label>
+            <div className="text-sm text-muted-foreground">{formatDate(settings.user?.created_at)}</div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>最后登录时间</Label>
+            <div className="text-sm text-muted-foreground">{formatDate(settings.user?.last_login_at)}</div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>最后登录IP</Label>
+            <div className="text-sm text-muted-foreground">{settings.user?.last_login_ip || "未知"}</div>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>认证令牌</Label>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowToken(!showToken)}
+              className="h-8 px-2"
+            >
+              {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
+          <div className="relative">
+            <Input 
+              value={showToken ? settings.user?.token || "" : "••••••••••••••••••••••••••"}
+              readOnly
+              className="pr-20"
+            />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="absolute right-0 top-0 h-full px-3"
+              onClick={copyTokenToClipboard}
+            >
+              复制
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      <Separator />
+      
+      {/* 设备信息 */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">设备信息</h3>
+        
+        {settings.user?.devices && settings.user.devices.length > 0 ? (
+          <div className="space-y-4">
+            {settings.user.devices.map((device) => (
+              <Card key={device.id} className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h4 className="font-medium">{device.name}</h4>
+                      {device.is_current && (
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full dark:bg-green-800/20 dark:text-green-400">
+                          当前设备
+                        </span>
                       )}
                     </div>
-                    {settings.user?.api_key ? (
-                      <p className="text-xs font-mono text-muted-foreground">
-                        {showApiKey
-                          ? settings.user.api_key
-                          : settings.user.api_key.replace(/./g, "*")}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        no api key yet - generate one to start building
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {settings.user?.api_key ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="h-9"
-                    onClick={() => {
-                      navigator.clipboard.writeText(settings.user.api_key!);
-                      toast({
-                        title: "copied to clipboard",
-                        description:
-                          "your api key has been copied to your clipboard",
-                      });
-                    }}
-                  >
-                    copy
-                  </Button>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="h-9"
-                    onClick={async () => {
-                      try {
-                        const response = await fetch(
-                          "https://screenpi.pe/api/dev/create",
-                          {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${settings.user?.token}`,
-                            },
-                          }
-                        );
-
-                        if (!response.ok)
-                          throw new Error("failed to generate api key");
-
-                        const { api_key } = await response.json();
-                        if (settings.user) {
-                          const updatedUser = { ...settings.user, api_key };
-                          updateSettings({ user: updatedUser });
-                          toast({
-                            title: "api key generated",
-                            description: "you can now start building pipes",
-                          });
-                        }
-                      } catch (error) {
-                        console.error("failed to generate api key:", error);
-                        toast({
-                          title: "generation failed",
-                          description: "couldn't generate api key",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
-                  >
-                    generate
-                  </Button>
-                )}
-              </div>
-            </div>
-            <div className="p-5 border border-border/50 rounded-lg bg-background/50 hover:bg-background/80 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 flex items-center justify-center bg-gray-900/10 rounded-md">
-                    <BookOpen className="w-4 h-4 text-gray-900/60" />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium">documentation</div>
-                    <p className="text-xs text-muted-foreground">
-                      learn how to build and publish custom pipes
-                    </p>
-                  </div>
-                </div>
-                <a
-                  href="https://docs.screenpi.pe/docs/plugins"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors rounded-md bg-secondary hover:bg-secondary/80"
-                >
-                  read docs
-                  <ArrowUpRight className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-            <div className="p-5 border border-border/50 rounded-lg bg-background/50 hover:bg-background/80 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 flex items-center justify-center bg-[#635BFF]/10 rounded-md">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      className="rounded-md"
-                      src="https://images.stripeassets.com/fzn2n1nzq965/HTTOloNPhisV9P4hlMPNA/cacf1bb88b9fc492dfad34378d844280/Stripe_icon_-_square.svg?q=80&w=1082"
-                      alt=""
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium flex items-center gap-2">
-                      stripe connect
-                      {settings.user?.stripe_connected &&
-                        settings.user?.stripe_account_status && (
-                          <div
-                            className={cn(
-                              "px-2 py-0.5 text-xs rounded-full",
-                              settings.user.stripe_account_status === "pending"
-                                ? "bg-yellow-500/10 text-yellow-500"
-                                : "bg-green-500/10 text-green-500"
-                            )}
-                            title={
-                              settings.user.stripe_account_status === "pending"
-                                ? "go to stripe and complete your account verification (bank account, id verification...)"
-                                : "your stripe account is fully verified and you can start receiving earnings from your pipes"
-                            }
-                          >
-                            {settings.user.stripe_account_status}
-                          </div>
-                        )}
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {device.os} {device.os_version}
+                      {device.browser && ` • ${device.browser} ${device.browser_version || ""}`}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      receive earnings from your pipes (
-                      <a
-                        href="https://discord.gg/dU9EBuw7Uq"
-                        className="underline hover:text-primary"
-                        target="_blank"
-                      >
-                        dm @louis030195
-                      </a>{" "}
-                      for any questions)
-                    </p>
-                  </div>
-                </div>
-                {settings.user?.stripe_connected ? (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="h-9"
-                      onClick={() => openUrl("https://dashboard.stripe.com/")}
-                    >
-                      manage
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9"
-                      onClick={() => {
-                        if (settings.user) {
-                          const updatedUser = {
-                            ...settings.user,
-                            stripe_connected: false,
-                          };
-                          updateSettings({ user: updatedUser });
-                          toast({
-                            title: "stripe disconnected",
-                            description:
-                              "your stripe account has been disconnected",
-                          });
-                        }
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleConnectStripe}
-                    className="h-9"
-                    disabled={isConnectingStripe || !settings.user?.id}
-                  >
-                    {isConnectingStripe ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      "connect"
+                    <div className="text-xs text-muted-foreground mt-1">
+                      最后活跃: {formatDate(device.last_active_at)}
+                    </div>
+                    {device.ip_address && (
+                      <div className="text-xs text-muted-foreground">
+                        IP: {device.ip_address}
+                      </div>
                     )}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-
-        {settings.user?.api_key && (
-          <>
-            <Separator className="my-6" />
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-1.5">
-                <h4 className="text-lg font-medium">developer profile</h4>
-                <p className="text-sm text-muted-foreground">
-                  customize your public developer profile, this will help us
-                  approve your pipe faster and help you get more users
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="bio">bio</Label>
-                  <Textarea
-                    id="bio"
-                    placeholder="tell us about yourself..."
-                    className="resize-none"
-                    rows={3}
-                    value={profileForm.bio}
-                    disabled={!settings.user?.api_key}
-                    onChange={(e) =>
-                      setProfileForm((prev) => ({
-                        ...prev,
-                        bio: e.target.value,
-                      }))
-                    }
-                    autoCorrect="off"
-                    autoComplete="off"
-                    autoCapitalize="off"
-                  />
+                  </div>
+                  
+                  {!device.is_current && (
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="github">github username</Label>
-                  <Input
-                    id="github"
-                    placeholder="username"
-                    disabled={!settings.user?.api_key}
-                    value={profileForm.github_username}
-                    onChange={(e) =>
-                      setProfileForm((prev) => ({
-                        ...prev,
-                        github_username: e.target.value,
-                      }))
-                    }
-                    autoCorrect="off"
-                    autoComplete="off"
-                    autoCapitalize="off"
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="website">website</Label>
-                  <Input
-                    id="website"
-                    type="url"
-                    placeholder="https://..."
-                    value={profileForm.website}
-                    disabled={!settings.user?.api_key}
-                    onChange={(e) =>
-                      setProfileForm((prev) => ({
-                        ...prev,
-                        website: e.target.value,
-                      }))
-                    }
-                    autoCorrect="off"
-                    autoComplete="off"
-                    autoCapitalize="off"
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="contact">additional contact</Label>
-                  <Input
-                    id="contact"
-                    placeholder="discord, twitter, etc..."
-                    value={profileForm.contact}
-                    disabled={!settings.user?.api_key}
-                    onChange={(e) =>
-                      setProfileForm((prev) => ({
-                        ...prev,
-                        contact: e.target.value,
-                      }))
-                    }
-                    autoCorrect="off"
-                    autoComplete="off"
-                    autoCapitalize="off"
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    className="w-full"
-                    disabled={!settings.user?.api_key}
-                    onClick={async () => {
-                      if (!settings.user) return;
-
-                      await updateProfile(profileForm);
-
-                      // Update the main settings after successful profile update
-                      if (settings.user) {
-                        const updatedUser = {
-                          ...settings.user,
-                          ...profileForm,
-                        };
-                        updateSettings({ user: updatedUser });
-                      }
-
-                      toast({
-                        title: "profile updated",
-                        description: "your developer profile has been saved",
-                      });
-                    }}
-                  >
-                    save changes
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center p-6 border rounded-lg bg-muted/10">
+            <p className="text-muted-foreground">没有设备信息</p>
+          </div>
         )}
       </div>
     </div>

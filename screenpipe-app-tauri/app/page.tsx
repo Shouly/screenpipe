@@ -61,10 +61,21 @@ export default function Home() {
           if (url.includes("api_key=")) {
             const apiKey = parsedUrl.searchParams.get("api_key");
             if (apiKey) {
-              updateSettings({ user: { token: apiKey } });
+              // 创建一个包含必填字段的用户对象
+              const currentDate = new Date().toISOString();
+              const mockUser = {
+                id: "api-key-user-" + Date.now(),
+                email: "api-user@example.com",
+                name: "API用户",
+                token: apiKey,
+                last_login_at: currentDate,
+                last_login_ip: "127.0.0.1"
+              };
+              
+              updateSettings({ user: mockUser });
               toast({
-                title: "logged in!",
-                description: "you have been logged in",
+                title: "登录成功",
+                description: "您已通过API密钥登录",
               });
             }
           }

@@ -281,9 +281,7 @@ const AISection = () => {
             warningText={
               !settings.user
                 ? "login required"
-                : !settings.user?.credits?.amount
-                  ? "requires credits"
-                  : undefined
+                : undefined
             }
           />
 
