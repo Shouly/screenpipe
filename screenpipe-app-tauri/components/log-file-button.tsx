@@ -1,37 +1,29 @@
-import { toast, useToast } from "./ui/use-toast";
+import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
+import { cn } from "@/lib/utils";
+import { Toolbar, ToolbarContent, ToolbarItem } from "@patternfly/react-core";
+import { LogViewer, LogViewerSearch } from "@patternfly/react-log-viewer";
+import { invoke } from "@tauri-apps/api/core";
+import { readTextFile } from "@tauri-apps/plugin-fs";
+import { open } from "@tauri-apps/plugin-shell";
+import { AppWindow, Copy, FileText, Upload } from "lucide-react";
+import { useState } from "react";
+import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { ScrollArea } from "./ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { Button } from "./ui/button";
-import { FileText, Copy, AppWindow, Loader, X, Upload } from "lucide-react";
-import { readTextFile } from "@tauri-apps/plugin-fs";
-import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
-import { cn } from "@/lib/utils";
-import { useSettings } from "@/lib/hooks/use-settings";
-import {
-  Dialog,
-  DialogHeader,
-  DialogTitle,
-  DialogContent,
-  DialogDescription,
-} from "./ui/dialog";
-import { useState, useEffect } from "react";
-import { ScrollArea } from "./ui/scroll-area";
-import { invoke } from "@tauri-apps/api/core";
-import React from "react";
-import { LogViewer, LogViewerSearch } from "@patternfly/react-log-viewer";
-import { Toolbar, ToolbarContent, ToolbarItem } from "@patternfly/react-core";
-import { open } from "@tauri-apps/plugin-shell";
-import { getVersion } from "@tauri-apps/api/app";
-import {
-  version as osVersion,
-  platform as osPlatform,
-} from "@tauri-apps/plugin-os";
-import { ShareLogsButton } from './share-logs-button'
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { toast, useToast } from "./ui/use-toast";
 
 const LogContent = ({
   content,
@@ -203,7 +195,9 @@ export const LogFileButton = ({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-100 rounded-2xl">
-                    <ShareLogsButton />
+                    <div className="p-4 text-center">
+                      <p>日志发送功能已移除</p>
+                    </div>
                   </PopoverContent>
                 </Popover>
               </div>

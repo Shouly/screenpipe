@@ -1,57 +1,43 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { Settings } from "@/components/settings";
 import HealthStatus from "@/components/screenpipe-status";
+import { Settings } from "@/components/settings";
+import { Button } from "@/components/ui/button";
 
-import React from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuGroup,
-} from "@/components/ui/dropdown-menu";
-import {
-  MessageSquare,
-  Heart,
-  Bell,
-  Play,
-  Folder,
-  Book,
-  User,
-  Settings2,
-  Upload,
-  Mail,
-  MoreHorizontal,
-} from "lucide-react";
-import { open } from "@tauri-apps/plugin-shell";
 import {
   InboxMessageAction,
   InboxMessages,
   Message,
 } from "@/components/inbox-messages";
-import { useState, useEffect } from "react";
-import { useSettings } from "@/lib/hooks/use-settings";
-import { useProfiles } from "@/lib/hooks/use-profiles";
-import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
-import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useChangelogDialog } from "@/lib/hooks/use-changelog-dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { ShareLogsButton } from "./share-logs-button";
-import localforage from "localforage";
+import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
 import { listen } from "@tauri-apps/api/event";
+import { open } from "@tauri-apps/plugin-shell";
+import localforage from "localforage";
+import {
+  Bell,
+  Book,
+  Folder,
+  Heart,
+  Settings2,
+  User
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Header() {
   const [showInbox, setShowInbox] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const { settings, updateSettings } = useSettings();
   const { setIsOpen: setSettingsOpen } = useSettingsDialog();
-  const { open: openStatusDialog } = useStatusDialog();
   const { setShowChangelogDialog } = useChangelogDialog();
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   useEffect(() => {
     const loadMessages = async () => {
@@ -121,17 +107,6 @@ export default function Header() {
         </div>
       </div>
       <div className="flex space-x-4 absolute top-4 right-4">
-        <Popover open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline">
-              <Mail className="h-3.5 w-3.5 mr-2" />
-              feedback
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-100 rounded-2xl" >
-            <ShareLogsButton showShareLink={false} onComplete={() => setIsFeedbackOpen(false)} />
-          </PopoverContent>
-        </Popover>
         <HealthStatus className="mt-3 cursor-pointer" />
         <Settings />
 
