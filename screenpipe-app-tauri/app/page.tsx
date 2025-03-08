@@ -33,16 +33,16 @@ export default function Home() {
 
   // 检查用户是否已登录，如果未登录则重定向到登录页面
   useEffect(() => {
-    if (!settings.user?.token) {
+    if (!settings.authToken) {
       router.push("/login");
     }
-  }, [settings.user?.token, router]);
+  }, [settings.authToken, router]);
 
   useEffect(() => {
-    if (settings.user?.token) {
-      loadUser(settings.user.token);
+    if (settings.authToken) {
+      loadUser(settings.authToken);
     }
-  }, [settings.user?.token]);
+  }, [settings.authToken]);
 
   useEffect(() => {
     const getAudioDevices = async () => {
@@ -224,7 +224,7 @@ export default function Home() {
   }, []);
 
   // 如果用户未登录，不渲染主页内容
-  if (!settings.user?.token) {
+  if (!settings.authToken) {
     return null;
   }
 
