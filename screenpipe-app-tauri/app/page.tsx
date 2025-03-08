@@ -19,6 +19,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { settings, updateSettings, loadUser, reloadStore } = useSettings();
@@ -28,11 +29,20 @@ export default function Home() {
   const { open: openStatusDialog } = useStatusDialog();
   const { setIsOpen: setSettingsOpen } = useSettingsDialog();
   const isProcessingRef = React.useRef(false);
+  const router = useRouter();
+
+  // 检查用户是否已登录，如果未登录则重定向到登录页面
+  useEffect(() => {
+    if (!settings.user?.token) {
+      router.push("/login");
+    }
+  }, [settings.user?.token, router]);
+
   useEffect(() => {
     if (settings.user?.token) {
       loadUser(settings.user.token);
     }
-  }, [settings.user.token]);
+  }, [settings.user?.token]);
 
   useEffect(() => {
     const getAudioDevices = async () => {
@@ -201,6 +211,11 @@ export default function Home() {
       unlisten.then((unlistenFn) => unlistenFn());
     };
   }, []);
+
+  // 如果用户未登录，不渲染主页内容
+  if (!settings.user?.token) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col items-center flex-1 max-w-screen-2xl mx-auto relative">

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useChangelogDialog } from "@/lib/hooks/use-changelog-dialog";
 import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
+import { useSettings } from "@/lib/hooks/use-settings";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-shell";
 import localforage from "localforage";
@@ -27,14 +28,20 @@ import {
   Book,
   Folder,
   Heart,
+  LogOut,
   Settings2,
   User
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Header() {
   const [showInbox, setShowInbox] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const { updateSettings, settings } = useSettings();
+  const { toast } = useToast();
+  const router = useRouter();
 
   const { setIsOpen: setSettingsOpen } = useSettingsDialog();
   const { setShowChangelogDialog } = useChangelogDialog();
@@ -99,6 +106,15 @@ export default function Header() {
     await localforage.setItem("inboxMessages", []);
   };
 
+  const handleLogout = () => {
+    updateSettings({ user: { token: "" } });
+    toast({
+      title: "已登出",
+      description: "您已成功登出ScreenPipe",
+    });
+    router.push("/login");
+  };
+
   return (
     <div>
       <div className="relative z-[-1] flex flex-col items-center">
@@ -131,7 +147,12 @@ export default function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="mr-4" align="end">
-            <DropdownMenuLabel>account</DropdownMenuLabel>
+            <DropdownMenuLabel>账户</DropdownMenuLabel>
+            {settings.user?.email && (
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                {settings.user.email}
+              </DropdownMenuLabel>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem
@@ -142,7 +163,7 @@ export default function Header() {
                 className="cursor-pointer p-1.5"
               >
                 <Settings2 className="mr-2 h-4 w-4" />
-                <span>settings</span>
+                <span>设置</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -152,7 +173,7 @@ export default function Header() {
                 onClick={() => open("https://docs.screenpi.pe")}
               >
                 <Book className="mr-2 h-4 w-4" />
-                <span>check docs</span>
+                <span>查看文档</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer"
@@ -163,7 +184,7 @@ export default function Header() {
                 }
               >
                 <Heart className="mr-2 h-4 w-4" />
-                <span>support us</span>
+                <span>支持我们</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -173,7 +194,14 @@ export default function Header() {
                 onClick={() => setShowChangelogDialog(true)}
               >
                 <Folder className="mr-2 h-4 w-4" />
-                <span>show changelog</span>
+                <span>显示更新日志</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer text-red-500 hover:text-red-600"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>登出</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
