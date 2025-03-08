@@ -75,14 +75,14 @@ async def create_index_templates():
                                         "timestamp": {"type": "date"},
                                         "name": {"type": "keyword"},
                                         "browser_url": {"type": "keyword"},
+                                        "app_name": {"type": "keyword"},
+                                        "window_name": {"type": "keyword"},
+                                        "focused": {"type": "boolean"},
                                         "ocr_text": {
                                             "properties": {
                                                 "text": {"type": "text", "analyzer": "standard"},
                                                 "text_json": {"type": "text", "index": False},
-                                                "app_name": {"type": "keyword"},
                                                 "ocr_engine": {"type": "keyword"},
-                                                "window_name": {"type": "keyword"},
-                                                "focused": {"type": "boolean"},
                                                 "text_length": {"type": "integer"}
                                             }
                                         }
