@@ -6,8 +6,6 @@ import React, { useEffect, useState } from "react";
 import NotificationHandler from "@/components/notification-handler";
 import Header from "@/components/header";
 import { useToast } from "@/components/ui/use-toast";
-import Onboarding from "@/components/onboarding";
-import { useOnboarding } from "@/lib/hooks/use-onboarding";
 import { ChangelogDialog } from "@/components/changelog-dialog";
 import { BreakingChangesInstructionsDialog } from "@/components/breaking-changes-instructions-dialog";
 import { useChangelogDialog } from "@/lib/hooks/use-changelog-dialog";
@@ -28,7 +26,6 @@ export default function Home() {
   const { settings, updateSettings, loadUser, reloadStore } = useSettings();
   const { setActiveProfile } = useProfiles();
   const { toast } = useToast();
-  const { showOnboarding, setShowOnboarding } = useOnboarding();
   const { setShowChangelogDialog } = useChangelogDialog();
   const { open: openStatusDialog } = useStatusDialog();
   const { setIsOpen: setSettingsOpen } = useSettingsDialog();
@@ -70,10 +67,6 @@ export default function Home() {
 
           if (url.includes("changelog")) {
             setShowChangelogDialog(true);
-          }
-
-          if (url.includes("onboarding")) {
-            setShowOnboarding(true);
           }
 
           if (url.includes("status")) {
@@ -201,19 +194,6 @@ export default function Home() {
   }, [setSettingsOpen]);
 
   useEffect(() => {
-    const checkScreenPermissionRestart = async () => {
-      const restartPending = await localforage.getItem(
-        "screenPermissionRestartPending"
-      );
-      if (restartPending) {
-        setShowOnboarding(true);
-      }
-    };
-
-    checkScreenPermissionRestart();
-  }, [setShowOnboarding]);
-
-  useEffect(() => {
     const unlisten = listen("cli-login", async (event) => {
       console.log("received cli-login event:", event);
       await reloadStore();
@@ -229,18 +209,14 @@ export default function Home() {
       <LoginDialog />
 
       <NotificationHandler />
-      {showOnboarding ? (
-        <Onboarding />
-      ) : (
-        <>
-          <ChangelogDialog />
-          {/* <BreakingChangesInstructionsDialog /> */}
-          <Header />
-          <div className=" w-full">
-            <PipeStore />
-          </div>
-        </>
-      )}
+      <>
+        <ChangelogDialog />
+        {/* <BreakingChangesInstructionsDialog /> */}
+        <Header />
+        <div className=" w-full">
+          <PipeStore />
+        </div>
+      </>
     </div>
   );
 }

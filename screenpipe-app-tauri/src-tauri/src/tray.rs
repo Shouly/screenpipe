@@ -151,9 +151,6 @@ fn handle_menu_event(app_handle: &AppHandle, event: tauri::menu::MenuEvent) {
         "quick_start" => {
             // focus on the main window
             let _ = app_handle.get_webview_window("main").unwrap().set_focus();
-            let _ = app_handle
-                .opener()
-                .open_url("screenpipe://onboarding", None::<&str>);
         }
         "settings" => {
             let _ = app_handle.get_webview_window("main").unwrap().set_focus();

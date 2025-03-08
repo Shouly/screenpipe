@@ -24,6 +24,7 @@ import {
   Settings2,
   Upload,
   Mail,
+  MoreHorizontal,
 } from "lucide-react";
 import { open } from "@tauri-apps/plugin-shell";
 import {
@@ -32,17 +33,25 @@ import {
   Message,
 } from "@/components/inbox-messages";
 import { useState, useEffect } from "react";
-import { useOnboarding } from "@/lib/hooks/use-onboarding";
-import { listen } from "@tauri-apps/api/event";
-import localforage from "localforage";
-import { useChangelogDialog } from "@/lib/hooks/use-changelog-dialog";
+import { useSettings } from "@/lib/hooks/use-settings";
+import { useProfiles } from "@/lib/hooks/use-profiles";
+import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
 import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
+import { useChangelogDialog } from "@/lib/hooks/use-changelog-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { ShareLogsButton } from "./share-logs-button";
+import localforage from "localforage";
+import { listen } from "@tauri-apps/api/event";
 
 export default function Header() {
   const [showInbox, setShowInbox] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+
+  const { settings, updateSettings } = useSettings();
+  const { setIsOpen: setSettingsOpen } = useSettingsDialog();
+  const { open: openStatusDialog } = useStatusDialog();
+  const { setShowChangelogDialog } = useChangelogDialog();
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   useEffect(() => {
     const loadMessages = async () => {
@@ -103,11 +112,6 @@ export default function Header() {
     setMessages([]);
     await localforage.setItem("inboxMessages", []);
   };
-
-  const { setShowOnboarding } = useOnboarding();
-  const { setShowChangelogDialog } = useChangelogDialog();
-  const { setIsOpen: setSettingsOpen } = useSettingsDialog();
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   return (
     <div>
@@ -189,13 +193,6 @@ export default function Header() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => setShowOnboarding(true)}
-              >
-                <Play className="mr-2 h-4 w-4" />
-                <span>show onboarding</span>
-              </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer"
                 onClick={() => setShowChangelogDialog(true)}
