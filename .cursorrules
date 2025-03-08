@@ -11,4 +11,4 @@ Rules:
 - Make sure to escape html thing like quotes etc properly. Only when necessary
 - When writing react or html code make sure to use thing like &apos; instead of ". Only when necessary (e.g inside quote themselves)
 - When I ask SQLite database related stuff, keep in mind my db is in $HOME/.screenpipe/db.sqlite and mp4 files in $HOME/.screenpipe/*.mp4
-
+- 中文回答问题
