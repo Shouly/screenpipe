@@ -46,6 +46,7 @@ import {
 } from "@/lib/hooks/use-settings";
 import { useToast } from "@/components/ui/use-toast";
 import { useHealthCheck } from "@/lib/hooks/use-health-check";
+import { useAuth } from "@/lib/hooks/use-auth";
 import { invoke } from "@tauri-apps/api/core";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -70,7 +71,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useSqlAutocomplete } from "@/lib/hooks/use-sql-autocomplete";
 import * as Sentry from "@sentry/react";
 import { defaultOptions } from "tauri-plugin-sentry-api";
-import { useLoginDialog } from "../login-dialog";
 
 type PermissionsStatus = {
   screenRecording: string;
@@ -139,7 +139,7 @@ export function RecordingSettings() {
   const isDisabled = health?.status_code === 500;
   const [isMacOS, setIsMacOS] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
-  const { checkLogin } = useLoginDialog();
+  const { checkLogin } = useAuth();
 
   // Add new state to track if settings have changed
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -349,18 +349,6 @@ export function RecordingSettings() {
     const isLoggedIn = checkLogin(settings.user);
     // If trying to use cloud but not logged in
     if (value === "screenpipe-cloud" && !isLoggedIn) {
-      return;
-    }
-
-    // If trying to use cloud but not subscribed
-    if (value === "screenpipe-cloud" && !settings.user?.cloud_subscribed) {
-      const clientRefId = `${
-        settings.user?.id
-      }&customer_email=${encodeURIComponent(settings.user?.email ?? "")}`;
-      openUrl(
-        `https://buy.stripe.com/7sIdRzbym4RA98c7sX?client_reference_id=${clientRefId}`
-      );
-      // Revert back to previous value in the Select component
       return;
     }
 
@@ -1012,19 +1000,6 @@ export function RecordingSettings() {
                       <SelectValue placeholder="select realtime transcription engine" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="screenpipe-cloud">
-                        <div className="flex items-center justify-between w-full space-x-2">
-                          <span>screenpipe cloud</span>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary">cloud</Badge>
-                            {!settings.user?.cloud_subscribed && (
-                              <Badge variant="outline" className="text-xs">
-                                get screenpipe cloud
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </SelectItem>
                       <SelectItem value="deepgram">
                         <div className="flex items-center justify-between w-full space-x-2">
                           <span>deepgram</span>
@@ -1052,19 +1027,6 @@ export function RecordingSettings() {
                     <SelectValue placeholder="select audio transcription engine" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="screenpipe-cloud">
-                      <div className="flex items-center justify-between w-full space-x-2">
-                        <span>screenpipe cloud</span>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary">cloud</Badge>
-                          {!settings.user?.cloud_subscribed && (
-                            <Badge variant="outline" className="text-xs">
-                              get screenpipe cloud
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </SelectItem>
                     <SelectItem value="deepgram">
                       <div className="flex items-center justify-between w-full space-x-2">
                         <span>deepgram</span>

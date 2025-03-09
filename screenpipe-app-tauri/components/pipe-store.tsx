@@ -1,46 +1,39 @@
-import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Power, Search, Trash2, RefreshCw } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
-import { useHealthCheck } from "@/lib/hooks/use-health-check";
-import {
-  PipeApi,
-  PipeDownloadError,
-  PurchaseHistoryItem,
-} from "@/lib/api/store";
-import { open as openUrl } from "@tauri-apps/plugin-shell";
-import { listen } from "@tauri-apps/api/event";
-import { InstalledPipe, PipeWithStatus } from "./pipe-store/types";
-import { PipeDetails } from "./pipe-store/pipe-details";
-import { AddPipeForm } from "./pipe-store/add-pipe-form";
-import { useSettings } from "@/lib/hooks/use-settings";
-import posthog from "posthog-js";
-import { Progress } from "./ui/progress";
-import { open } from "@tauri-apps/plugin-dialog";
-import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
-import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import localforage from "localforage";
-import { useLoginDialog } from "./login-dialog";
-import { PermissionButtons } from "./status/permission-buttons";
+import { toast } from "@/components/ui/use-toast";
+import {
+  PipeApi,
+  PipeDownloadError,
+  PurchaseHistoryItem,
+} from "@/lib/api/store";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { useHealthCheck } from "@/lib/hooks/use-health-check";
 import { usePlatform } from "@/lib/hooks/use-platform";
-import { invoke } from "@tauri-apps/api/core";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
+import { useSettings } from "@/lib/hooks/use-settings";
+import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
 import { cn } from "@/lib/utils";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
+import { open } from "@tauri-apps/plugin-dialog";
+import { open as openUrl } from "@tauri-apps/plugin-shell";
+import localforage from "localforage";
+import { Loader2, Power, RefreshCw, Search, Trash2 } from "lucide-react";
+import posthog from "posthog-js";
+import React, { useEffect, useState } from "react";
+import { AddPipeForm } from "./pipe-store/add-pipe-form";
+import { PipeDetails } from "./pipe-store/pipe-details";
+import { InstalledPipe, PipeWithStatus } from "./pipe-store/types";
+import { PermissionButtons } from "./status/permission-buttons";
+import { Progress } from "./ui/progress";
 
 const corePipes: string[] = [];
 
@@ -55,7 +48,7 @@ export const PipeStore: React.FC = () => {
   const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistoryItem[]>(
     []
   );
-  const { checkLogin } = useLoginDialog();
+  const { checkLogin } = useAuth();
   const { open: openStatusDialog } = useStatusDialog();
   const [loadingPurchases, setLoadingPurchases] = useState<Set<string>>(
     new Set()
@@ -374,10 +367,10 @@ export const PipeStore: React.FC = () => {
         prevPipes.map((p) =>
           p.id === pipe.id
             ? {
-                ...p,
-                is_installed: true,
-                is_installing: false,
-              }
+              ...p,
+              is_installed: true,
+              is_installing: false,
+            }
             : p
         )
       );
@@ -482,7 +475,7 @@ export const PipeStore: React.FC = () => {
       console.error("failed to reset pipes:", error);
       toast({
         title: "error resetting pipes",
-          description: `error: ${(error as Error).message}...}`,
+        description: `error: ${(error as Error).message}...}`,
         variant: "destructive",
       });
     } finally {
@@ -649,8 +642,7 @@ export const PipeStore: React.FC = () => {
       onComplete();
     } catch (error) {
       console.error(
-        `Failed to ${
-          pipe.installed_config?.enabled ? "disable" : "enable"
+        `Failed to ${pipe.installed_config?.enabled ? "disable" : "enable"
         } pipe:`,
         error
       );
@@ -810,7 +802,7 @@ export const PipeStore: React.FC = () => {
       if (!checkLogin(settings.user)) return;
 
       const currentVersion = pipe.installed_config?.version!;
-      const storeApi = await PipeApi.create(settings.user!.token!);
+      const storeApi = await PipeApi.create(settings.authToken!);
       const update = await storeApi.checkUpdate(pipe.id, currentVersion);
       if (!update.has_update) {
         toast({
@@ -946,7 +938,7 @@ export const PipeStore: React.FC = () => {
 
   useEffect(() => {
     fetchPurchaseHistory();
-  }, [settings.user.token]);
+  }, [settings.authToken]);
 
   useEffect(() => {
     fetchInstalledPipes();
@@ -961,7 +953,7 @@ export const PipeStore: React.FC = () => {
 
   useEffect(() => {
     const checkForUpdates = async () => {
-      if (!settings.user.token) {
+      if (!settings.authToken) {
         console.log("[pipe-update] Update check skipped: No user token");
         return;
       }
@@ -990,21 +982,21 @@ export const PipeStore: React.FC = () => {
         console.log("[pipe-update] No installed pipes to check");
         return;
       }
-            
+
       try {
         // Format pipes for batch update check
         const pluginsToCheck = installedPipes.map((pipe) => ({
           pipe_id: pipe.id,
           version: pipe.installed_config!.version!,
         }));
-        
+
         console.log("[pipe-update] Sending update check request:", pluginsToCheck);
-        
-        const storeApi = await PipeApi.create(settings.user.token);
+
+        const storeApi = await PipeApi.create(settings.authToken!);
         const updates = await storeApi.checkUpdates(pluginsToCheck);
-        
+
         console.log("[pipe-update] Update check response:", updates);
-        
+
         // Process updates
         for (const pipe of installedPipes) {
           const update = updates.results.find((u) => u.pipe_id === pipe.id);
@@ -1028,7 +1020,7 @@ export const PipeStore: React.FC = () => {
     const interval = setInterval(checkForUpdates, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [settings.user.token, pipes]);
+  }, [settings.authToken, pipes]);
 
   useEffect(() => {
     const setupDeepLink = async () => {
@@ -1191,7 +1183,7 @@ export const PipeStore: React.FC = () => {
           </TooltipProvider>
         </div>
       </div>
-      
+
       <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center">
         <div className="relative w-full md:w-1/2">
           <div className="relative">
@@ -1214,7 +1206,7 @@ export const PipeStore: React.FC = () => {
           />
         </div>
       </div>
-      
+
       <div className="flex-1 overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredPipes.map((pipe) => (
