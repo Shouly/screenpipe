@@ -277,8 +277,8 @@ export default function Home() {
     <main className="flex min-h-screen bg-background">
       <div className="flex w-full h-full">
         <Navigation activePage={activePage} onNavigate={handleNavigate} />
-        <div className="bg-muted flex-1 pt-2 pr-2 overflow-hidden ml-20">
-          <div className="w-full h-full bg-white rounded-xl overflow-y-auto canva-shadow">
+        <div className="bg-muted flex-1 pt-2 pr-2 ml-20 h-screen flex flex-col">
+          <div className="w-full flex-1 bg-white rounded-xl overflow-y-auto canva-shadow">
             {renderActivePage()}
           </div>
         </div>
