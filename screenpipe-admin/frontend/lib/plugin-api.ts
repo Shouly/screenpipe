@@ -80,7 +80,7 @@ export interface CreateVersionRequest {
  * @returns 插件列表
  */
 export async function getPlugins(): Promise<Plugin[]> {
-  const response = await api.get('/plugin/admin/plugins');
+  const response = await api.get('/admin/plugins');
   return response.data;
 }
 
@@ -90,7 +90,7 @@ export async function getPlugins(): Promise<Plugin[]> {
  * @returns 插件详情
  */
 export async function getPlugin(pluginId: number): Promise<Plugin> {
-  const response = await api.get(`/plugin/admin/plugins/${pluginId}`);
+  const response = await api.get(`/admin/plugins/${pluginId}`);
   return response.data;
 }
 
@@ -100,7 +100,7 @@ export async function getPlugin(pluginId: number): Promise<Plugin> {
  * @returns 创建的插件
  */
 export async function createPlugin(data: CreatePluginRequest): Promise<Plugin> {
-  const response = await api.post('/plugin/admin/plugins', data);
+  const response = await api.post('/admin/plugins', data);
   return response.data;
 }
 
@@ -111,7 +111,7 @@ export async function createPlugin(data: CreatePluginRequest): Promise<Plugin> {
  * @returns 更新后的插件
  */
 export async function updatePlugin(pluginId: number, data: UpdatePluginRequest): Promise<Plugin> {
-  const response = await api.put(`/plugin/admin/plugins/${pluginId}`, data);
+  const response = await api.put(`/admin/plugins/${pluginId}`, data);
   return response.data;
 }
 
@@ -120,7 +120,7 @@ export async function updatePlugin(pluginId: number, data: UpdatePluginRequest):
  * @param pluginId 插件ID
  */
 export async function deletePlugin(pluginId: number): Promise<void> {
-  await api.delete(`/plugin/admin/plugins/${pluginId}`);
+  await api.delete(`/admin/plugins/${pluginId}`);
 }
 
 /**
@@ -129,7 +129,7 @@ export async function deletePlugin(pluginId: number): Promise<void> {
  * @returns 版本列表
  */
 export async function getPluginVersions(pluginId: number): Promise<PluginVersion[]> {
-  const response = await api.get(`/plugin/admin/plugins/${pluginId}/versions`);
+  const response = await api.get(`/admin/plugins/${pluginId}/versions`);
   return response.data;
 }
 
@@ -157,7 +157,7 @@ export async function createPluginVersion(pluginId: number, data: CreateVersionR
   
   formData.append('zip_file', data.zip_file);
   
-  const response = await api.post(`/plugin/admin/plugins/${pluginId}/versions`, formData, {
+  const response = await api.post(`/admin/plugins/${pluginId}/versions`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -172,7 +172,7 @@ export async function createPluginVersion(pluginId: number, data: CreateVersionR
  * @param versionId 版本ID
  */
 export async function deletePluginVersion(pluginId: number, versionId: number): Promise<void> {
-  await api.delete(`/plugin/admin/plugins/${pluginId}/versions/${versionId}`);
+  await api.delete(`/admin/plugins/${pluginId}/versions/${versionId}`);
 }
 
 /**
@@ -182,5 +182,5 @@ export async function deletePluginVersion(pluginId: number, versionId: number): 
  * @returns 下载URL
  */
 export function getPluginDownloadUrl(pluginId: number, version: string): string {
-  return `${API_BASE_URL}/plugin/plugins/${pluginId}/versions/${version}/download`;
+  return `${API_BASE_URL}/plugins/${pluginId}/versions/${version}/download`;
 } 
