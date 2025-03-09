@@ -71,7 +71,11 @@ export default function Home() {
 
   useEffect(() => {
     if (settings.authToken) {
-      loadUser(settings.authToken);
+      loadUser(settings.authToken).catch(error => {
+        console.error("加载用户信息失败:", error);
+        // 认证失败时重定向到登录页面
+        router.push("/login");
+      });
     }
   }, [settings.authToken]);
 

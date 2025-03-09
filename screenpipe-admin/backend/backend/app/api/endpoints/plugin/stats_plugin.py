@@ -1,14 +1,14 @@
-from datetime import date, datetime, timedelta
+from datetime import date
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from fastapi import APIRouter, Depends, Path, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...db.mysql import get_db
-from ...models.api_models import (
-    PluginUsageLogCreate, PluginUsageLogResponse, 
+from ....db.mysql import get_db
+from ....models.api_models import (
+    PluginUsageLogCreate, PluginUsageLogResponse,
     PluginStatsResponse, PluginStatsSummary
 )
-from ...services.stats_service import StatsService
+from ....services.stats_service import StatsService
 
 router = APIRouter()
 
@@ -36,7 +36,7 @@ async def get_user_events(
 
 
 # 管理API端点
-@router.get("/admin/plugins/{plugin_id}/stats", response_model=List[PluginStatsResponse])
+@router.get("/plugins/{plugin_id}/stats", response_model=List[PluginStatsResponse])
 async def get_plugin_stats(
     plugin_id: int = Path(..., title="插件ID"),
     start_date: date = Query(..., title="开始日期"),
@@ -47,7 +47,7 @@ async def get_plugin_stats(
     return await StatsService.get_plugin_stats(db, plugin_id, start_date, end_date)
 
 
-@router.get("/admin/plugins/{plugin_id}/stats/summary", response_model=PluginStatsSummary)
+@router.get("/plugins/{plugin_id}/stats/summary", response_model=PluginStatsSummary)
 async def get_plugin_stats_summary(
     plugin_id: int = Path(..., title="插件ID"),
     days: int = Query(30, title="天数", ge=1, le=365),

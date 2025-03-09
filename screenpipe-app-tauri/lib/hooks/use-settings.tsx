@@ -445,6 +445,11 @@ export function useSettings() {
       });
     } catch (err) {
       console.error("failed to load user:", err);
+      // 当认证失败时，清除认证令牌和用户信息
+      setSettings({
+        user: undefined,
+        authToken: undefined
+      });
       throw err;
     }
   };
