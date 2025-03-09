@@ -8,8 +8,10 @@ import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
 import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
 import React, { useEffect, useState } from "react";
 
-import { LoginDialog } from "@/components/login-dialog";
+import HomeDashboard from "@/components/home-dashboard";
+import Navigation from "@/components/navigation";
 import { PipeStore } from "@/components/pipe-store";
+import { Settings } from "@/components/settings";
 import { PipeApi } from "@/lib/api";
 import { useProfiles } from "@/lib/hooks/use-profiles";
 import { invoke } from "@tauri-apps/api/core";
@@ -17,8 +19,6 @@ import { listen } from "@tauri-apps/api/event";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { useRouter } from "next/navigation";
-import Sidebar from "@/components/sidebar";
-import { Settings } from "@/components/settings";
 
 export default function Home() {
   const { settings, updateSettings, loadUser, reloadStore } = useSettings();
@@ -29,6 +29,7 @@ export default function Home() {
   const isProcessingRef = React.useRef(false);
   const router = useRouter();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [activePage, setActivePage] = useState<string>("home");
 
   // 在页面加载时从本地存储中恢复设置
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function Home() {
         setIsInitialized(true); // 即使失败也标记为已初始化，以便进行后续检查
       }
     };
-    
+
     loadSettings();
   }, []);
 
@@ -58,7 +59,7 @@ export default function Home() {
         hasAuthToken: !!settings.authToken,
         hasUser: !!settings.user
       });
-      
+
       if (!settings.authToken) {
         console.log("未找到认证令牌，重定向到登录页面");
         router.push("/login");
@@ -100,8 +101,8 @@ export default function Home() {
                 last_login_at: currentDate,
                 last_login_ip: "127.0.0.1"
               };
-              
-              updateSettings({ 
+
+              updateSettings({
                 user: mockUser,
                 authToken: apiKey
               });
@@ -251,26 +252,31 @@ export default function Home() {
     };
   }, []);
 
-  // 如果用户未登录，不渲染主页内容
-  if (!settings.authToken) {
-    return null;
-  }
+  // 处理导航切换
+  const handleNavigate = (page: string) => {
+    setActivePage(page);
+  };
+
+  // 渲染当前活动页面
+  const renderActivePage = () => {
+    switch (activePage) {
+      case "home":
+        return <HomeDashboard onNavigate={handleNavigate} />;
+      case "store":
+        return <PipeStore />;
+      default:
+        return <HomeDashboard onNavigate={handleNavigate} />;
+    }
+  };
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* 侧边栏 */}
-      <Sidebar />
-      
-      {/* 主内容区域 */}
+    <main className="flex min-h-screen">
+      <Navigation activePage={activePage} onNavigate={handleNavigate} />
       <div className="flex-1 overflow-auto">
-        <LoginDialog />
-        <NotificationHandler />
-        <Settings />
-        
-        <div className="p-4 md:p-6 max-w-screen-2xl mx-auto">
-          <PipeStore />
-        </div>
+        {renderActivePage()}
       </div>
-    </div>
+      <NotificationHandler />
+      <Settings />
+    </main>
   );
 }

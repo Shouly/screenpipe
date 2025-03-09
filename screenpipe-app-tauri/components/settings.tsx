@@ -5,6 +5,7 @@ import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
+  Activity,
   Brain,
   FolderInput,
   HardDrive,
@@ -28,6 +29,8 @@ import ShortcutSection from "./settings/shortcut-section";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent } from "./ui/dialog";
 import { Input } from "./ui/input";
+import HealthStatus from "./screenpipe-status";
+import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
 
 type SettingsSection =
   | "general"
@@ -36,13 +39,15 @@ type SettingsSection =
   | "recording"
   | "account"
   | "diskUsage"
-  | "dataImport";
+  | "dataImport"
+  | "status";
 
 export function Settings() {
   const { isOpen, setIsOpen: setSettingsOpen } = useSettingsDialog();
   const [activeSection, setActiveSection] = useState<SettingsSection>("account");
   const [searchQuery, setSearchQuery] = useState("");
   const { settings, updateSettings } = useSettings();
+  const { open: openStatusDialog } = useStatusDialog();
   const router = useRouter();
 
   const settingsSections = [
@@ -56,6 +61,12 @@ export function Settings() {
       id: "general",
       label: "通用",
       icon: <SettingsIcon className="h-4 w-4" />,
+      category: "应用"
+    },
+    {
+      id: "status",
+      label: "系统状态",
+      icon: <Activity className="h-4 w-4" />,
       category: "应用"
     },
     {
@@ -90,11 +101,11 @@ export function Settings() {
     },
   ];
 
-  const filteredSections = searchQuery
-    ? settingsSections.filter((section) =>
-      section.label.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    : settingsSections;
+  // 过滤设置项
+  const filteredSections = settingsSections.filter((section) => {
+    if (!searchQuery) return true;
+    return section.label.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   // 按类别分组
   const groupedSections = filteredSections.reduce((acc, section) => {
@@ -105,180 +116,158 @@ export function Settings() {
     return acc;
   }, {} as Record<string, typeof settingsSections>);
 
-  const renderSection = () => {
+  // 渲染当前活动的设置部分
+  const renderActiveSection = () => {
     switch (activeSection) {
-      case "general":
-        return <GeneralSettings />;
-      case "ai":
-        return <AISection />;
       case "account":
         return <AccountSection />;
-      case "recording":
-        return <RecordingSettings />;
+      case "general":
+        return <GeneralSettings />;
       case "shortcuts":
         return <ShortcutSection />;
+      case "recording":
+        return <RecordingSettings />;
+      case "ai":
+        return <AISection />;
       case "diskUsage":
         return <DiskUsage />;
       case "dataImport":
         return <DataImportSection />;
+      case "status":
+        return (
+          <div className="p-4">
+            <h2 className="text-xl font-semibold mb-4">系统状态</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              查看系统各组件的运行状态和诊断信息。
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                openStatusDialog();
+                setSettingsOpen(false);
+              }}
+              className="mb-6"
+            >
+              打开详细状态面板
+            </Button>
+            <div className="mt-4 border rounded-lg p-4">
+              <HealthStatus />
+            </div>
+          </div>
+        );
+      default:
+        return null;
     }
   };
 
-  // 获取当前活动部分的标题和描述
-  const getActiveSectionInfo = () => {
-    switch (activeSection) {
+  // 获取当前部分的标题和描述
+  const getSectionInfo = (section: SettingsSection) => {
+    switch (section) {
       case "account":
-        return { title: "账户信息", description: "查看您的账户信息" };
+        return { title: "账户", description: "管理您的账户信息" };
       case "general":
-        return { title: "通用设置", description: "管理应用的基本设置" };
-      case "ai":
-        return { title: "AI 设置", description: "配置AI相关功能" };
-      case "recording":
-        return { title: "录制设置", description: "管理屏幕录制选项" };
+        return { title: "通用设置", description: "应用的基本设置" };
       case "shortcuts":
-        return { title: "快捷键", description: "自定义应用快捷键" };
+        return { title: "快捷键", description: "自定义键盘快捷键" };
+      case "recording":
+        return { title: "录制设置", description: "配置录制选项" };
+      case "ai":
+        return { title: "AI 设置", description: "配置 AI 功能" };
       case "diskUsage":
-        return { title: "磁盘使用", description: "管理应用存储空间" };
+        return { title: "磁盘使用", description: "管理存储空间" };
       case "dataImport":
         return { title: "数据导入", description: "导入外部数据" };
+      case "status":
+        return { title: "系统状态", description: "查看系统状态" };
       default:
         return { title: "", description: "" };
     }
   };
 
-  // 登出功能
-  const handleLogout = () => {
-    updateSettings({
-      user: {
-        id: "",
-        email: "",
-        name: ""
-      },
-      authToken: ""
-    });
-    setSettingsOpen(false);
-    router.push("/login");
-  };
-
-  const activeSectionInfo = getActiveSectionInfo();
+  const { title, description } = getSectionInfo(activeSection);
 
   return (
-    <Dialog modal={true} open={isOpen} onOpenChange={setSettingsOpen}>
-      <DialogContent
-        className="max-w-[80vw] w-full max-h-[80vh] h-full overflow-hidden p-0 [&>button]:hidden rounded-xl border-none shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <motion.div
-          className="flex h-full bg-background"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-        >
+    <Dialog open={isOpen} onOpenChange={setSettingsOpen}>
+      <DialogContent className="max-w-5xl p-0 h-[85vh] overflow-hidden">
+        <div className="flex h-full">
           {/* 侧边栏 */}
-          <div className="w-52 border-r bg-muted/30 flex flex-col">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h2 className="text-xl font-bold">设置</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                onClick={() => setSettingsOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* 搜索框 */}
-            <div className="px-4 py-3">
+          <div className="w-64 border-r p-4 h-full overflow-y-auto">
+            <div className="mb-4">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="搜索设置..."
-                  className="pl-8 h-9 text-sm"
+                  className="pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                {searchQuery && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1 h-7 w-7"
-                    onClick={() => setSearchQuery("")}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                )}
               </div>
             </div>
 
-            {/* 设置导航 */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="space-y-6">
               {Object.entries(groupedSections).map(([category, sections]) => (
-                <div key={category} className="mb-4">
-                  <h3 className="text-xs font-medium text-muted-foreground px-4 py-2">{category}</h3>
-                  <div>
+                <div key={category}>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                    {category}
+                  </h3>
+                  <div className="space-y-1">
                     {sections.map((section) => (
-                      <motion.button
+                      <Button
                         key={section.id}
-                        onClick={() => setActiveSection(section.id as SettingsSection)}
+                        variant={activeSection === section.id ? "secondary" : "ghost"}
                         className={cn(
-                          "flex items-center w-full px-4 py-2 text-sm transition-colors",
+                          "w-full justify-start",
                           activeSection === section.id
-                            ? "bg-primary/10 text-primary font-medium"
-                            : "hover:bg-muted"
+                            ? "bg-accent text-accent-foreground"
+                            : ""
                         )}
-                        whileHover={{ x: 2 }}
-                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setActiveSection(section.id as SettingsSection)}
                       >
-                        <span className="flex items-center justify-center w-5 h-5 mr-3">
-                          {section.icon}
-                        </span>
-                        <span>{section.label}</span>
-                      </motion.button>
+                        {section.icon}
+                        <span className="ml-2">{section.label}</span>
+                      </Button>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* 登出按钮 */}
-            {settings.user?.id && (
-              <div className="p-4 border-t">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>登出</span>
-                </Button>
-              </div>
-            )}
+            <div className="absolute bottom-4 left-4">
+              <Button
+                variant="ghost"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 p-2"
+                onClick={() => {
+                  updateSettings({ authToken: "", user: undefined });
+                  setSettingsOpen(false);
+                  router.push("/login");
+                }}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                退出登录
+              </Button>
+            </div>
           </div>
 
-          {/* 内容区域 */}
-          <motion.div
-            className="flex-1 flex flex-col h-full max-h-[80vh] overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-            key={activeSection}
-          >
-            {/* 内容标题 */}
-            <div className="border-b p-6 pb-4">
-              <h3 className="text-lg font-medium">{activeSectionInfo.title}</h3>
-              <p className="text-sm text-muted-foreground">{activeSectionInfo.description}</p>
+          {/* 主内容区域 */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="flex justify-between items-center border-b p-4">
+              <div>
+                <h2 className="text-xl font-semibold">{title}</h2>
+                <p className="text-sm text-muted-foreground">{description}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSettingsOpen(false)}
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">关闭</span>
+              </Button>
             </div>
 
-            {/* 内容主体 */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="max-w-3xl">
-                {renderSection()}
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
+            <div className="p-4">{renderActiveSection()}</div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
