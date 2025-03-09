@@ -2,11 +2,8 @@
 
 import { getStore, useSettings } from "@/lib/hooks/use-settings";
 
-import { ChangelogDialog } from "@/components/changelog-dialog";
-import Header from "@/components/header";
 import NotificationHandler from "@/components/notification-handler";
 import { useToast } from "@/components/ui/use-toast";
-import { useChangelogDialog } from "@/lib/hooks/use-changelog-dialog";
 import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
 import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
 import React, { useEffect, useState } from "react";
@@ -20,12 +17,13 @@ import { listen } from "@tauri-apps/api/event";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { useRouter } from "next/navigation";
+import Sidebar from "@/components/sidebar";
+import { Settings } from "@/components/settings";
 
 export default function Home() {
   const { settings, updateSettings, loadUser, reloadStore } = useSettings();
   const { setActiveProfile } = useProfiles();
   const { toast } = useToast();
-  const { setShowChangelogDialog } = useChangelogDialog();
   const { open: openStatusDialog } = useStatusDialog();
   const { setIsOpen: setSettingsOpen } = useSettingsDialog();
   const isProcessingRef = React.useRef(false);
@@ -99,12 +97,14 @@ export default function Home() {
                 id: "api-key-user-" + Date.now(),
                 email: "api-user@example.com",
                 name: "API用户",
-                token: apiKey,
                 last_login_at: currentDate,
                 last_login_ip: "127.0.0.1"
               };
               
-              updateSettings({ user: mockUser });
+              updateSettings({ 
+                user: mockUser,
+                authToken: apiKey
+              });
               toast({
                 title: "登录成功",
                 description: "您已通过API密钥登录",
@@ -114,10 +114,6 @@ export default function Home() {
 
           if (url.includes("settings")) {
             setSettingsOpen(true);
-          }
-
-          if (url.includes("changelog")) {
-            setShowChangelogDialog(true);
           }
 
           if (url.includes("status")) {
@@ -261,18 +257,20 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center flex-1 max-w-screen-2xl mx-auto relative">
-      <LoginDialog />
-
-      <NotificationHandler />
-      <>
-        <ChangelogDialog />
-        {/* <BreakingChangesInstructionsDialog /> */}
-        <Header />
-        <div className=" w-full">
+    <div className="flex h-screen overflow-hidden">
+      {/* 侧边栏 */}
+      <Sidebar />
+      
+      {/* 主内容区域 */}
+      <div className="flex-1 overflow-auto">
+        <LoginDialog />
+        <NotificationHandler />
+        <Settings />
+        
+        <div className="p-4 md:p-6 max-w-screen-2xl mx-auto">
           <PipeStore />
         </div>
-      </>
+      </div>
     </div>
   );
 }
