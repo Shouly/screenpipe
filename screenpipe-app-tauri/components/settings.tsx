@@ -7,13 +7,12 @@ import {
   Video,
   Keyboard,
   User,
-  ChevronDown,
-  Plus,
-  Trash2,
-  Check,
   HardDrive,
   FolderInput,
   Settings as SettingsIcon,
+  Search,
+  X,
+  LogOut,
 } from "lucide-react";
 import { DialogHeader, DialogTitle } from "./ui/dialog";
 import { cn } from "@/lib/utils";
@@ -21,24 +20,16 @@ import { AccountSection } from "./settings/account-section";
 import ShortcutSection from "./settings/shortcut-section";
 import DiskUsage from "./settings/disk-usage";
 import AISection from "./settings/ai-section";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { relaunch } from "@tauri-apps/plugin-process";
 import { invoke } from "@tauri-apps/api/core";
-import { useProfiles } from "@/lib/hooks/use-profiles";
-import { toast } from "./ui/use-toast";
 import { DataImportSection } from "./settings/data-import-section";
 import { Dialog, DialogContent } from "./ui/dialog";
 import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
 import { RecordingSettings } from "./settings/recording-settings";
 import GeneralSettings from "./settings/general-settings";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 type SettingsSection =
   | "general"
@@ -51,59 +42,70 @@ type SettingsSection =
 
 export function Settings() {
   const { isOpen, setIsOpen: setSettingsOpen } = useSettingsDialog();
-  const {
-    profiles,
-    activeProfile,
-    createProfile,
-    deleteProfile,
-    setActiveProfile,
-  } = useProfiles();
-  const [activeSection, setActiveSection] =
-    useState<SettingsSection>("account");
-  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
-  const [newProfileName, setNewProfileName] = useState("");
-  const { settings } = useSettings();
+  const [activeSection, setActiveSection] = useState<SettingsSection>("account");
+  const [searchQuery, setSearchQuery] = useState("");
+  const { settings, updateSettings } = useSettings();
+  const router = useRouter();
 
-  const handleProfileChange = async () => {
-    toast({
-      title: "Restarting Screenpipe",
-      description: "Please wait while we restart Screenpipe",
-    });
-    await invoke("stop_screenpipe");
+  const settingsSections = [
+    {
+      id: "account",
+      label: "账户",
+      icon: <User className="h-4 w-4" />,
+      category: "账户"
+    },
+    {
+      id: "general",
+      label: "通用",
+      icon: <SettingsIcon className="h-4 w-4" />,
+      category: "应用"
+    },
+    {
+      id: "shortcuts",
+      label: "快捷键",
+      icon: <Keyboard className="h-4 w-4" />,
+      category: "应用"
+    },
+    {
+      id: "recording",
+      label: "录制",
+      icon: <Video className="h-4 w-4" />,
+      category: "功能"
+    },
+    {
+      id: "ai",
+      label: "AI 设置",
+      icon: <Brain className="h-4 w-4" />,
+      category: "功能"
+    },
+    {
+      id: "diskUsage",
+      label: "磁盘使用",
+      icon: <HardDrive className="h-4 w-4" />,
+      category: "数据"
+    },
+    {
+      id: "dataImport",
+      label: "数据导入",
+      icon: <FolderInput className="h-4 w-4" />,
+      category: "数据"
+    },
+  ];
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  const filteredSections = searchQuery
+    ? settingsSections.filter((section) =>
+        section.label.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : settingsSections;
 
-    await invoke("spawn_screenpipe");
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    relaunch();
-  };
-
-  const handleCreateProfile = async () => {
-    if (newProfileName.trim() === "default") {
-      toast({
-        title: "profile name is not allowed",
-        description: "Please choose a different name for your profile",
-      });
-      return;
+  // 按类别分组
+  const groupedSections = filteredSections.reduce((acc, section) => {
+    if (!acc[section.category]) {
+      acc[section.category] = [];
     }
-    if (newProfileName.trim()) {
-      console.log("creating profile", newProfileName.trim());
-      createProfile({
-        profileName: newProfileName.trim(),
-        currentSettings: settings,
-      });
-      setActiveProfile(newProfileName.trim());
-      setNewProfileName("");
-      setIsCreatingProfile(false);
-      handleProfileChange();
-    }
-  };
-
-  const handleSwitchProfile = async (profileName: string) => {
-    setActiveProfile(profileName);
-    handleProfileChange();
-  };
+    acc[section.category].push(section);
+    return acc;
+  }, {} as Record<string, typeof settingsSections>);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -124,164 +126,161 @@ export function Settings() {
     }
   };
 
-  useEffect(() => {
-    console.log(profiles, "profiles");
-  }, [profiles]);
+  // 获取当前活动部分的标题和描述
+  const getActiveSectionInfo = () => {
+    switch (activeSection) {
+      case "account":
+        return { title: "账户信息", description: "查看您的账户信息" };
+      case "general":
+        return { title: "通用设置", description: "管理应用的基本设置" };
+      case "ai":
+        return { title: "AI 设置", description: "配置AI相关功能" };
+      case "recording":
+        return { title: "录制设置", description: "管理屏幕录制选项" };
+      case "shortcuts":
+        return { title: "快捷键", description: "自定义应用快捷键" };
+      case "diskUsage":
+        return { title: "磁盘使用", description: "管理应用存储空间" };
+      case "dataImport":
+        return { title: "数据导入", description: "导入外部数据" };
+      default:
+        return { title: "", description: "" };
+    }
+  };
+
+  // 登出功能
+  const handleLogout = () => {
+    updateSettings({ 
+      user: { 
+        id: "",
+        email: "",
+        name: ""
+      },
+      authToken: "" 
+    });
+    setSettingsOpen(false);
+    router.push("/login");
+  };
+
+  const activeSectionInfo = getActiveSectionInfo();
 
   return (
     <Dialog modal={true} open={isOpen} onOpenChange={setSettingsOpen}>
       <DialogContent
-        className="max-w-[80vw] w-full max-h-[80vh] h-full overflow-hidden p-0 [&>button]:hidden"
+        className="max-w-[80vw] w-full max-h-[80vh] h-full overflow-hidden p-0 [&>button]:hidden rounded-xl border-none shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex h-full">
-          {/* Sidebar */}
-          <div className="w-64 border-r bg-[#f3f3f3]">
-            <DialogHeader className="flex items-center gap-4 ml-6 mt-4">
-              <DialogTitle className="text-2xl font-bold">settings</DialogTitle>
-            </DialogHeader>
-
-            {/* Profile Selector */}
-            <div className="px-4 py-3 border-b">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-between font-mono text-sm"
-                  >
-                    {activeProfile}
-                    <ChevronDown className="h-4 w-4 opacity-50" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                  {profiles?.map((profile) => (
-                    <DropdownMenuItem
-                      key={profile}
-                      className="justify-between"
-                      onSelect={() => handleSwitchProfile(profile)}
-                    >
-                      <span className="font-mono">{profile}</span>
-                      {activeProfile === profile && (
-                        <Check className="h-4 w-4" />
-                      )}
-                      {profile !== "default" && (
-                        <Trash2
-                          className="h-4 w-4 opacity-50 hover:opacity-100"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteProfile(profile);
-                          }}
-                        />
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  {isCreatingProfile ? (
-                    <div className="p-2">
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          handleCreateProfile();
-                        }}
-                        className="flex gap-2"
-                      >
-                        <Input
-                          value={newProfileName}
-                          onChange={(e) => setNewProfileName(e.target.value)}
-                          placeholder="profile name"
-                          className="h-8 font-mono"
-                          autoFocus
-                        />
-                        <Button
-                          type="submit"
-                          size="sm"
-                          disabled={!newProfileName.trim()}
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                      </form>
-                    </div>
-                  ) : (
-                    <DropdownMenuItem
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        setIsCreatingProfile(true);
-                      }}
-                      className="gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>new profile</span>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+        <motion.div 
+          className="flex h-full bg-background"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {/* 侧边栏 */}
+          <div className="w-52 border-r bg-muted/30 flex flex-col">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-xl font-bold">设置</h2>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-muted-foreground hover:text-foreground" 
+                onClick={() => setSettingsOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
 
-            {/* Existing Settings Navigation */}
-            <div className="flex flex-col space-y-1 p-4">
-              {[
-                {
-                  id: "account",
-                  label: "account",
-                  icon: <User className="h-4 w-4" />,
-                },
-                {
-                  id: "general",
-                  label: "general",
-                  icon: <SettingsIcon className="h-4 w-4" />,
-                },
-                {
-                  id: "ai",
-                  label: "ai settings",
-                  icon: <Brain className="h-4 w-4" />,
-                },
-                {
-                  id: "recording",
-                  label: "recording",
-                  icon: <Video className="h-4 w-4" />,
-                },
-                {
-                  id: "shortcuts",
-                  label: "shortcuts",
-                  icon: <Keyboard className="h-4 w-4" />,
-                },
-                {
-                  id: "diskUsage",
-                  label: "disk usage",
-                  icon: <HardDrive className="h-4 w-4" />,
-                },
-                {
-                  id: "dataImport",
-                  label: "data import",
-                  icon: <FolderInput className="h-4 w-4" />,
-                },
-              ].map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() =>
-                    setActiveSection(section.id as SettingsSection)
-                  }
-                  className={cn(
-                    "flex items-center space-x-2 px-4 py-1.5 rounded-lg transition-colors",
-                    activeSection === section.id
-                      ? "bg-black/90 text-white"
-                      : "hover:bg-black/10"
-                  )}
-                >
-                  {section.icon}
-                  <span>{section.label}</span>
-                </button>
+            {/* 搜索框 */}
+            <div className="px-4 py-3">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="搜索设置..."
+                  className="pl-8 h-9 text-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1 h-7 w-7"
+                    onClick={() => setSearchQuery("")}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* 设置导航 */}
+            <div className="flex-1 overflow-y-auto">
+              {Object.entries(groupedSections).map(([category, sections]) => (
+                <div key={category} className="mb-4">
+                  <h3 className="text-xs font-medium text-muted-foreground px-4 py-2">{category}</h3>
+                  <div>
+                    {sections.map((section) => (
+                      <motion.button
+                        key={section.id}
+                        onClick={() => setActiveSection(section.id as SettingsSection)}
+                        className={cn(
+                          "flex items-center w-full px-4 py-2 text-sm transition-colors",
+                          activeSection === section.id
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "hover:bg-muted"
+                        )}
+                        whileHover={{ x: 2 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <span className="flex items-center justify-center w-5 h-5 mr-3">
+                          {section.icon}
+                        </span>
+                        <span>{section.label}</span>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
+
+            {/* 登出按钮 */}
+            {settings.user?.id && (
+              <div className="p-4 border-t">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>登出</span>
+                </Button>
+              </div>
+            )}
           </div>
 
-          {/* Content */}
-          <div className="flex-1 flex flex-col h-full max-h-[80vh]">
-            <div className="flex-1 overflow-y-auto px-4">
-              <div className="max-h-full">{renderSection()}</div>
+          {/* 内容区域 */}
+          <motion.div 
+            className="flex-1 flex flex-col h-full max-h-[80vh] overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            key={activeSection}
+          >
+            {/* 内容标题 */}
+            <div className="border-b p-6 pb-4">
+              <h3 className="text-lg font-medium">{activeSectionInfo.title}</h3>
+              <p className="text-sm text-muted-foreground">{activeSectionInfo.description}</p>
             </div>
-          </div>
-        </div>
+
+            {/* 内容主体 */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="max-w-3xl">
+                {renderSection()}
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );
