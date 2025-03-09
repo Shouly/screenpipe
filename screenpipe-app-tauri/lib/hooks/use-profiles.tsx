@@ -101,14 +101,12 @@ const copyProfileSettings = async (
     // Define keys to copy from current settings
     const keysToCopy: FlattenObjectKeys<Settings>[] = [
       // Account related
-      "user.token",
+      "authToken",
       "user.id",
       "user.email",
       "user.name",
-      "user.image",
-      "user.clerk_id",
-      "user.credits.amount",
-
+      "user.avatar",
+      
       // AI related
       "aiProviderType",
       "aiUrl",

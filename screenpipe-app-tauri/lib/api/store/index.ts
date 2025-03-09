@@ -97,7 +97,7 @@ export class PipeApi {
   private cacheTTL = 60000; // 60 seconds cache
 
   private constructor(authToken: string) {
-    this.baseUrl = "https://screenpi.pe";
+    this.baseUrl = "http://localhost:8000/api/v1";
     this.authToken = authToken;
   }
 
@@ -109,7 +109,7 @@ export class PipeApi {
 
   private async init(authToken: string) {
     try {
-      const BASE_URL = await invoke("get_env", { name: "BASE_URL_PRIVATE" });
+      const BASE_URL = await invoke("get_env", { name: "BACKEND_API_URL" });
       if (BASE_URL) {
         this.baseUrl = BASE_URL as string;
       }
@@ -150,7 +150,7 @@ export class PipeApi {
   async getUserPurchaseHistory(): Promise<PurchaseHistoryResponse> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/api/plugins/user-purchase-history`,
+        `${this.baseUrl}/plugin/plugins/user-purchase-history`,
         {
           headers: {
             Authorization: `Bearer ${this.authToken}`,
@@ -175,7 +175,7 @@ export class PipeApi {
     if (cached) return cached;
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/plugins/registry`, {
+      const response = await fetch(`${this.baseUrl}/plugins/registry`, {
         headers: {
           Authorization: `Bearer ${this.authToken}`,
         },
@@ -195,7 +195,7 @@ export class PipeApi {
 
   async purchasePipe(pipeId: string): Promise<PurchaseUrlResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/plugins/purchase`, {
+      const response = await fetch(`${this.baseUrl}/plugins/purchase`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -218,7 +218,7 @@ export class PipeApi {
 
   async downloadPipe(pipeId: string): Promise<PipeDownloadResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/plugins/download`, {
+      const response = await fetch(`${this.baseUrl}/plugins/download`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -253,7 +253,7 @@ export class PipeApi {
     if (cached) return cached;
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/plugins/check-update`, {
+      const response = await fetch(`${this.baseUrl}/plugins/check-update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -308,7 +308,7 @@ export class PipeApi {
 
     try {
       console.log(`[pipe-update] sending update check request to server for ${remotePlugins.length} plugins`);
-      const response = await fetch(`${this.baseUrl}/api/plugins/check-updates`, {
+      const response = await fetch(`${this.baseUrl}/plugins/check-updates`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

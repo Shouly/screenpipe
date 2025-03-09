@@ -14,10 +14,10 @@ export default function LoginLayout({
 
   // 如果用户已登录，重定向到主页
   useEffect(() => {
-    if (settings.user?.token) {
+    if (settings.authToken) {
       router.push("/");
     }
-  }, [settings.user?.token, router]);
+  }, [settings.authToken, router]);
 
   return (
     <div className="min-h-screen bg-[#faf9f5] dark:bg-[#1c1c1c] overflow-hidden">

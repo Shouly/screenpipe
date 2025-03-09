@@ -1,39 +1,45 @@
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Loader2, Power, Search, Trash2, RefreshCw } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { useHealthCheck } from "@/lib/hooks/use-health-check";
+import {
+  PipeApi,
+  PipeDownloadError,
+  PurchaseHistoryItem,
+} from "@/lib/api/store";
+import { open as openUrl } from "@tauri-apps/plugin-shell";
+import { listen } from "@tauri-apps/api/event";
+import { InstalledPipe, PipeWithStatus } from "./pipe-store/types";
+import { PipeDetails } from "./pipe-store/pipe-details";
+import { PipeCard } from "./pipe-store/pipe-card";
+import { AddPipeForm } from "./pipe-store/add-pipe-form";
+import { useSettings } from "@/lib/hooks/use-settings";
+import posthog from "posthog-js";
+import { Progress } from "./ui/progress";
+import { open } from "@tauri-apps/plugin-dialog";
+import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
+import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { toast } from "@/components/ui/use-toast";
-import {
-  PipeApi,
-  PipeDownloadError,
-  PurchaseHistoryItem,
-} from "@/lib/api/store";
-import { useAuth } from "@/lib/hooks/use-auth";
-import { useHealthCheck } from "@/lib/hooks/use-health-check";
-import { usePlatform } from "@/lib/hooks/use-platform";
-import { useSettings } from "@/lib/hooks/use-settings";
-import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
-import { cn } from "@/lib/utils";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
-import { open } from "@tauri-apps/plugin-dialog";
-import { open as openUrl } from "@tauri-apps/plugin-shell";
 import localforage from "localforage";
-import { Loader2, Power, RefreshCw, Search, Trash2 } from "lucide-react";
-import posthog from "posthog-js";
-import React, { useEffect, useState } from "react";
-import { AddPipeForm } from "./pipe-store/add-pipe-form";
-import { PipeDetails } from "./pipe-store/pipe-details";
-import { InstalledPipe, PipeWithStatus } from "./pipe-store/types";
 import { PermissionButtons } from "./status/permission-buttons";
-import { Progress } from "./ui/progress";
+import { usePlatform } from "@/lib/hooks/use-platform";
+import { invoke } from "@tauri-apps/api/core";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 const corePipes: string[] = [];
 
@@ -116,7 +122,7 @@ export const PipeStore: React.FC = () => {
 
   const fetchStorePlugins = async () => {
     try {
-      const pipeApi = await PipeApi.create(settings.authToken!);
+      const pipeApi = await PipeApi.create(settings.authToken);
       const plugins = await pipeApi.listStorePlugins();
 
       // Create PipeWithStatus objects for store plugins
@@ -178,7 +184,7 @@ export const PipeStore: React.FC = () => {
 
   const fetchPurchaseHistory = async () => {
     if (!settings.authToken) return;
-    const pipeApi = await PipeApi.create(settings.authToken!);
+    const pipeApi = await PipeApi.create(settings.authToken);
     const purchaseHistory = await pipeApi.getUserPurchaseHistory();
     setPurchaseHistory(purchaseHistory);
   };
@@ -192,7 +198,7 @@ export const PipeStore: React.FC = () => {
 
       setLoadingPurchases((prev) => new Set(prev).add(pipe.id));
 
-      const pipeApi = await PipeApi.create(settings.authToken!);
+      const pipeApi = await PipeApi.create(settings.authToken);
       const response = await pipeApi.purchasePipe(pipe.id);
 
       if (response.data.payment_successful) {
@@ -337,7 +343,7 @@ export const PipeStore: React.FC = () => {
         duration: 10000,
       });
 
-      const pipeApi = await PipeApi.create(settings.authToken!);
+      const pipeApi = await PipeApi.create(settings.authToken);
       const response = await pipeApi.downloadPipe(pipe.id);
 
       const downloadResponse = await fetch(
@@ -367,10 +373,10 @@ export const PipeStore: React.FC = () => {
         prevPipes.map((p) =>
           p.id === pipe.id
             ? {
-              ...p,
-              is_installed: true,
-              is_installing: false,
-            }
+                ...p,
+                is_installed: true,
+                is_installing: false,
+              }
             : p
         )
       );
@@ -475,7 +481,7 @@ export const PipeStore: React.FC = () => {
       console.error("failed to reset pipes:", error);
       toast({
         title: "error resetting pipes",
-        description: `error: ${(error as Error).message}...}`,
+          description: `error: ${(error as Error).message}...}`,
         variant: "destructive",
       });
     } finally {
@@ -642,7 +648,8 @@ export const PipeStore: React.FC = () => {
       onComplete();
     } catch (error) {
       console.error(
-        `Failed to ${pipe.installed_config?.enabled ? "disable" : "enable"
+        `Failed to ${
+          pipe.installed_config?.enabled ? "disable" : "enable"
         } pipe:`,
         error
       );
@@ -802,7 +809,7 @@ export const PipeStore: React.FC = () => {
       if (!checkLogin(settings.user)) return;
 
       const currentVersion = pipe.installed_config?.version!;
-      const storeApi = await PipeApi.create(settings.authToken!);
+      const storeApi = await PipeApi.create(settings.authToken);
       const update = await storeApi.checkUpdate(pipe.id, currentVersion);
       if (!update.has_update) {
         toast({
@@ -982,21 +989,21 @@ export const PipeStore: React.FC = () => {
         console.log("[pipe-update] No installed pipes to check");
         return;
       }
-
+            
       try {
         // Format pipes for batch update check
         const pluginsToCheck = installedPipes.map((pipe) => ({
           pipe_id: pipe.id,
           version: pipe.installed_config!.version!,
         }));
-
+        
         console.log("[pipe-update] Sending update check request:", pluginsToCheck);
-
-        const storeApi = await PipeApi.create(settings.authToken!);
+        
+        const storeApi = await PipeApi.create(settings.authToken);
         const updates = await storeApi.checkUpdates(pluginsToCheck);
-
+        
         console.log("[pipe-update] Update check response:", updates);
-
+        
         // Process updates
         for (const pipe of installedPipes) {
           const update = updates.results.find((u) => u.pipe_id === pipe.id);
@@ -1137,156 +1144,133 @@ export const PipeStore: React.FC = () => {
   }
 
   return (
-    <div className="p-5 min-h-full">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Pipe 商店</h1>
-        <div className="flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setConfirmOpen(true)}
-                  className="canva-button"
-                  disabled={isPurging}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>重置所有 pipes</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleUpdateAllPipes()}
-                  className="canva-button"
-                  disabled={
-                    !pipes.some(
-                      (pipe) => pipe.is_installed && pipe.has_update
-                    )
-                  }
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>更新所有 pipes</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
-
-      <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center">
-        <div className="relative w-full md:w-1/2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="搜索Pipe..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-full rounded-lg border-gray-200 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-              autoCorrect="off"
-              autoComplete="off"
-            />
+    <div className="overflow-hidden flex flex-col space-y-4">
+      <div className="flex flex-col flex-1 overflow-hidden space-y-4 p-4">
+        <div className="space-y-4">
+          <div className="flex flex-col gap-4 md:w-[50%] w-full">
+            <div className="flex-1 relative py-2">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="search community pipes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                autoCorrect="off"
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">show installed only</span>
+              <Switch
+                checked={showInstalledOnly}
+                onCheckedChange={setShowInstalledOnly}
+              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setConfirmOpen(true)}
+                      className="flex items-center gap-2"
+                      disabled={isPurging}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>reset all pipes</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>confirm deletion of all pipes?</DialogTitle>
+                    <DialogDescription>
+                      are you sure you want to delete all pipes? <br/> you&apos;ll have to download them again
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex justify-end gap-4">
+                    <Button 
+                      onClick={() => setConfirmOpen(false)} 
+                      disabled={isPurging}
+                      variant={"outline"}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleResetAllPipes} 
+                      disabled={isPurging}
+                    >
+                      {isPurging ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          reseting all pipes...
+                        </>
+                      ) : (
+                          "Confirm"
+                        )}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleUpdateAllPipes()}
+                      className="flex items-center gap-2"
+                      disabled={
+                        !pipes.some(
+                          (pipe) => pipe.is_installed && pipe.has_update
+                        )
+                      }
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>update all pipes</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">仅显示已安装</span>
-          <Switch
-            checked={showInstalledOnly}
-            onCheckedChange={setShowInstalledOnly}
-          />
-        </div>
-      </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredPipes.map((pipe) => (
-            <PipeCard
-              key={pipe.id}
-              pipe={pipe}
-              setPipe={(updatedPipe) => {
-                setPipes((prevPipes) => {
-                  return prevPipes.map((p) =>
-                    p.id === updatedPipe.id ? updatedPipe : p
-                  );
-                });
-              }}
-              onInstall={handleInstallPipe}
-              onClick={setSelectedPipe}
-              onPurchase={handlePurchasePipe}
-              isLoadingPurchase={loadingPurchases.has(pipe.id)}
-              isLoadingInstall={loadingInstalls.has(pipe.id)}
-              onToggle={handleTogglePipe}
-            />
-          ))}
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredPipes.map((pipe) => (
+              <PipeCard
+                key={pipe.id}
+                pipe={pipe}
+                setPipe={(updatedPipe) => {
+                  setPipes((prevPipes) => {
+                    return prevPipes.map((p) =>
+                      p.id === updatedPipe.id ? updatedPipe : p
+                    );
+                  });
+                }}
+                onInstall={handleInstallPipe}
+                onClick={setSelectedPipe}
+                onPurchase={handlePurchasePipe}
+                isLoadingPurchase={loadingPurchases.has(pipe.id)}
+                isLoadingInstall={loadingInstalls.has(pipe.id)}
+                onToggle={handleTogglePipe}
+              />
+            ))}
+          </div>
         </div>
-      </div>
 
-      <AddPipeForm
-        onAddPipe={handleInstallSideload}
-        isHealthy={health?.status !== "error"}
-        onLoadFromLocalFolder={handleLoadFromLocalFolder}
-      />
+        <AddPipeForm
+          onAddPipe={handleInstallSideload}
+          isHealthy={health?.status !== "error"}
+          onLoadFromLocalFolder={handleLoadFromLocalFolder}
+        />
+      </div>
     </div>
   );
 };
-
-function PipeCard({
-  pipe,
-  setPipe,
-  onInstall,
-  onClick,
-  onPurchase,
-  isLoadingPurchase,
-  isLoadingInstall,
-  onToggle,
-}: PipeCardProps) {
-  // ... existing code ...
-
-  return (
-    <Card
-      className={cn(
-        "overflow-hidden transition-all duration-200 card-hover",
-        pipe.is_installed && "border-blue-200"
-      )}
-    >
-      <CardHeader className="p-4 pb-0">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-md bg-blue-100 flex items-center justify-center text-blue-600">
-              {pipe.emoji || "🔌"}
-            </div>
-            <div>
-              <CardTitle className="text-lg">{pipe.name}</CardTitle>
-              <CardDescription className="text-xs">
-                {pipe.author}
-              </CardDescription>
-            </div>
-          </div>
-          {pipe.is_installed && (
-            <Switch
-              checked={pipe.is_enabled}
-              onCheckedChange={() => onToggle(pipe)}
-              disabled={isLoadingInstall}
-            />
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="p-4 pt-2">
-        <p className="text-sm text-gray-600 line-clamp-2 h-10">
-          {pipe.description}
-        </p>
-        {/* ... rest of the component ... */}
-      </CardContent>
-    </Card>
-  );
-}
