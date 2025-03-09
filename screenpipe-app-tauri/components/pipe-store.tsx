@@ -8,7 +8,6 @@ import { useHealthCheck } from "@/lib/hooks/use-health-check";
 import {
   PipeApi,
   PipeDownloadError,
-  PurchaseHistoryItem,
 } from "@/lib/api/store";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { listen } from "@tauri-apps/api/event";
@@ -51,14 +50,8 @@ export const PipeStore: React.FC = () => {
   const [installedPipes, setInstalledPipes] = useState<InstalledPipe[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showInstalledOnly, setShowInstalledOnly] = useState(false);
-  const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistoryItem[]>(
-    []
-  );
   const { checkLogin } = useAuth();
   const { open: openStatusDialog } = useStatusDialog();
-  const [loadingPurchases, setLoadingPurchases] = useState<Set<string>>(
-    new Set()
-  );
   const [loadingInstalls, setLoadingInstalls] = useState<Set<string>>(
     new Set()
   );
@@ -135,9 +128,8 @@ export const PipeStore: React.FC = () => {
             ...plugin,
             is_installed: !!installedPipe,
             installed_config: installedPipe?.config,
-            has_purchased: purchaseHistory.some(
-              (p) => p.plugin_id === plugin.id
-            ),
+            // 所有插件都视为已购买
+            has_purchased: true,
             is_core_pipe: corePipes.includes(plugin.name),
             is_enabled: installedPipe?.config?.enabled ?? false,
             has_update: false,
@@ -179,67 +171,6 @@ export const PipeStore: React.FC = () => {
       setPipes([...storePluginsWithStatus, ...customPipes]);
     } catch (error) {
       console.warn("Failed to fetch store plugins:", error);
-    }
-  };
-
-  const fetchPurchaseHistory = async () => {
-    if (!settings.authToken) return;
-    const pipeApi = await PipeApi.create(settings.authToken);
-    const purchaseHistory = await pipeApi.getUserPurchaseHistory();
-    setPurchaseHistory(purchaseHistory);
-  };
-
-  const handlePurchasePipe = async (
-    pipe: PipeWithStatus,
-    onComplete?: () => void
-  ) => {
-    try {
-      if (!checkLogin(settings.user)) return;
-
-      setLoadingPurchases((prev) => new Set(prev).add(pipe.id));
-
-      const pipeApi = await PipeApi.create(settings.authToken);
-      const response = await pipeApi.purchasePipe(pipe.id);
-
-      if (response.data.payment_successful) {
-        await handleInstallPipe(pipe);
-        toast({
-          title: "purchase & install successful",
-          description: "payment processed with saved card",
-        });
-      } else if (response.data.already_purchased) {
-        await handleInstallPipe(pipe);
-        toast({
-          title: "pipe already purchased",
-          description: "installing pipe...",
-        });
-      } else if (response.data.used_credits) {
-        await handleInstallPipe(pipe);
-        toast({
-          title: "purchase & install successful",
-          description: "your pipe has been purchased and installed",
-        });
-      } else if (response.data.checkout_url) {
-        openUrl(response.data.checkout_url);
-        toast({
-          title: "redirecting to checkout",
-          description: "you'll be able to install the pipe after purchase",
-        });
-      }
-      onComplete?.();
-    } catch (error) {
-      console.error("error purchasing pipe:", error);
-      toast({
-        title: "error purchasing pipe",
-        description: "please try again or check the logs",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingPurchases((prev) => {
-        const next = new Set(prev);
-        next.delete(pipe.id);
-        return next;
-      });
     }
   };
 
@@ -392,14 +323,6 @@ export const PipeStore: React.FC = () => {
           p.id === pipe.id ? { ...p, is_installing: false } : p
         )
       );
-      if ((error as Error).cause === PipeDownloadError.PURCHASE_REQUIRED) {
-        return toast({
-          title: "paid pipe",
-          description:
-            "this pipe requires purchase. please visit screenpi.pe to buy credits.",
-          variant: "destructive",
-        });
-      }
       toast({
         title: "error installing pipe",
         description: (error as Error).message,
@@ -941,11 +864,7 @@ export const PipeStore: React.FC = () => {
 
   useEffect(() => {
     fetchStorePlugins();
-  }, [installedPipes, purchaseHistory]);
-
-  useEffect(() => {
-    fetchPurchaseHistory();
-  }, [settings.authToken]);
+  }, [installedPipes]);
 
   useEffect(() => {
     fetchInstalledPipes();
@@ -1048,9 +967,6 @@ export const PipeStore: React.FC = () => {
 
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            // First update purchase history to reflect the new purchase
-            await fetchPurchaseHistory();
-
             // Find the pipe in the store
             const purchasedPipe = pipes.find((pipe) => pipe.id === pipeId);
             if (!purchasedPipe) {
@@ -1136,8 +1052,6 @@ export const PipeStore: React.FC = () => {
         onRefreshFromDisk={handleRefreshFromDisk}
         onUpdate={handleUpdatePipe}
         onInstall={handleInstallPipe}
-        onPurchase={handlePurchasePipe}
-        isLoadingPurchase={loadingPurchases.has(selectedPipe.id)}
         isLoadingInstall={loadingInstalls.has(selectedPipe.id)}
       />
     );
@@ -1248,16 +1162,12 @@ export const PipeStore: React.FC = () => {
                 key={pipe.id}
                 pipe={pipe}
                 setPipe={(updatedPipe) => {
-                  setPipes((prevPipes) => {
-                    return prevPipes.map((p) =>
-                      p.id === updatedPipe.id ? updatedPipe : p
-                    );
-                  });
+                  setPipes((prev) =>
+                    prev.map((p) => (p.id === updatedPipe.id ? updatedPipe : p))
+                  );
                 }}
                 onInstall={handleInstallPipe}
                 onClick={setSelectedPipe}
-                onPurchase={handlePurchasePipe}
-                isLoadingPurchase={loadingPurchases.has(pipe.id)}
                 isLoadingInstall={loadingInstalls.has(pipe.id)}
                 onToggle={handleTogglePipe}
               />

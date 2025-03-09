@@ -35,8 +35,6 @@ interface PipeDetailsProps {
   onDelete: (pipe: PipeWithStatus, onComplete: () => void) => void;
   onRefreshFromDisk: (pipe: PipeWithStatus, onComplete: () => void) => void;
   onInstall: (pipe: PipeWithStatus, onComplete: () => void) => void;
-  onPurchase: (pipe: PipeWithStatus, onComplete: () => void) => void;
-  isLoadingPurchase?: boolean;
   isLoadingInstall?: boolean;
 }
 
@@ -68,8 +66,6 @@ export const PipeDetails: React.FC<PipeDetailsProps> = ({
   onDelete,
   onRefreshFromDisk,
   onInstall,
-  onPurchase,
-  isLoadingPurchase,
   isLoadingInstall,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -238,25 +234,18 @@ export const PipeDetails: React.FC<PipeDetailsProps> = ({
                   size="sm"
                   variant={pipe.is_paid ? "default" : "outline"}
                   onClick={() => {
-                    if (pipe.is_paid && !pipe.has_purchased) {
-                      setIsLoading(true);
-                      onPurchase(pipe, () => setIsLoading(false));
-                    } else {
-                      setIsLoading(true);
-                      onInstall(pipe, () => setIsLoading(false));
-                    }
+                    setIsLoading(true);
+                    onInstall(pipe, () => setIsLoading(false));
                   }}
                   className="font-medium"
-                  disabled={isLoadingPurchase || isLoadingInstall}
+                  disabled={isLoadingInstall}
                 >
-                  {isLoadingPurchase ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : isLoadingInstall ? (
+                  {isLoadingInstall ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       installing...
                     </>
-                  ) : pipe.is_paid && !pipe.has_purchased ? (
+                  ) : pipe.is_paid ? (
                     `$${pipe.price}`
                   ) : (
                     <>

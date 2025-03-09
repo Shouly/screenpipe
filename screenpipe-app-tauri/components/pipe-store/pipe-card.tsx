@@ -26,9 +26,7 @@ import {
 interface PipeCardProps {
   pipe: PipeWithStatus;
   onInstall: (pipe: PipeWithStatus, onComplete: () => void) => Promise<any>;
-  onPurchase: (pipe: PipeWithStatus, onComplete: () => void) => Promise<any>;
   onClick: (pipe: PipeWithStatus) => void;
-  isLoadingPurchase?: boolean;
   isLoadingInstall?: boolean;
   onToggle: (pipe: PipeWithStatus, onComplete: () => void) => Promise<any>;
   setPipe: (pipe: PipeWithStatus) => void;
@@ -82,9 +80,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
   pipe,
   onInstall,
   onClick,
-  onPurchase,
   setPipe,
-  isLoadingPurchase,
   isLoadingInstall,
   onToggle,
 }) => {
@@ -298,33 +294,22 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                 variant={pipe.is_paid ? "default" : "outline"}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (pipe.is_paid && !pipe.has_purchased) {
-                    setIsLoading(true);
-                    onPurchase(pipe, () => setIsLoading(false));
-                    posthog.capture("pipe_purchase", {
-                      pipe_id: pipe.id,
-                      email: settings.user?.email,
-                    });
-                  } else {
-                    setIsLoading(true);
-                    onInstall(pipe, () => setIsLoading(false));
-                    posthog.capture("pipe_install", {
-                      pipe_id: pipe.id,
-                      email: settings.user?.email,
-                    });
-                  }
+                  setIsLoading(true);
+                  onInstall(pipe, () => setIsLoading(false));
+                  posthog.capture("pipe_install", {
+                    pipe_id: pipe.id,
+                    email: settings.user?.email,
+                  });
                 }}
                 className="font-medium no-card-hover"
-                disabled={isLoadingPurchase}
+                disabled={isLoading || isLoadingInstall}
               >
-                {isLoadingPurchase ? (
+                {isLoadingInstall ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : pipe.is_paid && !pipe.has_purchased ? (
-                  `$${pipe.price}`
                 ) : (
                   <>
                     <Download className="h-3.5 w-3.5 mr-2" />
-                    get
+                    {pipe.is_paid ? `$${pipe.price}` : "get"}
                   </>
                 )}
               </Button>
