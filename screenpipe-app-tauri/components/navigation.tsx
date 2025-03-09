@@ -98,7 +98,7 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
 
     return (
         <>
-            <div className="bg-background flex flex-col py-4 relative w-20">
+            <div className="bg-background flex flex-col py-4 fixed left-0 top-0 w-20 h-screen z-30">
                 {/* Logo 区域 */}
                 <div className="flex flex-col items-center justify-center mb-8 px-3">
                     <div className="w-10 h-10 flex-shrink-0">
