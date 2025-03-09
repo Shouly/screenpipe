@@ -1,25 +1,26 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSettings } from "@/lib/hooks/use-settings";
-import { useToast } from "@/components/ui/use-toast";
-import { useRouter, useSearchParams } from "next/navigation";
-import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { Separator } from "@/components/ui/separator";
-import { Eye, EyeOff, ExternalLink, MonitorX, Loader2, Mail, CheckCircle } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import { UserApi } from "@/lib/api";
+import { useSettings } from "@/lib/hooks/use-settings";
 import { platform } from "@tauri-apps/plugin-os";
+import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { motion } from "framer-motion";
+import { Loader2, MonitorX } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
-  const { updateSettings, saveSettings } = useSettings();
+  const { saveSettings } = useSettings();
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showVerificationForm, setShowVerificationForm] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -42,11 +43,11 @@ export default function LoginPage() {
       return;
     }
 
-    setIsLoading(true);
+    setIsEmailLoading(true);
     try {
       // 获取设备信息
       const os = await platform();
-      
+
       // 创建设备信息 - 适配新的用户模型
       const deviceInfo = {
         name: "我的Mac电脑",
@@ -57,7 +58,7 @@ export default function LoginPage() {
         browser_version: "1.0",
         ip_address: "127.0.0.1"
       };
-      
+
       // 调用后端API发送登录链接
       const userApi = new UserApi();
       let response;
@@ -67,23 +68,23 @@ export default function LoginPage() {
           email,      // 使用邮箱
           deviceInfo  // 设备信息
         );
-        
+
         // 显示登录链接已发送的提示
         toast({
           title: "验证码已发送",
           description: "请检查您的邮箱，输入6位验证码完成登录",
         });
-        
+
         // 显示验证码输入表单
         setShowVerificationForm(true);
-        
+
       } catch (apiError) {
         console.error("API调用失败:", apiError);
         throw apiError;
       }
     } catch (error) {
       console.error("登录失败:", error);
-      
+
       // 提供更具体的错误信息
       let errorMessage = "发送登录链接失败";
       if (!navigator.onLine) {
@@ -91,14 +92,14 @@ export default function LoginPage() {
       } else if (error instanceof Error) {
         errorMessage = error.message || errorMessage;
       }
-      
+
       toast({
         title: "登录失败",
         description: errorMessage,
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsEmailLoading(false);
     }
   };
 
@@ -112,33 +113,33 @@ export default function LoginPage() {
       });
       return;
     }
-    
+
     setIsVerifying(true);
-    
+
     try {
       console.log("开始验证登录验证码...");
       const userApi = new UserApi();
       const response = await userApi.verifyEmailLogin(email, verificationCode);
-      
+
       console.log("验证成功，保存用户数据和令牌...", {
         userId: response.user.id,
         email: response.user.email,
         tokenLength: response.access_token.length
       });
-      
+
       // 使用saveSettings代替updateSettings，确保设置被保存到本地存储
-      await saveSettings({ 
+      await saveSettings({
         user: response.user,
         authToken: response.access_token
       });
-      
+
       console.log("用户数据和令牌已保存");
-      
+
       toast({
         title: "登录成功",
         description: "欢迎回到ScreenPipe",
       });
-      
+
       // 使用setTimeout确保状态更新和toast显示后再跳转
       // 这样可以避免跳转延迟的感觉，因为用户已经看到了成功提示
       setTimeout(() => {
@@ -167,13 +168,23 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    // 显示功能尚未完全实现的提示
-    toast({
-      title: "功能开发中",
-      description: "Google登录功能尚未完全实现，请使用邮箱登录",
-      variant: "default",
-    });
-    
+    // 设置Google登录按钮的加载状态
+    setIsGoogleLoading(true);
+
+    try {
+      // 显示功能尚未完全实现的提示
+      toast({
+        title: "功能开发中",
+        description: "Google登录功能尚未完全实现，请使用邮箱登录",
+        variant: "default",
+      });
+    } finally {
+      // 无论成功与否，都需要重置加载状态
+      setTimeout(() => {
+        setIsGoogleLoading(false);
+      }, 1000);
+    }
+
     // 暂时不执行实际的登录逻辑
     return;
   };
@@ -208,13 +219,13 @@ export default function LoginPage() {
           <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-6 mb-6">
             {!showVerificationForm ? (
               <div className="space-y-6">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full flex items-center justify-center gap-2 h-12 border-zinc-200 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors rounded-md"
                   onClick={handleGoogleLogin}
-                  disabled={isLoading}
+                  disabled={isGoogleLoading}
                 >
-                  {isLoading ? (
+                  {isGoogleLoading ? (
                     <div className="flex items-center">
                       <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-zinc-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -269,12 +280,12 @@ export default function LoginPage() {
                       className="h-12 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#e25822]/20 rounded-md"
                     />
                   </div>
-                  <Button 
-                    className="w-full h-12 bg-[#e25822] hover:bg-[#d24812] text-white transition-colors rounded-md font-medium" 
+                  <Button
+                    className="w-full h-12 bg-[#e25822] hover:bg-[#d24812] text-white transition-colors rounded-md font-medium"
                     onClick={handleLogin}
-                    disabled={isLoading}
+                    disabled={isEmailLoading}
                   >
-                    {isLoading ? (
+                    {isEmailLoading ? (
                       <div className="flex items-center">
                         <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -284,28 +295,28 @@ export default function LoginPage() {
                       </div>
                     ) : "使用邮箱继续"}
                   </Button>
-                  
+
                   {/* 隐私条款 - 移到登录框内部并居中 */}
                   <div className="text-xs text-zinc-500 dark:text-zinc-400 pt-4 mt-2 text-center">
                     <p>
                       继续使用即表示您同意ScreenPipe的{" "}
-                      <Button 
-                        variant="link" 
+                      <Button
+                        variant="link"
                         className="p-0 h-auto font-normal text-xs text-zinc-500 dark:text-zinc-400 hover:text-[#e25822] dark:hover:text-[#f47b20] underline underline-offset-2"
                         onClick={() => openUrl("https://screenpi.pe/terms")}
                       >
                         用户条款
                       </Button>{" "}
                       和{" "}
-                      <Button 
-                        variant="link" 
+                      <Button
+                        variant="link"
                         className="p-0 h-auto font-normal text-xs text-zinc-500 dark:text-zinc-400 hover:text-[#e25822] dark:hover:text-[#f47b20] underline underline-offset-2"
                         onClick={() => openUrl("https://screenpi.pe/privacy")}
                       >
                         使用政策
                       </Button>，并确认您已阅读{" "}
-                      <Button 
-                        variant="link" 
+                      <Button
+                        variant="link"
                         className="p-0 h-auto font-normal text-xs text-zinc-500 dark:text-zinc-400 hover:text-[#e25822] dark:hover:text-[#f47b20] underline underline-offset-2"
                         onClick={() => openUrl("https://screenpi.pe/privacy")}
                       >
@@ -316,7 +327,7 @@ export default function LoginPage() {
                 </div>
               </div>
             ) : (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -325,38 +336,38 @@ export default function LoginPage() {
                 <div className="text-center">
                   <div className="mb-8 flex justify-center">
                   </div>
-                  
+
                   <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-2">
                     输入验证码
                   </h2>
-                  
+
                   <p className="text-zinc-600 dark:text-zinc-300 mb-6">
                     我们已向 <span className="font-medium text-[#e25822] dark:text-[#f47b20]">{email}</span> 发送了临时登录码
                   </p>
                 </div>
-                
+
                 {/* 验证码输入区域 */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="space-y-2">
                     <Input
                       id="verification-code"
                       type="text"
-                      placeholder="输入登录码"
+                      placeholder="输入验证码"
                       value={verificationCode}
                       onChange={(e) => setVerificationCode(e.target.value)}
-                      className="h-12 text-center text-lg font-medium bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#e25822]/20 rounded-md"
+                      className="h-12 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-[#e25822]/20 rounded-md"
                       disabled={isVerifying}
                       autoComplete="one-time-code"
                     />
                   </div>
-                  
-                  <Button 
+
+                  <Button
                     onClick={handleVerifyCode}
                     disabled={isVerifying || !verificationCode.trim()}
-                    className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 dark:bg-[#e25822] dark:hover:bg-[#d24812] text-white transition-all duration-200 font-medium rounded-md"
+                    className="w-full h-12 bg-[#e25822] hover:bg-[#d24812] text-white transition-colors rounded-md font-medium"
                   >
                     {isVerifying ? (
-                      <div className="flex items-center justify-center">
+                      <div className="flex items-center">
                         <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -365,34 +376,35 @@ export default function LoginPage() {
                       </div>
                     ) : "继续"}
                   </Button>
+
+                  <div className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+                    <p className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto font-normal text-sm text-zinc-500 dark:text-zinc-400 hover:text-[#e25822] dark:hover:text-[#f47b20] underline underline-offset-2"
+                        onClick={handleResendCode}
+                        disabled={isEmailLoading}
+                      >
+                        没收到验证码？重新发送
+                      </Button>
+                      {isEmailLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                    </p>
+                  </div>
                 </div>
-                
-                <div className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-                  <p>
-                    <Button 
-                      variant="link" 
-                      className="p-0 h-auto font-normal text-sm text-zinc-500 dark:text-zinc-400 hover:text-[#e25822] dark:hover:text-[#f47b20] underline underline-offset-2"
-                      onClick={handleResendCode}
-                      disabled={isLoading}
-                    >
-                      不是您？重新登录
-                    </Button>
-                  </p>
-                </div>
-                
+
                 <div className="pt-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
                   <p>
                     继续使用即表示您同意ScreenPipe的{" "}
-                    <Button 
-                      variant="link" 
+                    <Button
+                      variant="link"
                       className="p-0 h-auto font-normal text-xs text-zinc-500 dark:text-zinc-400 hover:text-[#e25822] dark:hover:text-[#f47b20] underline underline-offset-2"
                       onClick={() => openUrl("https://screenpi.pe/terms")}
                     >
                       服务条款
                     </Button>{" "}
                     和{" "}
-                    <Button 
-                      variant="link" 
+                    <Button
+                      variant="link"
                       className="p-0 h-auto font-normal text-xs text-zinc-500 dark:text-zinc-400 hover:text-[#e25822] dark:hover:text-[#f47b20] underline underline-offset-2"
                       onClick={() => openUrl("https://screenpi.pe/privacy")}
                     >
@@ -406,64 +418,141 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* 右侧功能介绍区域 - 新设计 */}
-      <div className="hidden md:block w-1/2 p-8 md:p-12 flex items-center justify-center">
-        <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[#e25822]/90 to-[#f47b20]/90 flex items-center justify-center overflow-hidden relative">
-          {/* 背景图案 */}
+      {/* 右侧功能介绍区域 - 优化设计 */}
+      <div className="hidden md:block w-1/2 p-8 md:p-12 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900/50">
+        <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[#e25822] to-[#f47b20] flex items-center justify-center overflow-hidden relative shadow-xl">
+          {/* 动态背景图案 */}
           <div className="absolute inset-0 opacity-10 bg-[url('/images/grid-pattern.svg')] bg-repeat"></div>
-          
+
+          {/* 装饰元素 */}
+          <motion.div
+            className="absolute top-10 right-10 w-20 h-20 rounded-full bg-white/10"
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.5, 0.3]
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div
+            className="absolute bottom-20 left-10 w-32 h-32 rounded-full bg-white/10"
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.2, 0.4, 0.2]
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 1
+            }}
+          />
+
           {/* 内容容器 */}
           <div className="relative z-10 max-w-lg p-8 text-white">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              隐私优先的AI助手
-            </h2>
-            
-            <div className="space-y-6">
-              <div className="flex items-start space-x-4">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-8 tracking-tight">
+                让AI成为您的<br />屏幕助手
+              </h2>
+            </motion.div>
+
+            <div className="space-y-8">
+              <motion.div
+                className="flex items-start space-x-5"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0 mt-1 shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">本地优先</h3>
-                  <p className="text-white/80">您的数据保留在您的设备上，确保最大程度的隐私保护。</p>
+                  <h3 className="text-xl font-semibold mb-2">隐私至上</h3>
+                  <p className="text-white/90 leading-relaxed">您的数据保留在您的设备上，我们采用端到端加密，确保您的信息安全无忧。</p>
                 </div>
-              </div>
-              
-              <div className="flex items-start space-x-4">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M12 16v-4"></path>
-                    <path d="M12 8h.01"></path>
+              </motion.div>
+
+              <motion.div
+                className="flex items-start space-x-5"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0 mt-1 shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <path d="M8 13h8"></path>
+                    <path d="M8 17h8"></path>
+                    <path d="M8 9h1"></path>
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">智能助手</h3>
-                  <p className="text-white/80">AI助手帮助您分析屏幕内容，提供有价值的见解和建议。</p>
+                  <h3 className="text-xl font-semibold mb-2">智能分析</h3>
+                  <p className="text-white/90 leading-relaxed">AI助手实时分析屏幕内容，提供上下文相关的见解和建议，提升您的工作效率。</p>
                 </div>
-              </div>
-              
-              <div className="flex items-start space-x-4">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+              </motion.div>
+
+              <motion.div
+                className="flex items-start space-x-5"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+              >
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0 mt-1 shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m8 3 4 8 5-5 5 15H2L8 3z"></path>
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">深色模式</h3>
-                  <p className="text-white/80">支持深色模式，保护您的眼睛，提供舒适的使用体验。</p>
+                  <h3 className="text-xl font-semibold mb-2">高效协作</h3>
+                  <p className="text-white/90 leading-relaxed">无缝集成到您的工作流程中，帮助您更快地完成任务，提高团队协作效率。</p>
                 </div>
-              </div>
+              </motion.div>
             </div>
-            
-            <div className="mt-10 pt-6 border-t border-white/20">
-              <p className="text-white/70 italic">
-                "ScreenPipe帮助我更高效地工作，同时保护我的隐私。这是我用过的最好的屏幕助手工具。"
+
+            <motion.div
+              className="mt-12 pt-6 border-t border-white/20"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+            >
+              <div className="flex items-center space-x-4">
+                <div className="flex -space-x-2">
+                  <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center text-[#e25822] font-bold text-sm border-2 border-white">JD</div>
+                  <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center text-[#e25822] font-bold text-sm border-2 border-white">ZL</div>
+                  <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center text-[#e25822] font-bold text-sm border-2 border-white">WH</div>
+                </div>
+                <div>
+                  <div className="flex items-center space-x-1 mb-1">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-sm text-white/80">
+                    超过<span className="font-bold">10,000+</span>专业人士的选择
+                  </p>
+                </div>
+              </div>
+              <p className="mt-4 text-white/90 italic text-sm">
+                "ScreenPipe彻底改变了我的工作方式，它就像是我的第二大脑，帮我处理屏幕上的所有信息。"
               </p>
-              <p className="mt-2 font-medium">— 满意用户</p>
-            </div>
+              <div className="mt-2 flex items-center">
+                <p className="font-medium">李明，产品经理</p>
+                <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs">已验证用户</span>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
