@@ -2,9 +2,10 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, validator
 
 from .plugin import PluginStatus, PluginVisibility
+from .plugin_license import LicenseStatus
 
 
 # 生产力类型枚举
@@ -278,3 +279,144 @@ class TokenResponse(BaseModel):
     success: bool
     message: str
     requires_verification: bool = False
+
+
+# 许可证相关模型
+class LicenseCreate(BaseModel):
+    user_id: str
+    plugin_id: int
+    expires_at: Optional[datetime] = None
+    machine_id: Optional[str] = None
+
+
+class LicenseUpdate(BaseModel):
+    is_active: Optional[bool] = None
+    status: Optional[LicenseStatus] = None
+    expires_at: Optional[datetime] = None
+    machine_id: Optional[str] = None
+
+
+class LicenseResponse(BaseModel):
+    id: int
+    user_id: str
+    plugin_id: int
+    license_key: str
+    issued_at: datetime
+    expires_at: Optional[datetime] = None
+    is_active: bool
+    status: str
+    machine_id: Optional[str] = None
+    last_verified_at: Optional[datetime] = None
+    
+    class Config:
+        orm_mode = True
+
+
+class LicenseVerificationRequest(BaseModel):
+    license_key: str
+    plugin_id: int
+    machine_id: Optional[str] = None
+
+
+class LicenseVerificationResponse(BaseModel):
+    valid: bool
+    message: Optional[str] = None
+    expires_at: Optional[datetime] = None
+
+
+# 评论相关模型
+class ReviewCreate(BaseModel):
+    plugin_id: int
+    rating: int
+    title: Optional[str] = None
+    comment: Optional[str] = None
+    
+    @validator('rating')
+    def rating_must_be_valid(cls, v):
+        if v < 1 or v > 5:
+            raise ValueError('Rating must be between 1 and 5')
+        return v
+
+
+class ReviewUpdate(BaseModel):
+    rating: Optional[int] = None
+    title: Optional[str] = None
+    comment: Optional[str] = None
+    
+    @validator('rating')
+    def rating_must_be_valid(cls, v):
+        if v is not None and (v < 1 or v > 5):
+            raise ValueError('Rating must be between 1 and 5')
+        return v
+
+
+class ReviewResponse(BaseModel):
+    id: int
+    plugin_id: int
+    user_id: str
+    rating: int
+    title: Optional[str] = None
+    comment: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    is_verified_purchase: bool
+    
+    class Config:
+        orm_mode = True
+
+
+class ReviewSummary(BaseModel):
+    average_rating: float
+    total_reviews: int
+    rating_distribution: Dict[int, int]  # 例如 {1: 5, 2: 10, 3: 20, 4: 30, 5: 35}
+
+
+# 统计相关模型
+class PluginEventType(str, Enum):
+    INSTALL = "install"
+    UNINSTALL = "uninstall"
+    UPDATE = "update"
+    ACTIVATE = "activate"
+    DEACTIVATE = "deactivate"
+
+
+class PluginUsageLogCreate(BaseModel):
+    plugin_id: int
+    user_id: str
+    machine_id: Optional[str] = None
+    event_type: PluginEventType
+    version: Optional[str] = None
+
+
+class PluginUsageLogResponse(BaseModel):
+    id: int
+    plugin_id: int
+    user_id: str
+    machine_id: Optional[str] = None
+    event_type: str
+    created_at: datetime
+    version: Optional[str] = None
+    
+    class Config:
+        orm_mode = True
+
+
+class PluginStatsResponse(BaseModel):
+    plugin_id: int
+    date: date
+    active_installs: int
+    new_installs: int
+    uninstalls: int
+    updates: int
+    downloads: int
+    
+    class Config:
+        orm_mode = True
+
+
+class PluginStatsSummary(BaseModel):
+    total_installs: int
+    active_installs: int
+    total_downloads: int
+    average_daily_installs: float
+    install_trend: List[Dict[str, Any]]  # 例如 [{"date": "2023-01-01", "installs": 10}, ...]

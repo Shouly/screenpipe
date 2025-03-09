@@ -8,16 +8,18 @@ from typing import Dict, List, Optional, Tuple
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import desc
+from sqlalchemy import desc, and_, select as sqlalchemy_select
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from backend.app.models.plugin import Plugin, PluginVersion
+from backend.app.models.plugin import Plugin, PluginVersion, PluginVisibility, PluginStatus
+from backend.app.models.plugin_license import PluginLicense
 from backend.app.models.api_models import (
     PluginCreate, PluginUpdate, PluginVersionCreate,
     PluginUpdateCheckItem, PluginUpdateCheckResultItem
 )
 from backend.app.core.config import settings
+from backend.app.services.stats_service import StatsService
 
 
 class PluginService:
@@ -315,25 +317,24 @@ class PluginService:
         return results
 
     @staticmethod
-    def increment_download_count(db: Session, plugin_id: int, version_id: int = None):
-        """增加下载计数"""
-        db_plugin = PluginService.get_plugin(db, plugin_id)
-        if not db_plugin:
-            return False
+    async def increment_download_count(db: AsyncSession, plugin_id: int, version_id: int) -> None:
+        """增加插件和版本的下载计数"""
+        # 更新插件下载计数
+        db_plugin = await PluginService.get_plugin(db, plugin_id)
+        if db_plugin:
+            db_plugin.downloads_count += 1
+            db.add(db_plugin)
         
-        # 增加插件总下载次数
-        db_plugin.downloads_count += 1
-        db.add(db_plugin)
+        # 更新版本下载计数
+        db_version = await PluginService.get_plugin_version(db, version_id)
+        if db_version:
+            db_version.download_count += 1
+            db.add(db_version)
         
-        # 如果指定了版本，增加版本下载次数
-        if version_id:
-            db_version = PluginService.get_plugin_version(db, version_id)
-            if db_version:
-                db_version.download_count += 1
-                db.add(db_version)
+        await db.commit()
         
-        db.commit()
-        return True
+        # 更新每日统计
+        await StatsService.increment_download_count(db, plugin_id)
 
     @staticmethod
     def _calculate_file_hash(file_path: str) -> str:
@@ -372,4 +373,44 @@ class PluginService:
             return False
         except (ValueError, IndexError):
             # 版本号格式错误，默认不更新
-            return False 
+            return False
+
+    @staticmethod
+    async def get_public_plugins(db: AsyncSession, skip: int = 0, limit: int = 100):
+        """获取公开的插件列表"""
+        result = await db.execute(
+            select(Plugin)
+            .options(selectinload(Plugin.versions))
+            .filter(Plugin.visibility == PluginVisibility.PUBLIC)
+            .filter(Plugin.status == PluginStatus.ACTIVE)
+            .offset(skip)
+            .limit(limit)
+        )
+        return result.scalars().all()
+
+    @staticmethod
+    async def get_user_licensed_plugins(db: AsyncSession, user_id: str, skip: int = 0, limit: int = 100):
+        """获取用户已购买的插件列表"""
+        # 查询用户有效的许可证
+        licenses_query = sqlalchemy_select(PluginLicense.plugin_id).filter(
+            and_(
+                PluginLicense.user_id == user_id,
+                PluginLicense.is_active == True,
+                PluginLicense.status == 'active'
+            )
+        )
+        licenses_result = await db.execute(licenses_query)
+        licensed_plugin_ids = [row[0] for row in licenses_result.fetchall()]
+        
+        if not licensed_plugin_ids:
+            return []
+        
+        # 查询这些插件的详细信息
+        result = await db.execute(
+            select(Plugin)
+            .options(selectinload(Plugin.versions))
+            .filter(Plugin.id.in_(licensed_plugin_ids))
+            .offset(skip)
+            .limit(limit)
+        )
+        return result.scalars().all() 

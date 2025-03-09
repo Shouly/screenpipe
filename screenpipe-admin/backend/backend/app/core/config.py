@@ -3,6 +3,8 @@ import logging
 import secrets
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
+from typing import Any, Dict, List, Optional, Union
+from pydantic import AnyHttpUrl
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -59,6 +61,27 @@ class Settings(BaseSettings):
     
     # 插件配置
     PLUGIN_STORAGE_PATH: str = os.getenv("PLUGIN_STORAGE_PATH", os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "storage", "plugins"))
+    
+    # 基础URL，用于构建下载链接
+    BASE_URL: str = "http://localhost:8000"
+    
+    # 是否需要认证
+    REQUIRE_AUTH: bool = True
+    
+    # 数据库配置
+    MYSQL_DB: str = os.getenv("MYSQL_DB", "timeglass")
+    
+    # Elasticsearch配置
+    ELASTICSEARCH_HOST: str = os.getenv("ELASTICSEARCH_HOST", "localhost")
+    ELASTICSEARCH_PORT: str = os.getenv("ELASTICSEARCH_PORT", "9200")
+    ELASTICSEARCH_USER: Optional[str] = os.getenv("ELASTICSEARCH_USER")
+    ELASTICSEARCH_PASSWORD: Optional[str] = os.getenv("ELASTICSEARCH_PASSWORD")
+    
+    # 远程控制服务配置
+    REMOTE_CONTROL_PORT: int = int(os.getenv("REMOTE_CONTROL_PORT", "3031"))
+    
+    class Config:
+        case_sensitive = True
 
 settings = Settings()
 
