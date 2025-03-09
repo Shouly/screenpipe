@@ -98,11 +98,11 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
 
     return (
         <>
-            <div className="bg-white flex flex-col py-4 relative w-16">
+            <div className="bg-background flex flex-col py-4 relative w-20">
                 {/* Logo 区域 */}
                 <div className="flex flex-col items-center justify-center mb-8 px-3">
-                    <div className="w-8 h-8 flex-shrink-0">
-                        <img src="/logo.svg" alt="ScreenPipe" className="w-8 h-8" />
+                    <div className="w-10 h-10 flex-shrink-0">
+                        <img src="/logo.svg" alt="ScreenPipe" className="w-10 h-10" />
                     </div>
                 </div>
 
@@ -115,12 +115,12 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         onClick={() => onNavigate("home")}
                         className={cn(
                             "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
-                            "hover:bg-blue-50 hover:text-blue-600 rounded-lg canva-hover-effect",
-                            activePage === "home" ? "bg-blue-50 text-blue-600" : ""
+                            "hover:bg-white hover:text-blue-600 rounded-lg canva-hover-effect",
+                            activePage === "home" ? "bg-white text-blue-600 shadow-sm" : ""
                         )}
                     >
-                        <Home className="h-5 w-5 mb-1" />
-                        <span className="text-[10px] text-center">首页</span>
+                        <Home className="h-6 w-6 mb-1" />
+                        <span className="text-xs text-center">首页</span>
                     </Button>
 
                     {/* Pipe商店 */}
@@ -130,12 +130,12 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         onClick={() => onNavigate("store")}
                         className={cn(
                             "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
-                            "hover:bg-blue-50 hover:text-blue-600 rounded-lg canva-hover-effect",
-                            activePage === "store" ? "bg-blue-50 text-blue-600" : ""
+                            "hover:bg-white hover:text-blue-600 rounded-lg canva-hover-effect",
+                            activePage === "store" ? "bg-white text-blue-600 shadow-sm" : ""
                         )}
                     >
-                        <ShoppingBag className="h-5 w-5 mb-1" />
-                        <span className="text-[10px] text-center">商店</span>
+                        <ShoppingBag className="h-6 w-6 mb-1" />
+                        <span className="text-xs text-center">商店</span>
                     </Button>
                 </div>
 
@@ -152,11 +152,11 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         onClick={() => setShowInbox(!showInbox)}
                         className={cn(
                             "flex flex-col items-center justify-center h-auto py-2 px-1 w-full relative",
-                            "hover:bg-blue-50 hover:text-blue-600 rounded-lg canva-hover-effect"
+                            "hover:bg-white hover:text-blue-600 rounded-lg canva-hover-effect"
                         )}
                     >
-                        <Bell className="h-5 w-5 mb-1" />
-                        <span className="text-[10px] text-center">通知</span>
+                        <Bell className="h-6 w-6 mb-1" />
+                        <span className="text-xs text-center">通知</span>
                         {unreadCount > 0 && (
                             <span className="absolute top-0 right-0 bg-red-500 text-white text-[8px] rounded-full h-4 w-4 flex items-center justify-center">
                                 {unreadCount}
@@ -171,11 +171,11 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         onClick={handleSettingsClick}
                         className={cn(
                             "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
-                            "hover:bg-blue-50 hover:text-blue-600 rounded-lg canva-hover-effect"
+                            "hover:bg-white hover:text-blue-600 rounded-lg canva-hover-effect"
                         )}
                     >
-                        <Settings className="h-5 w-5 mb-1" />
-                        <span className="text-[10px] text-center">设置</span>
+                        <Settings className="h-6 w-6 mb-1" />
+                        <span className="text-xs text-center">设置</span>
                     </Button>
                 </div>
             </div>

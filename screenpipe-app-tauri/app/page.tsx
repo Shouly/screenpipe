@@ -270,11 +270,11 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen bg-[#f9f9f9]">
+    <main className="flex min-h-screen bg-background">
       <div className="flex w-full h-full">
         <Navigation activePage={activePage} onNavigate={handleNavigate} />
-        <div className="flex-1 p-3 overflow-hidden">
-          <div className="w-full h-full bg-white rounded-xl overflow-auto canva-shadow">
+        <div className="flex-1 p-2 overflow-hidden">
+          <div className="w-full h-full bg-white rounded-xl overflow-y-auto canva-shadow">
             {renderActivePage()}
           </div>
         </div>

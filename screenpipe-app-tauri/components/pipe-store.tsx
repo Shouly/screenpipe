@@ -1145,7 +1145,7 @@ export const PipeStore: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-5 min-h-full">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Pipe 商店</h1>
         <div className="flex items-center gap-2">
