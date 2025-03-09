@@ -122,7 +122,7 @@ export const PipeStore: React.FC = () => {
 
   const fetchStorePlugins = async () => {
     try {
-      const pipeApi = await PipeApi.create(settings.user?.token!);
+      const pipeApi = await PipeApi.create(settings.authToken!);
       const plugins = await pipeApi.listStorePlugins();
 
       // Create PipeWithStatus objects for store plugins
@@ -183,8 +183,8 @@ export const PipeStore: React.FC = () => {
   };
 
   const fetchPurchaseHistory = async () => {
-    if (!settings.user?.token) return;
-    const pipeApi = await PipeApi.create(settings.user!.token!);
+    if (!settings.authToken) return;
+    const pipeApi = await PipeApi.create(settings.authToken!);
     const purchaseHistory = await pipeApi.getUserPurchaseHistory();
     setPurchaseHistory(purchaseHistory);
   };
@@ -198,7 +198,7 @@ export const PipeStore: React.FC = () => {
 
       setLoadingPurchases((prev) => new Set(prev).add(pipe.id));
 
-      const pipeApi = await PipeApi.create(settings.user!.token!);
+      const pipeApi = await PipeApi.create(settings.authToken!);
       const response = await pipeApi.purchasePipe(pipe.id);
 
       if (response.data.payment_successful) {
@@ -343,7 +343,7 @@ export const PipeStore: React.FC = () => {
         duration: 10000,
       });
 
-      const pipeApi = await PipeApi.create(settings.user!.token!);
+      const pipeApi = await PipeApi.create(settings.authToken!);
       const response = await pipeApi.downloadPipe(pipe.id);
 
       const downloadResponse = await fetch(

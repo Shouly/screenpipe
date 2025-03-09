@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
 import { sendNotification } from "@tauri-apps/plugin-notification";
 import { platform } from "@tauri-apps/plugin-os";
+import React, { useEffect } from "react";
 
 const UpdateNotification: React.FC<{ checkIntervalHours: number }> = ({
   checkIntervalHours = 3,

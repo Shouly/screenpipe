@@ -1,19 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Label } from "./ui/label";
-import { Checkbox } from "./ui/checkbox";
-import { invoke } from "@tauri-apps/api/core";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
-import { Layers, Layout, RefreshCw } from "lucide-react";
-import { toast } from "./ui/use-toast";
-import { InstalledPipe, PipeWithStatus } from "./pipe-store/types";
+import { open } from "@tauri-apps/plugin-dialog";
+import { FolderOpen, Layers, Layout, RefreshCw } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import { MemoizedReactMarkdown } from "./markdown";
+import { PipeWithStatus } from "./pipe-store/types";
 import { SqlAutocompleteInput } from "./sql-autocomplete-input";
+import { Button } from "./ui/button";
+import { Checkbox } from "./ui/checkbox";
+import { CodeBlock } from "./ui/codeblock";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import {
   Select,
   SelectContent,
@@ -21,13 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { HelpCircle } from "lucide-react";
-import { MemoizedReactMarkdown } from "./markdown";
-import { CodeBlock } from "./ui/codeblock";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import { open } from "@tauri-apps/plugin-dialog";
-import { FolderOpen } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 type PipeConfigFormProps = {
   pipe: PipeWithStatus;
@@ -370,9 +366,9 @@ export const PipeConfigForm: React.FC<PipeConfigFormProps> = ({
               setConfig((prev) =>
                 prev
                   ? {
-                      ...prev,
-                      port: parseInt(e.target.value) || 3000,
-                    }
+                    ...prev,
+                    port: parseInt(e.target.value) || 3000,
+                  }
                   : prev
               )
             }

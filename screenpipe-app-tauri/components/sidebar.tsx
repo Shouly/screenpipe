@@ -7,21 +7,21 @@ import {
   InboxMessages,
   Message,
 } from "@/components/inbox-messages";
-import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/components/ui/use-toast";
+import { useHealthCheck } from "@/lib/hooks/use-health-check";
 import { useSettings } from "@/lib/hooks/use-settings";
+import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
+import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
+import { cn } from "@/lib/utils";
 import { listen } from "@tauri-apps/api/event";
 import localforage from "localforage";
 import {
+  Activity,
   Bell,
   Settings2,
-  Activity,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useHealthCheck } from "@/lib/hooks/use-health-check";
-import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
 
 export default function Sidebar() {
   const [showInbox, setShowInbox] = useState(false);
@@ -100,11 +100,11 @@ export default function Sidebar() {
   // 获取系统状态颜色
   const getStatusColor = () => {
     if (!health || health.status === "loading") return "bg-yellow-500";
-    
+
     const isVisionOk = health.frame_status === "ok" || health.frame_status === "disabled";
     const isAudioOk = health.audio_status === "ok" || health.audio_status === "disabled" || settings.disableAudio;
     const isUiOk = health.ui_status === "ok" || health.ui_status === "disabled" || !settings.enableUiMonitoring;
-    
+
     return isVisionOk && isAudioOk && isUiOk ? "bg-green-500" : "bg-red-500";
   };
 
@@ -142,7 +142,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div 
+    <div
       className={cn(
         "h-screen bg-background border-r flex flex-col py-4 transition-all duration-300",
         expanded ? "w-48" : "w-12 sm:w-14"
@@ -157,7 +157,7 @@ export default function Sidebar() {
         </div>
         {expanded && <span className="ml-2 font-semibold text-sm">ScreenPipe</span>}
       </div>
-      
+
       {/* 主菜单项 */}
       <div className="flex-1 flex flex-col space-y-2 px-1 sm:px-2">
         <TooltipProvider>
@@ -186,7 +186,7 @@ export default function Sidebar() {
               </TooltipContent>
             )}
           </Tooltip>
-          
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -216,7 +216,7 @@ export default function Sidebar() {
           </Tooltip>
         </TooltipProvider>
       </div>
-      
+
       {/* 底部系统状态 */}
       <div className="mt-auto px-1 sm:px-2">
         <div className="hidden">
@@ -266,7 +266,7 @@ export default function Sidebar() {
           </Tooltip>
         </TooltipProvider>
       </div>
-      
+
       {/* 通知弹出框 */}
       {showInbox && (
         <div className={cn(

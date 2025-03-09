@@ -1,25 +1,25 @@
 "use client";
-import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useState } from "react";
 import { Badge } from "./ui/badge";
 import { toast } from "./ui/use-toast";
 
+import { useHealthCheck } from "@/lib/hooks/use-health-check";
+import { open as openUrl } from "@tauri-apps/plugin-shell";
+import { Folder, Power } from "lucide-react";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
-import { useHealthCheck } from "@/lib/hooks/use-health-check";
-import {  Folder, Power, Settings } from "lucide-react";
-import { open as openUrl } from "@tauri-apps/plugin-shell";
 
-import { LogFileButton } from "./log-file-button";
-import { DevModeSettings } from "./dev-mode-settings";
-import { cn } from "@/lib/utils";
 import { useSettings } from "@/lib/hooks/use-settings";
 import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
+import { cn } from "@/lib/utils";
+import { DevModeSettings } from "./dev-mode-settings";
+import { LogFileButton } from "./log-file-button";
 import { PermissionButtons } from "./status/permission-buttons";
 
 const HealthStatus = ({ className }: { className?: string }) => {
@@ -132,9 +132,8 @@ const HealthStatus = ({ className }: { className?: string }) => {
         {/* <Activity className="mr-2 h-4 w-4" /> */}
         <Power className="mr-2 h-4 w-4" />
         <span
-          className={`ml-1 w-2 h-2 rounded-full ${statusColor} inline-block ${
-            statusColor === "bg-red-500" ? "animate-pulse" : ""
-          }`}
+          className={`ml-1 w-2 h-2 rounded-full ${statusColor} inline-block ${statusColor === "bg-red-500" ? "animate-pulse" : ""
+            }`}
         />
       </Badge>
       <Dialog open={isOpen} onOpenChange={close}>
@@ -164,11 +163,10 @@ const HealthStatus = ({ className }: { className?: string }) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-2 h-2 rounded-full ${
-                      health?.frame_status === "ok"
-                        ? "bg-green-500"
-                        : "bg-red-500"
-                    }`}
+                    className={`w-2 h-2 rounded-full ${health?.frame_status === "ok"
+                      ? "bg-green-500"
+                      : "bg-red-500"
+                      }`}
                   />
                   <span className="text-sm">screen recording</span>
                   <span className="text-sm text-muted-foreground">
@@ -186,13 +184,12 @@ const HealthStatus = ({ className }: { className?: string }) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-2 h-2 rounded-full ${
-                      settings.disableAudio
-                        ? "bg-gray-400"
-                        : health?.audio_status === "ok"
+                    className={`w-2 h-2 rounded-full ${settings.disableAudio
+                      ? "bg-gray-400"
+                      : health?.audio_status === "ok"
                         ? "bg-green-500"
                         : "bg-red-500"
-                    }`}
+                      }`}
                   />
                   <span className="text-sm">audio recording</span>
                   <span className="text-sm text-muted-foreground">
@@ -200,8 +197,8 @@ const HealthStatus = ({ className }: { className?: string }) => {
                     {settings.disableAudio
                       ? "turned off"
                       : health
-                      ? health.audio_status
-                      : "error"}
+                        ? health.audio_status
+                        : "error"}
                     , last update:{" "}
                     {settings.disableAudio
                       ? "n/a"
@@ -218,11 +215,10 @@ const HealthStatus = ({ className }: { className?: string }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div
-                      className={`w-2 h-2 rounded-full ${
-                        health?.ui_status === "ok"
-                          ? "bg-green-500"
-                          : "bg-red-500"
-                      }`}
+                      className={`w-2 h-2 rounded-full ${health?.ui_status === "ok"
+                        ? "bg-green-500"
+                        : "bg-red-500"
+                        }`}
                     />
                     <span className="text-sm">ui monitoring</span>
                     <span className="text-sm text-muted-foreground">

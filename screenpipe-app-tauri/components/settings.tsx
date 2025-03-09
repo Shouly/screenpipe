@@ -1,35 +1,33 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { useSettings } from "@/lib/hooks/use-settings";
+import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import {
   Brain,
-  Video,
-  Keyboard,
-  User,
-  HardDrive,
   FolderInput,
-  Settings as SettingsIcon,
-  Search,
-  X,
+  HardDrive,
+  Keyboard,
   LogOut,
+  Search,
+  Settings as SettingsIcon,
+  User,
+  Video,
+  X,
 } from "lucide-react";
-import { DialogHeader, DialogTitle } from "./ui/dialog";
-import { cn } from "@/lib/utils";
-import { AccountSection } from "./settings/account-section";
-import ShortcutSection from "./settings/shortcut-section";
-import DiskUsage from "./settings/disk-usage";
-import AISection from "./settings/ai-section";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { invoke } from "@tauri-apps/api/core";
-import { DataImportSection } from "./settings/data-import-section";
-import { Dialog, DialogContent } from "./ui/dialog";
-import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
-import { RecordingSettings } from "./settings/recording-settings";
-import GeneralSettings from "./settings/general-settings";
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { AccountSection } from "./settings/account-section";
+import AISection from "./settings/ai-section";
+import { DataImportSection } from "./settings/data-import-section";
+import DiskUsage from "./settings/disk-usage";
+import GeneralSettings from "./settings/general-settings";
+import { RecordingSettings } from "./settings/recording-settings";
+import ShortcutSection from "./settings/shortcut-section";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent } from "./ui/dialog";
+import { Input } from "./ui/input";
 
 type SettingsSection =
   | "general"
@@ -94,8 +92,8 @@ export function Settings() {
 
   const filteredSections = searchQuery
     ? settingsSections.filter((section) =>
-        section.label.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      section.label.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : settingsSections;
 
   // 按类别分组
@@ -150,13 +148,13 @@ export function Settings() {
 
   // 登出功能
   const handleLogout = () => {
-    updateSettings({ 
-      user: { 
+    updateSettings({
+      user: {
         id: "",
         email: "",
         name: ""
       },
-      authToken: "" 
+      authToken: ""
     });
     setSettingsOpen(false);
     router.push("/login");
@@ -170,7 +168,7 @@ export function Settings() {
         className="max-w-[80vw] w-full max-h-[80vh] h-full overflow-hidden p-0 [&>button]:hidden rounded-xl border-none shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <motion.div 
+        <motion.div
           className="flex h-full bg-background"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -180,10 +178,10 @@ export function Settings() {
           <div className="w-52 border-r bg-muted/30 flex flex-col">
             <div className="p-4 border-b flex items-center justify-between">
               <h2 className="text-xl font-bold">设置</h2>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 text-muted-foreground hover:text-foreground" 
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
                 onClick={() => setSettingsOpen(false)}
               >
                 <X className="h-4 w-4" />
@@ -246,9 +244,9 @@ export function Settings() {
             {/* 登出按钮 */}
             {settings.user?.id && (
               <div className="p-4 border-t">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleLogout}
                   className="w-full flex items-center justify-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200"
                 >
@@ -260,7 +258,7 @@ export function Settings() {
           </div>
 
           {/* 内容区域 */}
-          <motion.div 
+          <motion.div
             className="flex-1 flex flex-col h-full max-h-[80vh] overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

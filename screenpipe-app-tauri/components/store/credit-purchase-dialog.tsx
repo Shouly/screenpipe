@@ -36,7 +36,7 @@ export function CreditPurchaseDialog({
       `${url}?client_reference_id=${settings.user?.id}&metadata[user_id]=${settings.user?.id}`
     );
     setTimeout(async () => {
-      await loadUser(settings.user?.token!, true);
+      await loadUser(settings.authToken!, true);
       onCreditsUpdated?.();
       setShowRefreshHint(true);
       setIsLoading(false);

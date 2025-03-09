@@ -49,7 +49,6 @@ export function CliCommandDialog({ settings }: CliCommandDialogProps) {
 
     // Add AI proxy env vars for screenpipe cloud
     if (
-      settings.user.cloud_subscribed &&
       settings.realtimeAudioTranscriptionEngine === "screenpipe-cloud" &&
       settings.userId
     ) {
