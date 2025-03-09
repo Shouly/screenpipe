@@ -2,8 +2,8 @@
 
 import { useSettings } from "@/lib/hooks/use-settings";
 import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
+import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 import {
   Activity,
   Brain,
@@ -26,11 +26,10 @@ import DiskUsage from "./settings/disk-usage";
 import GeneralSettings from "./settings/general-settings";
 import { RecordingSettings } from "./settings/recording-settings";
 import ShortcutSection from "./settings/shortcut-section";
+import { StatusSection } from "./settings/status-section";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent } from "./ui/dialog";
 import { Input } from "./ui/input";
-import HealthStatus from "./screenpipe-status";
-import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
 
 type SettingsSection =
   | "general"
@@ -134,27 +133,7 @@ export function Settings() {
       case "dataImport":
         return <DataImportSection />;
       case "status":
-        return (
-          <div className="p-4">
-            <h2 className="text-xl font-semibold mb-4">系统状态</h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              查看系统各组件的运行状态和诊断信息。
-            </p>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                openStatusDialog();
-                setSettingsOpen(false);
-              }}
-              className="mb-6"
-            >
-              打开详细状态面板
-            </Button>
-            <div className="mt-4 border rounded-lg p-4">
-              <HealthStatus />
-            </div>
-          </div>
-        );
+        return <StatusSection />;
       default:
         return null;
     }
@@ -191,55 +170,58 @@ export function Settings() {
       <DialogContent className="max-w-5xl p-0 h-[85vh] overflow-hidden rounded-xl" hideCloseButton>
         <div className="flex h-full">
           {/* 侧边栏 */}
-          <div className="w-56 border-r p-4 h-full overflow-y-auto bg-gray-50 relative">
-            <div className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="搜索设置..."
-                  className="pl-9 rounded-lg border-gray-200 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          <div className="w-56 border-r bg-gray-50 flex flex-col h-full">
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="mb-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="搜索设置..."
+                    className="pl-9 rounded-lg border-gray-200 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {Object.entries(groupedSections).map(([category, sections]) => (
+                  <div key={category}>
+                    <h3 className="text-sm font-medium text-gray-500 mb-2 px-2">
+                      {category}
+                    </h3>
+                    <div className="space-y-1">
+                      {sections.map((section) => (
+                        <Button
+                          key={section.id}
+                          variant={activeSection === section.id ? "secondary" : "ghost"}
+                          className={cn(
+                            "w-full justify-start rounded-lg",
+                            activeSection === section.id
+                              ? "bg-white text-blue-600 shadow-sm"
+                              : "hover:bg-white"
+                          )}
+                          onClick={() => setActiveSection(section.id as SettingsSection)}
+                        >
+                          <div className={cn(
+                            "w-6 h-6 rounded-full flex items-center justify-center mr-2",
+                            activeSection === section.id
+                              ? "bg-blue-50"
+                              : "bg-gray-100"
+                          )}>
+                            {section.icon}
+                          </div>
+                          <span>{section.label}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="space-y-6 mb-16">
-              {Object.entries(groupedSections).map(([category, sections]) => (
-                <div key={category}>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2 px-2">
-                    {category}
-                  </h3>
-                  <div className="space-y-1">
-                    {sections.map((section) => (
-                      <Button
-                        key={section.id}
-                        variant={activeSection === section.id ? "secondary" : "ghost"}
-                        className={cn(
-                          "w-full justify-start rounded-lg",
-                          activeSection === section.id
-                            ? "bg-white text-blue-600 shadow-sm"
-                            : "hover:bg-white"
-                        )}
-                        onClick={() => setActiveSection(section.id as SettingsSection)}
-                      >
-                        <div className={cn(
-                          "w-6 h-6 rounded-full flex items-center justify-center mr-2",
-                          activeSection === section.id 
-                            ? "bg-blue-50" 
-                            : "bg-gray-100"
-                        )}>
-                          {section.icon}
-                        </div>
-                        <span>{section.label}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center w-full px-2">
+            {/* 登出按钮固定在底部 */}
+            <div className="p-4 border-t bg-gray-50">
               <Button
                 variant="outline"
                 className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg w-full"
@@ -256,8 +238,8 @@ export function Settings() {
           </div>
 
           {/* 主内容区域 */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="flex justify-between items-center border-b p-4">
+          <div className="flex-1 flex flex-col h-full">
+            <div className="flex justify-between items-center border-b p-4 bg-white flex-shrink-0">
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
                 <p className="text-sm text-gray-500">{description}</p>
@@ -273,7 +255,11 @@ export function Settings() {
               </Button>
             </div>
 
-            <div className="p-6">{renderActiveSection()}</div>
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6">
+                {renderActiveSection()}
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>

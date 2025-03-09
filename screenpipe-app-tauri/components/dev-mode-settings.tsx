@@ -175,7 +175,7 @@ export const DevModeSettings = ({ localDataDir }: { localDataDir: string }) => {
   return (
     <>
       <div className="w-full my-4 flex justify-center">
-        <div className="flex-col justify-around space-y-4 w-[40vw]">
+        <div className="flex-col justify-around space-y-4 w-full max-w-3xl mx-auto">
           <Card className="p-8 relative">
             <CardContent>
               <div className="flex flex-col ">
