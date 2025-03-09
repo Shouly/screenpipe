@@ -53,7 +53,7 @@ export function Settings() {
   const settingsSections = [
     {
       id: "account",
-      label: "账户",
+      label: "个人资料",
       icon: <User className="h-4 w-4" />,
       category: "账户"
     },
@@ -164,7 +164,7 @@ export function Settings() {
   const getSectionInfo = (section: SettingsSection) => {
     switch (section) {
       case "account":
-        return { title: "账户", description: "管理您的账户信息" };
+        return { title: "个人资料", description: "管理您的账户信息" };
       case "general":
         return { title: "通用设置", description: "应用的基本设置" };
       case "shortcuts":
@@ -188,26 +188,26 @@ export function Settings() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setSettingsOpen}>
-      <DialogContent className="max-w-5xl p-0 h-[85vh] overflow-hidden">
+      <DialogContent className="max-w-5xl p-0 h-[85vh] overflow-hidden rounded-xl" hideCloseButton>
         <div className="flex h-full">
           {/* 侧边栏 */}
-          <div className="w-64 border-r p-4 h-full overflow-y-auto">
-            <div className="mb-4">
+          <div className="w-56 border-r p-4 h-full overflow-y-auto bg-gray-50 relative">
+            <div className="mb-6">
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="搜索设置..."
-                  className="pl-8"
+                  className="pl-9 rounded-lg border-gray-200 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-6 mb-16">
               {Object.entries(groupedSections).map(([category, sections]) => (
                 <div key={category}>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                  <h3 className="text-sm font-medium text-gray-500 mb-2 px-2">
                     {category}
                   </h3>
                   <div className="space-y-1">
@@ -216,15 +216,22 @@ export function Settings() {
                         key={section.id}
                         variant={activeSection === section.id ? "secondary" : "ghost"}
                         className={cn(
-                          "w-full justify-start",
+                          "w-full justify-start rounded-lg",
                           activeSection === section.id
-                            ? "bg-accent text-accent-foreground"
-                            : ""
+                            ? "bg-white text-blue-600 shadow-sm"
+                            : "hover:bg-white"
                         )}
                         onClick={() => setActiveSection(section.id as SettingsSection)}
                       >
-                        {section.icon}
-                        <span className="ml-2">{section.label}</span>
+                        <div className={cn(
+                          "w-6 h-6 rounded-full flex items-center justify-center mr-2",
+                          activeSection === section.id 
+                            ? "bg-blue-50" 
+                            : "bg-gray-100"
+                        )}>
+                          {section.icon}
+                        </div>
+                        <span>{section.label}</span>
                       </Button>
                     ))}
                   </div>
@@ -232,10 +239,10 @@ export function Settings() {
               ))}
             </div>
 
-            <div className="absolute bottom-4 left-4">
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center w-full px-2">
               <Button
-                variant="ghost"
-                className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 p-2"
+                variant="outline"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg w-full"
                 onClick={() => {
                   updateSettings({ authToken: "", user: undefined });
                   setSettingsOpen(false);
@@ -252,20 +259,21 @@ export function Settings() {
           <div className="flex-1 overflow-y-auto">
             <div className="flex justify-between items-center border-b p-4">
               <div>
-                <h2 className="text-xl font-semibold">{title}</h2>
-                <p className="text-sm text-muted-foreground">{description}</p>
+                <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+                <p className="text-sm text-gray-500">{description}</p>
               </div>
               <Button
                 variant="ghost"
-                size="icon"
+                size="sm"
                 onClick={() => setSettingsOpen(false)}
+                className="rounded-full h-8 w-8 p-0 hover:bg-gray-100"
               >
                 <X className="h-4 w-4" />
                 <span className="sr-only">关闭</span>
               </Button>
             </div>
 
-            <div className="p-4">{renderActiveSection()}</div>
+            <div className="p-6">{renderActiveSection()}</div>
           </div>
         </div>
       </DialogContent>
