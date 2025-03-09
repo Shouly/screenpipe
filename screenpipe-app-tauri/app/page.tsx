@@ -270,10 +270,14 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen">
-      <Navigation activePage={activePage} onNavigate={handleNavigate} />
-      <div className="flex-1 overflow-auto">
-        {renderActivePage()}
+    <main className="flex min-h-screen bg-[#f9f9f9]">
+      <div className="flex w-full h-full">
+        <Navigation activePage={activePage} onNavigate={handleNavigate} />
+        <div className="flex-1 p-3 overflow-hidden">
+          <div className="w-full h-full bg-white rounded-xl overflow-auto canva-shadow">
+            {renderActivePage()}
+          </div>
+        </div>
       </div>
       <NotificationHandler />
       <Settings />

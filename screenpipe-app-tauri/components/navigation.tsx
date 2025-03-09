@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 import { listen } from "@tauri-apps/api/event";
 import localforage from "localforage";
 import {
-    Bell,
     Home,
-    Package,
-    Settings2
+    ShoppingBag,
+    Bell,
+    Settings
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -27,7 +27,6 @@ interface NavigationProps {
 export default function Navigation({ activePage, onNavigate }: NavigationProps) {
     const [showInbox, setShowInbox] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
-    const [collapsed, setCollapsed] = useState(true);
     const { setIsOpen: setSettingsOpen } = useSettingsDialog();
 
     useEffect(() => {
@@ -99,48 +98,29 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
 
     return (
         <>
-            <div
-                className="h-screen bg-background border-r flex flex-col py-4 relative"
-                style={{
-                    width: collapsed ? '64px' : '256px',
-                    transition: 'width 0.2s ease-out'
-                }}
-                onMouseEnter={() => setCollapsed(false)}
-                onMouseLeave={() => setCollapsed(true)}
-            >
+            <div className="bg-white flex flex-col py-4 relative w-16">
                 {/* Logo 区域 */}
-                <div className="flex items-center justify-center mb-8 px-4">
+                <div className="flex flex-col items-center justify-center mb-8 px-3">
                     <div className="w-8 h-8 flex-shrink-0">
                         <img src="/logo.svg" alt="ScreenPipe" className="w-8 h-8" />
                     </div>
-                    <span className={cn("ml-3 font-semibold text-lg whitespace-nowrap overflow-hidden",
-                        collapsed ? "opacity-0 w-0" : "opacity-100 w-auto",
-                        "transition-all duration-200"
-                    )}>
-                        ScreenPipe
-                    </span>
                 </div>
 
                 {/* 主导航项 */}
-                <div className="flex-1 flex flex-col space-y-1 px-2">
+                <div className="flex-1 flex flex-col space-y-6 px-2">
                     {/* 首页 */}
                     <Button
                         variant={activePage === "home" ? "secondary" : "ghost"}
                         size="sm"
                         onClick={() => onNavigate("home")}
                         className={cn(
-                            "flex w-full justify-start py-2",
-                            "hover:bg-accent hover:text-accent-foreground",
-                            collapsed ? "px-3" : "px-4"
+                            "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
+                            "hover:bg-blue-50 hover:text-blue-600 rounded-lg canva-hover-effect",
+                            activePage === "home" ? "bg-blue-50 text-blue-600" : ""
                         )}
                     >
-                        <Home className="h-5 w-5 flex-shrink-0" />
-                        <span className={cn("ml-3 text-sm whitespace-nowrap overflow-hidden",
-                            collapsed ? "opacity-0 w-0" : "opacity-100 w-auto",
-                            "transition-all duration-200"
-                        )}>
-                            首页
-                        </span>
+                        <Home className="h-5 w-5 mb-1" />
+                        <span className="text-[10px] text-center">首页</span>
                     </Button>
 
                     {/* Pipe商店 */}
@@ -149,23 +129,18 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         size="sm"
                         onClick={() => onNavigate("store")}
                         className={cn(
-                            "flex w-full justify-start py-2",
-                            "hover:bg-accent hover:text-accent-foreground",
-                            collapsed ? "px-3" : "px-4"
+                            "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
+                            "hover:bg-blue-50 hover:text-blue-600 rounded-lg canva-hover-effect",
+                            activePage === "store" ? "bg-blue-50 text-blue-600" : ""
                         )}
                     >
-                        <Package className="h-5 w-5 flex-shrink-0" />
-                        <span className={cn("ml-3 text-sm whitespace-nowrap overflow-hidden",
-                            collapsed ? "opacity-0 w-0" : "opacity-100 w-auto",
-                            "transition-all duration-200"
-                        )}>
-                            Pipe商店
-                        </span>
+                        <ShoppingBag className="h-5 w-5 mb-1" />
+                        <span className="text-[10px] text-center">商店</span>
                     </Button>
                 </div>
 
                 {/* 底部工具栏 */}
-                <div className="mt-auto px-2 space-y-1">
+                <div className="mt-auto px-2 space-y-6 mb-4">
                     <div className="hidden">
                         <HealthStatus className="status-trigger" />
                     </div>
@@ -176,20 +151,14 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         size="sm"
                         onClick={() => setShowInbox(!showInbox)}
                         className={cn(
-                            "flex w-full relative justify-start py-2",
-                            "hover:bg-accent hover:text-accent-foreground",
-                            collapsed ? "px-3" : "px-4"
+                            "flex flex-col items-center justify-center h-auto py-2 px-1 w-full relative",
+                            "hover:bg-blue-50 hover:text-blue-600 rounded-lg canva-hover-effect"
                         )}
                     >
-                        <Bell className="h-5 w-5 flex-shrink-0" />
-                        <span className={cn("ml-3 text-sm whitespace-nowrap overflow-hidden",
-                            collapsed ? "opacity-0 w-0" : "opacity-100 w-auto",
-                            "transition-all duration-200"
-                        )}>
-                            通知
-                        </span>
+                        <Bell className="h-5 w-5 mb-1" />
+                        <span className="text-[10px] text-center">通知</span>
                         {unreadCount > 0 && (
-                            <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                            <span className="absolute top-0 right-0 bg-red-500 text-white text-[8px] rounded-full h-4 w-4 flex items-center justify-center">
                                 {unreadCount}
                             </span>
                         )}
@@ -201,25 +170,19 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         size="sm"
                         onClick={handleSettingsClick}
                         className={cn(
-                            "flex w-full justify-start py-2",
-                            "hover:bg-accent hover:text-accent-foreground",
-                            collapsed ? "px-3" : "px-4"
+                            "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
+                            "hover:bg-blue-50 hover:text-blue-600 rounded-lg canva-hover-effect"
                         )}
                     >
-                        <Settings2 className="h-5 w-5 flex-shrink-0" />
-                        <span className={cn("ml-3 text-sm whitespace-nowrap overflow-hidden",
-                            collapsed ? "opacity-0 w-0" : "opacity-100 w-auto",
-                            "transition-all duration-200"
-                        )}>
-                            设置
-                        </span>
+                        <Settings className="h-5 w-5 mb-1" />
+                        <span className="text-[10px] text-center">设置</span>
                     </Button>
                 </div>
             </div>
 
             {/* 通知面板 */}
             {showInbox && (
-                <div className="fixed top-0 right-0 h-screen w-80 bg-background border-l shadow-lg z-50">
+                <div className="fixed top-0 right-0 h-screen w-80 bg-white border-l shadow-lg z-50 rounded-l-xl">
                     <InboxMessages
                         messages={messages}
                         onClose={() => setShowInbox(false)}
