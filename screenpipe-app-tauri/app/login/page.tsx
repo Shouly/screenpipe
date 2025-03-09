@@ -79,12 +79,9 @@ export default function LoginPage() {
         setShowVerificationForm(true);
 
       } catch (apiError) {
-        console.error("API调用失败:", apiError);
         throw apiError;
       }
     } catch (error) {
-      console.error("登录失败:", error);
-
       // 提供更具体的错误信息
       let errorMessage = "发送登录链接失败";
       if (!navigator.onLine) {
@@ -117,23 +114,14 @@ export default function LoginPage() {
     setIsVerifying(true);
 
     try {
-      console.log("开始验证登录验证码...");
       const userApi = new UserApi();
       const response = await userApi.verifyEmailLogin(email, verificationCode);
-
-      console.log("验证成功，保存用户数据和令牌...", {
-        userId: response.user.id,
-        email: response.user.email,
-        tokenLength: response.access_token.length
-      });
 
       // 使用saveSettings代替updateSettings，确保设置被保存到本地存储
       await saveSettings({
         user: response.user,
         authToken: response.access_token
       });
-
-      console.log("用户数据和令牌已保存");
 
       toast({
         title: "登录成功",
@@ -143,13 +131,11 @@ export default function LoginPage() {
       // 使用setTimeout确保状态更新和toast显示后再跳转
       // 这样可以避免跳转延迟的感觉，因为用户已经看到了成功提示
       setTimeout(() => {
-        console.log("准备跳转到主页...");
         router.push("/");
         // 强制刷新以确保路由更新
         router.refresh();
-      }, 500); // 增加延迟时间，确保数据保存完成
+      }, 50); // 增加延迟时间，确保数据保存完成
     } catch (error) {
-      console.error("验证登录失败:", error);
       toast({
         title: "验证失败",
         description: "验证码无效或已过期，请重新获取",
