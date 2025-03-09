@@ -98,7 +98,7 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
 
     return (
         <>
-            <div className="bg-background flex flex-col py-4 fixed left-0 top-0 w-20 h-screen z-30">
+            <div className="bg-muted flex flex-col py-4 fixed left-0 top-0 w-20 h-screen z-30">
                 {/* Logo 区域 */}
                 <div className="flex flex-col items-center justify-center mb-8 px-3">
                     <div className="w-10 h-10 flex-shrink-0">
@@ -115,8 +115,8 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         onClick={() => onNavigate("home")}
                         className={cn(
                             "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
-                            "hover:bg-white hover:text-blue-600 rounded-lg canva-hover-effect",
-                            activePage === "home" ? "bg-white text-blue-600 shadow-sm" : ""
+                            "hover:bg-accent hover:text-primary rounded-lg transition-colors",
+                            activePage === "home" ? "bg-accent text-primary" : ""
                         )}
                     >
                         <Home className="h-6 w-6 mb-1" />
@@ -130,8 +130,8 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         onClick={() => onNavigate("store")}
                         className={cn(
                             "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
-                            "hover:bg-white hover:text-blue-600 rounded-lg canva-hover-effect",
-                            activePage === "store" ? "bg-white text-blue-600 shadow-sm" : ""
+                            "hover:bg-accent hover:text-primary rounded-lg transition-colors",
+                            activePage === "store" ? "bg-accent text-primary" : ""
                         )}
                     >
                         <ShoppingBag className="h-6 w-6 mb-1" />
@@ -152,13 +152,13 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         onClick={() => setShowInbox(!showInbox)}
                         className={cn(
                             "flex flex-col items-center justify-center h-auto py-2 px-1 w-full relative",
-                            "hover:bg-white hover:text-blue-600 rounded-lg canva-hover-effect"
+                            "hover:bg-accent hover:text-primary rounded-lg transition-colors"
                         )}
                     >
                         <Bell className="h-6 w-6 mb-1" />
                         <span className="text-xs text-center">通知</span>
                         {unreadCount > 0 && (
-                            <span className="absolute top-0 right-0 bg-red-500 text-white text-[8px] rounded-full h-4 w-4 flex items-center justify-center">
+                            <span className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-[8px] rounded-full h-4 w-4 flex items-center justify-center">
                                 {unreadCount}
                             </span>
                         )}
@@ -171,7 +171,7 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         onClick={handleSettingsClick}
                         className={cn(
                             "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
-                            "hover:bg-white hover:text-blue-600 rounded-lg canva-hover-effect"
+                            "hover:bg-accent hover:text-primary rounded-lg transition-colors"
                         )}
                     >
                         <Settings className="h-6 w-6 mb-1" />
@@ -182,7 +182,7 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
 
             {/* 通知面板 */}
             {showInbox && (
-                <div className="fixed top-0 right-0 h-screen w-80 bg-white border-l shadow-lg z-50 rounded-l-xl">
+                <div className="fixed top-0 right-0 h-screen w-80 bg-muted border-l border-border shadow-lg z-50 rounded-l-xl">
                     <InboxMessages
                         messages={messages}
                         onClose={() => setShowInbox(false)}
