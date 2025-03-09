@@ -7,35 +7,23 @@ import {
   InboxMessages,
   Message,
 } from "@/components/inbox-messages";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
 import { useSettings } from "@/lib/hooks/use-settings";
 import { listen } from "@tauri-apps/api/event";
 import localforage from "localforage";
 import {
   Bell,
-  LogOut,
-  Settings2,
-  User
+  Settings2
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
 export default function Sidebar() {
   const [showInbox, setShowInbox] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const { updateSettings, settings } = useSettings();
+  const { settings } = useSettings();
   const { toast } = useToast();
-  const router = useRouter();
 
   const { setIsOpen: setSettingsOpen } = useSettingsDialog();
 
@@ -99,22 +87,6 @@ export default function Sidebar() {
     await localforage.setItem("inboxMessages", []);
   };
 
-  const handleLogout = () => {
-    updateSettings({ 
-      user: { 
-        id: "",
-        email: "",
-        name: ""
-      },
-      authToken: "" 
-    });
-    toast({
-      title: "已登出",
-      description: "您已成功登出ScreenPipe",
-    });
-    router.push("/login");
-  };
-
   const unreadCount = messages.filter(msg => !msg.read).length;
 
   return (
@@ -132,6 +104,7 @@ export default function Sidebar() {
           variant="ghost"
           size="sm"
           onClick={() => {
+            console.log("设置按钮被点击");
             setSettingsOpen(true);
           }}
           className={cn(
@@ -164,44 +137,11 @@ export default function Sidebar() {
         </Button>
       </div>
       
-      {/* 底部用户信息和状态 */}
+      {/* 底部系统状态 */}
       <div className="mt-auto px-1 sm:px-2 space-y-2">
         <div className="flex items-center justify-center py-1 sm:py-2" title="系统状态">
           <HealthStatus className="cursor-pointer scale-75 sm:scale-100" />
         </div>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "flex justify-center w-full p-1 sm:p-2",
-                "hover:bg-accent hover:text-accent-foreground"
-              )}
-              title={settings.user?.name || settings.user?.email || "用户"}
-            >
-              <User className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="sr-only">用户</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>账户</DropdownMenuLabel>
-            {settings.user?.email && (
-              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                {settings.user.email}
-              </DropdownMenuLabel>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="cursor-pointer text-red-500 hover:text-red-600"
-              onClick={handleLogout}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>登出</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
       
       {/* 通知弹出框 */}
