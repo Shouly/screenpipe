@@ -59,7 +59,6 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { platform } from "@tauri-apps/plugin-os";
-import posthog from "posthog-js";
 import { Language } from "@/lib/language";
 import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
@@ -289,26 +288,11 @@ export function RecordingSettings() {
       console.log("settings", settings);
 
       if (!settings.analyticsEnabled) {
-        posthog.capture("telemetry", {
-          enabled: false,
-        });
-        // disable opentelemetry
-        posthog.opt_out_capturing();
-        // disable sentry
         Sentry.close();
         console.log("telemetry disabled");
       } else {
         const isDebug = process.env.TAURI_ENV_DEBUG === "true";
         if (!isDebug) {
-          posthog.opt_in_capturing();
-          posthog.capture("telemetry", {
-            enabled: true,
-          });
-
-          // enable opentelemetry
-          console.log("telemetry enabled");
-
-          // enable sentry
           Sentry.init({
             ...defaultOptions,
           });

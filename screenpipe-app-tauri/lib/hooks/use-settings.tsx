@@ -13,7 +13,6 @@ import { LazyStore, LazyStore as TauriStore } from "@tauri-apps/plugin-store";
 import { localDataDir } from "@tauri-apps/api/path";
 import { flattenObject, unflattenObject } from "../utils";
 import { useEffect } from "react";
-import posthog from "posthog-js";
 import localforage from "localforage";
 import { UserApi } from "@/lib/api";
 
@@ -375,15 +374,6 @@ export function useSettings() {
     initializeSettings();
   }, []);
 
-  useEffect(() => {
-    if (settings.user?.id) {
-      posthog.identify(settings.user?.id, {
-        email: settings.user?.email,
-        name: settings.user?.name,
-      });
-    }
-  }, [settings.user?.id]);
-
   const getDataDir = async () => {
     const homeDirPath = await homeDir();
 
@@ -426,13 +416,6 @@ export function useSettings() {
       // 使用后端API获取用户信息
       const userApi = new UserApi();
       const userData = await userApi.getCurrentUser(token);
-
-      // if user was not logged in, send posthog event app_login with email
-      if (!settings.user?.id) {
-        posthog.capture("app_login", {
-          email: userData.email,
-        });
-      }
 
       // cache the result
       await localforage.setItem(cacheKey, {

@@ -1,26 +1,4 @@
-import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Loader2, Power, Search, Trash2, RefreshCw } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
-import { useHealthCheck } from "@/lib/hooks/use-health-check";
-import {
-  PipeApi,
-  PipeDownloadError,
-} from "@/lib/api/store";
-import { open as openUrl } from "@tauri-apps/plugin-shell";
-import { listen } from "@tauri-apps/api/event";
-import { InstalledPipe, PipeWithStatus } from "./pipe-store/types";
-import { PipeDetails } from "./pipe-store/pipe-details";
-import { PipeCard } from "./pipe-store/pipe-card";
-import { AddPipeForm } from "./pipe-store/add-pipe-form";
-import { useSettings } from "@/lib/hooks/use-settings";
-import posthog from "posthog-js";
-import { Progress } from "./ui/progress";
-import { open } from "@tauri-apps/plugin-dialog";
-import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
-import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
 import {
   Dialog,
   DialogContent,
@@ -28,17 +6,36 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import localforage from "localforage";
-import { PermissionButtons } from "./status/permission-buttons";
-import { usePlatform } from "@/lib/hooks/use-platform";
-import { invoke } from "@tauri-apps/api/core";
+import { toast } from "@/components/ui/use-toast";
+import {
+  PipeApi
+} from "@/lib/api/store";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useHealthCheck } from "@/lib/hooks/use-health-check";
+import { usePlatform } from "@/lib/hooks/use-platform";
+import { useSettings } from "@/lib/hooks/use-settings";
+import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
+import { open } from "@tauri-apps/plugin-dialog";
+import localforage from "localforage";
+import { Loader2, Power, RefreshCw, Search, Trash2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { AddPipeForm } from "./pipe-store/add-pipe-form";
+import { PipeCard } from "./pipe-store/pipe-card";
+import { PipeDetails } from "./pipe-store/pipe-details";
+import { InstalledPipe, PipeWithStatus } from "./pipe-store/types";
+import { PermissionButtons } from "./status/permission-buttons";
+import { Progress } from "./ui/progress";
 
 const corePipes: string[] = [];
 
@@ -79,20 +76,6 @@ export const PipeStore: React.FC = () => {
     });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPurging, setIsPurging] = useState(false);
-
-  // Add debounced search tracking
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchQuery) {
-        posthog.capture("search_pipes", {
-          query: searchQuery,
-          results_count: filteredPipes.length,
-        });
-      }
-    }, 1000); // Debounce for 1 second
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, filteredPipes.length]);
 
   useEffect(() => {
     const unsubscribePromise = listen("update-all-pipes", async () => {
@@ -175,9 +158,6 @@ export const PipeStore: React.FC = () => {
   };
 
   const handleInstallSideload = async (url: string) => {
-    posthog.capture("add_own_pipe", {
-      newRepoUrl: url,
-    });
     try {
       const t = toast({
         title: "adding custom pipe",
@@ -304,10 +284,10 @@ export const PipeStore: React.FC = () => {
         prevPipes.map((p) =>
           p.id === pipe.id
             ? {
-                ...p,
-                is_installed: true,
-                is_installing: false,
-              }
+              ...p,
+              is_installed: true,
+              is_installing: false,
+            }
             : p
         )
       );
@@ -404,7 +384,7 @@ export const PipeStore: React.FC = () => {
       console.error("failed to reset pipes:", error);
       toast({
         title: "error resetting pipes",
-          description: `error: ${(error as Error).message}...}`,
+        description: `error: ${(error as Error).message}...}`,
         variant: "destructive",
       });
     } finally {
@@ -571,8 +551,7 @@ export const PipeStore: React.FC = () => {
       onComplete();
     } catch (error) {
       console.error(
-        `Failed to ${
-          pipe.installed_config?.enabled ? "disable" : "enable"
+        `Failed to ${pipe.installed_config?.enabled ? "disable" : "enable"
         } pipe:`,
         error
       );
@@ -908,21 +887,21 @@ export const PipeStore: React.FC = () => {
         console.log("[pipe-update] No installed pipes to check");
         return;
       }
-            
+
       try {
         // Format pipes for batch update check
         const pluginsToCheck = installedPipes.map((pipe) => ({
           pipe_id: pipe.id,
           version: pipe.installed_config!.version!,
         }));
-        
+
         console.log("[pipe-update] Sending update check request:", pluginsToCheck);
-        
+
         const storeApi = await PipeApi.create(settings.authToken);
         const updates = await storeApi.checkUpdates(pluginsToCheck);
-        
+
         console.log("[pipe-update] Update check response:", updates);
-        
+
         // Process updates
         for (const pipe of installedPipes) {
           const update = updates.results.find((u) => u.pipe_id === pipe.id);
@@ -1132,19 +1111,19 @@ export const PipeStore: React.FC = () => {
             <DialogHeader>
               <DialogTitle>确认删除所有 Pipe？</DialogTitle>
               <DialogDescription>
-                您确定要删除所有 Pipe 吗？<br/>您需要重新下载它们。
+                您确定要删除所有 Pipe 吗？<br />您需要重新下载它们。
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end gap-4">
-              <Button 
-                onClick={() => setConfirmOpen(false)} 
+              <Button
+                onClick={() => setConfirmOpen(false)}
                 disabled={isPurging}
                 variant={"outline"}
               >
                 取消
               </Button>
-              <Button 
-                onClick={handleResetAllPipes} 
+              <Button
+                onClick={handleResetAllPipes}
                 disabled={isPurging}
               >
                 {isPurging ? (
@@ -1153,8 +1132,8 @@ export const PipeStore: React.FC = () => {
                     正在重置...
                   </>
                 ) : (
-                    "确认"
-                  )}
+                  "确认"
+                )}
               </Button>
             </div>
           </DialogContent>
@@ -1182,9 +1161,9 @@ export const PipeStore: React.FC = () => {
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-center">
               <p className="text-muted-foreground mb-2">没有找到匹配的 Pipe</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setSearchQuery("")}
                 className="mt-2"
               >
