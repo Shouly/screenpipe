@@ -182,7 +182,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
           size="sm"
           variant="outline"
           disabled
-          className="hover:bg-muted font-medium relative hover:!bg-muted no-card-hover"
+          className="hover:bg-muted font-medium relative hover:!bg-muted no-card-hover rounded-lg shadow-sm"
         >
           <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
           <div className="flex flex-col items-start">
@@ -205,17 +205,17 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                   setIsLoading(true);
                   onToggle(pipe, () => setIsLoading(false));
                 }}
-                className="font-medium no-card-hover"
+                className="font-medium no-card-hover rounded-lg shadow-sm"
                 disabled={isLoading}
               >
                 <AlertCircle className="h-3.5 w-3.5 mr-2" />
-                retry
+                重试
               </Button>
             </TooltipTrigger>
             <TooltipContent>
               {typeof buildStatus === "object" && buildStatus.error
                 ? buildStatus.error
-                : "Installation failed"}
+                : "安装失败"}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -232,11 +232,11 @@ export const PipeCard: React.FC<PipeCardProps> = ({
             setIsLoading(true);
             onToggle(pipe, () => setIsLoading(false));
           }}
-          className="hover:bg-muted font-medium relative hover:!bg-muted no-card-hover"
+          className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg shadow-sm"
           disabled={isLoading}
         >
           <Power className="h-3.5 w-3.5 mr-2" />
-          enable
+          启用
         </Button>
       );
     }
@@ -246,17 +246,17 @@ export const PipeCard: React.FC<PipeCardProps> = ({
         size="sm"
         variant="outline"
         onClick={handleOpenWindow}
-        className="hover:bg-muted font-medium relative no-card-hover"
+        className="hover:bg-accent/20 font-medium relative no-card-hover rounded-lg shadow-sm transition-colors"
       >
         <Puzzle className="h-3.5 w-3.5 mr-2" />
-        open
+        打开
       </Button>
     );
   }, [pipe.installed_config?.buildStatus]);
 
   return (
     <motion.div
-      className="border rounded-xl p-5 hover:bg-muted/20 has-[.no-card-hover:hover]:hover:bg-transparent transition-all duration-200 cursor-pointer relative shadow-sm hover:shadow"
+      className="border rounded-xl p-5 hover:bg-accent/20 has-[.no-card-hover:hover]:hover:bg-transparent transition-all duration-300 cursor-pointer relative shadow-sm hover:shadow-md canva-hover-effect"
       onClick={() => onClick(pipe)}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -265,6 +265,9 @@ export const PipeCard: React.FC<PipeCardProps> = ({
       <div className="flex flex-col h-full justify-between space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Puzzle className="h-5 w-5 text-primary" />
+            </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-lg tracking-tight">
                 {pipe.name}
@@ -293,7 +296,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                   setIsLoading(true);
                   onInstall(pipe, () => setIsLoading(false));
                 }}
-                className="font-medium no-card-hover"
+                className="font-medium no-card-hover rounded-lg shadow-sm hover:shadow transition-all"
                 disabled={isLoading || isLoadingInstall}
               >
                 {isLoadingInstall ? (
@@ -310,16 +313,16 @@ export const PipeCard: React.FC<PipeCardProps> = ({
         </div>
         {pipe.developer_accounts.developer_name && (
           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-auto flex-wrap">
-            <div className="flex items-center gap-1">
-              <div className="size-6 rounded-full bg-muted flex items-center justify-center">
+            <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-full">
+              <div className="size-5 rounded-full bg-muted flex items-center justify-center">
                 <UserIcon className="size-3" />
               </div>
-              {pipe.developer_accounts.developer_name}
+              <span className="font-medium">{pipe.developer_accounts.developer_name}</span>
             </div>
             {pipe.plugin_analytics.downloads_count != null && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-full">
                 <Download className="h-3 w-3" />
-                {pipe.plugin_analytics.downloads_count}
+                <span className="font-medium">{pipe.plugin_analytics.downloads_count}</span>
               </span>
             )}
             {pipe.source_code && (
@@ -328,23 +331,24 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted hover:bg-accent/10 hover:text-accent transition-colors no-card-hover"
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-accent/20 hover:text-accent transition-colors no-card-hover"
               >
                 <Download className="h-3 w-3" />
-                <span className="font-mono">source</span>
+                <span className="font-mono font-medium">source</span>
               </a>
             )}
             {pipe.is_local && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted font-mono text-xs">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-secondary/20 text-secondary-foreground font-medium text-xs">
                 local
               </span>
             )}
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted font-mono text-xs">
-              {pipe.installed_config?.version && "v"}
-              {pipe.installed_config?.version}
-            </span>
+            {pipe.installed_config?.version && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted/50 font-mono text-xs font-medium">
+                v{pipe.installed_config?.version}
+              </span>
+            )}
             {pipe.has_update && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono text-xs">
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10 text-primary font-medium text-xs">
                 <ArrowUpCircle className="h-3 w-3" />
                 update
               </span>

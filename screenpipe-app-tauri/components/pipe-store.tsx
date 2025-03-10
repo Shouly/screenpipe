@@ -36,6 +36,7 @@ import { PipeDetails } from "./pipe-store/pipe-details";
 import { InstalledPipe, PipeWithStatus } from "./pipe-store/types";
 import { PermissionButtons } from "./status/permission-buttons";
 import { Progress } from "./ui/progress";
+import { motion } from "framer-motion";
 
 const corePipes: string[] = [];
 
@@ -1039,8 +1040,18 @@ export const PipeStore: React.FC = () => {
   return (
     <div className="overflow-hidden flex flex-col h-full">
       <div className="p-6 flex flex-col flex-1 overflow-hidden space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Pipe 商店</h1>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-between"
+        >
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Pipe 商店</h1>
+            <p className="text-muted-foreground mt-1">
+              浏览和安装强大的 Pipe 插件，提升您的工作流程
+            </p>
+          </div>
           <div className="flex items-center gap-2">
             <TooltipProvider>
               <Tooltip>
@@ -1049,7 +1060,7 @@ export const PipeStore: React.FC = () => {
                     variant="outline"
                     size="icon"
                     onClick={() => setConfirmOpen(true)}
-                    className="h-9 w-9"
+                    className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
                     disabled={isPurging}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -1067,7 +1078,7 @@ export const PipeStore: React.FC = () => {
                     variant="outline"
                     size="icon"
                     onClick={() => handleUpdateAllPipes()}
-                    className="h-9 w-9"
+                    className="h-9 w-9 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors"
                     disabled={
                       !pipes.some(
                         (pipe) => pipe.is_installed && pipe.has_update
@@ -1083,48 +1094,56 @@ export const PipeStore: React.FC = () => {
               </Tooltip>
             </TooltipProvider>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-accent/30 p-4 rounded-xl"
+        >
           <div className="relative w-full md:w-[400px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="搜索 Pipe..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-10"
+              className="pl-9 h-10 bg-white border-0 shadow-sm focus-visible:ring-primary"
               autoCorrect="off"
               autoComplete="off"
             />
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">仅显示已安装</span>
+            <span className="text-sm font-medium">仅显示已安装</span>
             <Switch
               checked={showInstalledOnly}
               onCheckedChange={setShowInstalledOnly}
+              className="data-[state=checked]:bg-primary"
             />
           </div>
-        </div>
+        </motion.div>
 
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px] rounded-xl">
             <DialogHeader>
-              <DialogTitle>确认删除所有 Pipe？</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-xl">确认删除所有 Pipe？</DialogTitle>
+              <DialogDescription className="text-muted-foreground mt-2">
                 您确定要删除所有 Pipe 吗？<br />您需要重新下载它们。
               </DialogDescription>
             </DialogHeader>
-            <div className="flex justify-end gap-4">
+            <div className="flex justify-end gap-4 mt-4">
               <Button
                 onClick={() => setConfirmOpen(false)}
                 disabled={isPurging}
-                variant={"outline"}
+                variant="outline"
+                className="rounded-lg"
               >
                 取消
               </Button>
               <Button
                 onClick={handleResetAllPipes}
                 disabled={isPurging}
+                className="rounded-lg bg-primary hover:bg-primary/90"
               >
                 {isPurging ? (
                   <>
@@ -1139,47 +1158,72 @@ export const PipeStore: React.FC = () => {
           </DialogContent>
         </Dialog>
 
-        <div className="flex-1 overflow-y-auto pr-1">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex-1 overflow-y-auto pr-1"
+        >
           {filteredPipes.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredPipes.map((pipe) => (
-                <PipeCard
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredPipes.map((pipe, index) => (
+                <motion.div
                   key={pipe.id}
-                  pipe={pipe}
-                  setPipe={(updatedPipe) => {
-                    setPipes((prev) =>
-                      prev.map((p) => (p.id === updatedPipe.id ? updatedPipe : p))
-                    );
-                  }}
-                  onInstall={handleInstallPipe}
-                  onClick={setSelectedPipe}
-                  isLoadingInstall={loadingInstalls.has(pipe.id)}
-                  onToggle={handleTogglePipe}
-                />
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.05 * index }}
+                >
+                  <PipeCard
+                    pipe={pipe}
+                    setPipe={(updatedPipe) => {
+                      setPipes((prev) =>
+                        prev.map((p) => (p.id === updatedPipe.id ? updatedPipe : p))
+                      );
+                    }}
+                    onInstall={handleInstallPipe}
+                    onClick={setSelectedPipe}
+                    isLoadingInstall={loadingInstalls.has(pipe.id)}
+                    onToggle={handleTogglePipe}
+                  />
+                </motion.div>
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-center">
-              <p className="text-muted-foreground mb-2">没有找到匹配的 Pipe</p>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center justify-center h-64 text-center bg-muted/30 rounded-xl p-8"
+            >
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                <Search className="h-8 w-8 text-muted-foreground/70" />
+              </div>
+              <p className="text-muted-foreground mb-2 text-lg">没有找到匹配的 Pipe</p>
+              <p className="text-muted-foreground/70 mb-4 text-sm">尝试使用不同的搜索词或清除筛选条件</p>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setSearchQuery("")}
-                className="mt-2"
+                className="mt-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
               >
                 清除搜索
               </Button>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
-        <div className="pt-4 border-t">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="pt-6 border-t"
+        >
           <AddPipeForm
             onAddPipe={handleInstallSideload}
             isHealthy={health?.status !== "error"}
             onLoadFromLocalFolder={handleLoadFromLocalFolder}
           />
-        </div>
+        </motion.div>
       </div>
     </div>
   );
