@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { open as openUrl } from "@tauri-apps/plugin-shell";
 
 interface PipeCardProps {
   pipe: PipeWithStatus;
@@ -107,6 +108,22 @@ export const PipeCard: React.FC<PipeCardProps> = ({
     }
   };
 
+  const handleOpenInBrowser = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      if (pipe.installed_config?.port) {
+        await openUrl(`http://localhost:${pipe.installed_config.port}`);
+      }
+    } catch (err) {
+      console.error("failed to open in browser:", err);
+      toast({
+        title: "error opening in browser",
+        description: "please try again or check the logs",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     const pollBuildStatus = async () => {
       const id = pipe.is_local ? pipe.id : pipe.name;
@@ -184,7 +201,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
           size="sm"
           variant="outline"
           disabled
-          className="hover:bg-muted font-medium relative hover:!bg-muted no-card-hover rounded-lg shadow-sm h-8 px-2.5 w-full"
+          className="hover:bg-muted font-medium relative hover:!bg-muted no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border/50 transition-colors"
         >
           <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
           <span className="text-xs">{getBuildStepMessage(buildStatus)}</span>
@@ -205,7 +222,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                   setIsLoading(true);
                   onToggle(pipe, () => setIsLoading(false));
                 }}
-                className="font-medium no-card-hover rounded-lg shadow-sm h-8 px-2.5 w-full"
+                className="font-medium no-card-hover rounded-lg h-8 px-2.5 flex-1 transition-colors"
                 disabled={isLoading}
               >
                 <AlertCircle className="h-3 w-3 mr-1.5" />
@@ -232,7 +249,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
             setIsLoading(true);
             onToggle(pipe, () => setIsLoading(false));
           }}
-          className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg shadow-sm h-8 px-2.5 w-full"
+          className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border/50"
           disabled={isLoading}
         >
           <Power className="h-3 w-3 mr-1.5" />
@@ -247,19 +264,19 @@ export const PipeCard: React.FC<PipeCardProps> = ({
         variant="outline"
         onClick={(e) => {
           e.stopPropagation();
-          handleOpenWindow(e);
+          handleOpenInBrowser(e);
         }}
-        className="hover:bg-accent/20 font-medium relative no-card-hover rounded-lg shadow-sm transition-colors h-8 px-2.5 w-full"
+        className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border/50"
       >
         <Puzzle className="h-3 w-3 mr-1.5" />
-        <span className="text-xs">打开</span>
+        <span className="text-xs">在浏览器中打开</span>
       </Button>
     );
-  }, [pipe.installed_config?.buildStatus, isLoading, onToggle, pipe, handleOpenWindow]);
+  }, [pipe.installed_config?.buildStatus, isLoading, onToggle, pipe, handleOpenWindow, handleOpenInBrowser]);
 
   return (
     <motion.div
-      className="group border rounded-xl p-4 hover:bg-accent/10 transition-all duration-300 cursor-pointer relative shadow-sm hover:shadow-md h-full flex flex-col"
+      className="group border border-border/50 rounded-xl p-4 hover:bg-accent/5 transition-all duration-300 cursor-pointer relative shadow-sm hover:shadow-md h-full flex flex-col"
       onClick={() => onClick(pipe)}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -283,15 +300,15 @@ export const PipeCard: React.FC<PipeCardProps> = ({
         )}
       </div>
 
-      <div className="flex flex-col h-full justify-between space-y-3">
-        <div>
-          {/* 头部信息 */}
-          <div className="flex items-start gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Puzzle className="h-5 w-5 text-primary" />
+      <div className="flex flex-col h-full justify-between">
+        {/* 头部信息 */}
+        <div className="mb-auto">
+          <div className="flex items-start gap-3 mb-2.5">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Puzzle className="h-4.5 w-4.5 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-base tracking-tight truncate">
+              <h3 className="font-semibold text-base tracking-tight truncate cn-text-title">
                 {pipe.name}
               </h3>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -309,7 +326,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
           </div>
           
           {/* 描述 */}
-          <div className="text-xs text-muted-foreground line-clamp-2 h-9 mb-3">
+          <div className="text-xs text-muted-foreground line-clamp-2 min-h-[2.5rem] mb-2.5 cn-text-body">
             <PipeStoreMarkdown
               content={
                 (pipe.description
@@ -323,12 +340,12 @@ export const PipeCard: React.FC<PipeCardProps> = ({
           {/* 标签 */}
           <div className="flex flex-wrap gap-1.5">
             {pipe.installed_config?.version && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/40 font-mono text-xs">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/30 font-mono text-xs">
                 v{pipe.installed_config?.version}
               </span>
             )}
             {pipe.is_local && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-secondary/20 text-secondary-foreground text-xs">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary-foreground text-xs">
                 本地
               </span>
             )}
@@ -338,7 +355,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/40 text-xs hover:bg-primary/10 hover:text-primary transition-colors"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/30 text-xs hover:bg-primary/10 hover:text-primary transition-colors"
               >
                 <ExternalLink className="h-2.5 w-2.5" />
                 源码
@@ -348,25 +365,34 @@ export const PipeCard: React.FC<PipeCardProps> = ({
         </div>
         
         {/* 操作按钮 */}
-        <div className="flex items-center justify-between mt-auto pt-2 border-t border-muted/40">
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
           {pipe.is_installed ? (
             <div className="flex items-center gap-2 w-full">
               {renderInstallationStatus()}
               
-              {/* 额外操作按钮，仅在悬停时显示 */}
+              {/* 额外操作按钮 */}
               {pipe.is_enabled && pipe.installed_config?.buildStatus === "success" && (
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenWindow(e);
-                    }}
-                    className="h-8 w-8 p-0 rounded-full"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </Button>
+                <div className="transition-opacity">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenInBrowser(e);
+                          }}
+                          className="h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:text-primary"
+                        >
+                          <Puzzle className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p>在独立窗口中打开</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               )}
             </div>
@@ -379,7 +405,10 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                 setIsLoading(true);
                 onInstall(pipe, () => setIsLoading(false));
               }}
-              className="font-medium no-card-hover rounded-lg shadow-sm hover:shadow transition-all h-8 w-full justify-center"
+              className={cn(
+                "font-medium no-card-hover rounded-lg h-8 w-full justify-center transition-colors",
+                pipe.is_paid ? "" : "border-border/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30"
+              )}
               disabled={isLoading || isLoadingInstall}
             >
               {isLoadingInstall ? (

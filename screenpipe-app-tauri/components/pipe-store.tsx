@@ -1102,32 +1102,29 @@ export const PipeStore: React.FC = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-accent/30 p-4 rounded-xl"
+          className="flex items-center justify-between"
         >
-          <div className="flex items-center justify-between">
-            <div className="relative w-full md:w-[400px]">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="搜索 Pipe..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-10 bg-white border-0 shadow-sm focus-visible:ring-primary"
-                autoCorrect="off"
-                autoComplete="off"
-              />
-            </div>
-            <div className="hidden md:flex">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearchQuery("")}
-                className="text-xs text-muted-foreground hover:text-foreground"
-                disabled={!searchQuery}
-              >
-                清除搜索
-              </Button>
-            </div>
+          <div className="relative w-full md:w-[400px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="搜索 Pipe..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10 border-muted focus-visible:ring-primary"
+              autoCorrect="off"
+              autoComplete="off"
+            />
           </div>
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchQuery("")}
+              className="ml-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              清除
+            </Button>
+          )}
         </motion.div>
 
         <motion.div
