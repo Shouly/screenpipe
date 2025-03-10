@@ -176,28 +176,37 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* 顶部导航栏 */}
-      <header className="w-full py-4 px-6 md:px-10 flex items-center">
+      <header className="w-full py-6 px-6 md:px-10 flex items-center">
         <div className="flex items-center">
-          <span className="text-2xl md:text-3xl font-bold text-primary">Terix</span>
+          <span className="text-2xl md:text-3xl font-bold text-primary tracking-tight">Terix</span>
         </div>
       </header>
 
       {/* 主要内容区域 */}
-      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-0 -mt-20">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-0 -mt-16">
         {/* 登录大模块 */}
         <div className="w-full max-w-4xl flex flex-col items-center">
           {/* 标题 */}
-          <div className="text-center mb-8 w-full">
-            <h1 className="text-4xl font-bold mb-3">登录</h1>
+          <div className="text-center mb-10 w-full">
+            <h1 className="text-4xl font-bold mb-3 cn-text-title">登录</h1>
+            <p className="text-muted-foreground max-w-md mx-auto">使用您的账号登录以访问所有功能</p>
           </div>
 
           {/* 登录表单区域 */}
-          <div className="w-full flex flex-col md:flex-row">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="w-full flex flex-col md:flex-row"
+          >
             {/* 左侧邮箱登录区域 */}
             <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center">
               {!showVerificationForm ? (
                 <div className="space-y-6">
                   <div>
+                    <label htmlFor="email" className="block text-sm font-medium mb-2 text-foreground">
+                      邮箱地址
+                    </label>
                     <Input
                       id="email"
                       placeholder="输入您的邮箱"
@@ -209,7 +218,7 @@ export default function LoginPage() {
                   </div>
                   <div className="pt-2">
                     <Button
-                      className="w-full h-11 bg-transparent text-primary hover:bg-primary hover:text-primary-foreground border border-input rounded-md flex items-center justify-center transition-colors"
+                      className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md flex items-center justify-center transition-all"
                       onClick={handleLogin}
                       disabled={isEmailLoading}
                     >
@@ -235,7 +244,7 @@ export default function LoginPage() {
                   className="space-y-6"
                 >
                   <div className="text-center">
-                    <h2 className="text-lg font-semibold mb-2">验证您的邮箱</h2>
+                    <h2 className="text-lg font-semibold mb-2 cn-text-title">验证您的邮箱</h2>
                     <p className="text-sm text-muted-foreground">
                       我们已向 <span className="font-medium">{email}</span> 发送了验证码
                     </p>
@@ -258,7 +267,7 @@ export default function LoginPage() {
                   <Button
                     onClick={handleVerifyCode}
                     disabled={isVerifying || !verificationCode.trim() || verificationCode.length < 6}
-                    className="w-full h-11 bg-transparent text-primary hover:bg-primary hover:text-primary-foreground border border-input rounded-md flex items-center justify-center transition-colors"
+                    className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md flex items-center justify-center transition-all"
                   >
                     {isVerifying ? (
                       <div className="flex items-center justify-center">
@@ -286,21 +295,22 @@ export default function LoginPage() {
             {/* 中间分隔线和文字 */}
             <div className="hidden md:flex items-center justify-center relative">
               <div className="h-[80%] w-px absolute"></div>
-              <div className="absolute bg-background px-4 py-1 text-muted-foreground text-sm">
+              <div className="absolute bg-background px-4 py-1 text-muted-foreground text-sm font-medium">
                 或
               </div>
             </div>
 
             {/* 右侧社交登录区域 */}
             <div className="w-full md:w-1/2 p-8 md:p-10 mt-4 md:mt-0 md:border-l border-t md:border-t-0 border-border flex flex-col justify-center">
-              <div className="space-y-4">
+              <div className="space-y-5">
+                <h3 className="text-center text-sm font-medium text-muted-foreground mb-2">使用以下方式快速登录</h3>
                 {/* Google登录按钮 */}
                 <button
-                  className="w-full flex items-center h-11 border border-input rounded-md overflow-hidden transition-colors hover:bg-muted"
+                  className="w-full flex items-center h-11 border border-input rounded-md overflow-hidden transition-all hover:border-primary/50"
                   onClick={handleGoogleLogin}
                   disabled={isGoogleLoading}
                 >
-                  <div className="w-11 h-11 flex items-center justify-center bg-background">
+                  <div className="w-11 h-11 flex items-center justify-center">
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
                   </div>
                   <div className="flex-1 text-center text-sm font-medium py-2">
@@ -310,14 +320,14 @@ export default function LoginPage() {
 
                 {/* X (Twitter) 登录按钮 */}
                 <button
-                  className="w-full flex items-center h-11 border border-input rounded-md overflow-hidden transition-colors hover:bg-muted"
+                  className="w-full flex items-center h-11 border border-input rounded-md overflow-hidden transition-all hover:border-primary/50"
                   onClick={() => toast({
                     title: "功能开发中",
                     description: "X登录功能尚未完全实现",
                   })}
                 >
-                  <div className="w-11 h-11 flex items-center justify-center bg-background">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                  <div className="w-11 h-11 flex items-center justify-center bg-black">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white" className="w-5 h-5">
                       <path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5685 21H20.8131L13.6819 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
                     </svg>
                   </div>
@@ -328,13 +338,13 @@ export default function LoginPage() {
 
                 {/* SSO登录按钮 */}
                 <button
-                  className="w-full flex items-center h-11 border border-input rounded-md overflow-hidden transition-colors hover:bg-muted"
+                  className="w-full flex items-center h-11 border border-input rounded-md overflow-hidden transition-all hover:border-primary/50"
                   onClick={() => toast({
                     title: "功能开发中",
                     description: "SSO登录功能尚未完全实现",
                   })}
                 >
-                  <div className="w-11 h-11 flex items-center justify-center bg-background">
+                  <div className="w-11 h-11 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-primary">
                       <circle cx="12" cy="12" r="10" />
                       <circle cx="12" cy="10" r="3" />
@@ -347,15 +357,15 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* 底部隐私条款 */}
-          <div className="w-full mt-auto py-6 text-center text-xs mt-6">
+          <div className="w-full mt-auto py-6 text-center text-xs mt-8">
             <div className="flex flex-col md:flex-row justify-center gap-2 md:gap-6">
-              <a href="https://screenpi.pe/terms" className="text-muted-foreground underline hover:text-color-2" target="_blank" rel="noopener noreferrer">
+              <a href="https://screenpi.pe/terms" className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
                 服务条款
               </a>
-              <a href="https://screenpi.pe/privacy" className="text-muted-foreground underline hover:text-color-2" target="_blank" rel="noopener noreferrer">
+              <a href="https://screenpi.pe/privacy" className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
                 隐私政策
               </a>
             </div>
