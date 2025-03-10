@@ -14,9 +14,7 @@ import {
   Search,
   Settings as SettingsIcon,
   User,
-  Video,
-  X,
-  ChevronLeft
+  Video
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -337,20 +335,9 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.3 }}
           >
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBackToHome}
-                className="mr-4 rounded-full h-8 w-8 p-0 hover:bg-gray-100"
-              >
-                <ChevronLeft className="h-5 w-5 text-gray-500" />
-                <span className="sr-only">返回</span>
-              </Button>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
-                <p className="text-sm text-gray-500">{description}</p>
-              </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+              <p className="text-sm text-gray-500">{description}</p>
             </div>
           </motion.div>
 
@@ -360,7 +347,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.4 }}
           >
-            <div className="p-8 max-w-4xl mx-auto">
+            <div className="p-4 max-w-4xl mx-auto">
               {renderActiveSection()}
             </div>
           </motion.div>
