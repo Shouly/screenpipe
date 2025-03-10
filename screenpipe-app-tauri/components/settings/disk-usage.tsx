@@ -1,16 +1,13 @@
 "use client";
-import React, { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/use-toast";
 import { invoke } from "@tauri-apps/api/core";
+import { motion } from "framer-motion";
 import localforage from "localforage";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Database, FileAudio, FileVideo, HardDrive, HardDriveDownload, Package } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 interface DiskUsageData {
   media: {
@@ -27,36 +24,76 @@ interface DiskUsageData {
   avaiable_space: string;
 }
 
-const BadgeItem = ({
-  label,
-  value,
-  description,
-}: {
-  label: string;
-  value: string;
-  description?: string;
-}) => (
-  <div className="flex flex-row items-center justify-between">
-    <div className="flex flex-col !float-left items-start">
-      <span className="font-semibold">{label}</span>
-      <span className="text-[14px] !font-normal text-muted-foreground">
-        {description}
-      </span>
+// 动画变体
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 10, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15
+    }
+  }
+};
+
+const UsageItem = ({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) => (
+  <div className="flex items-center justify-between py-2">
+    <div className="flex items-center gap-2">
+      <div className="text-primary">{icon}</div>
+      <span className="text-gray-800">{label}</span>
     </div>
     <Badge
       variant={"outline"}
-      className="mr-4 font-semibold min-w-[5.5rem] flex flex-row justify-center"
+      className="min-w-[5.5rem] flex flex-row justify-center bg-primary/10 text-primary border-primary/20"
     >
       {value}
     </Badge>
   </div>
 );
 
-const Divider = () => (
-  <div className="flex my-2 justify-center">
-    <div className="h-[1px] w-[250px] rounded-full bg-gradient-to-l from-slate-500/30 to-transparent"></div>
-    <div className="h-[1px] w-[250px] rounded-full bg-gradient-to-r from-slate-500/30 to-transparent"></div>
-  </div>
+const DiskUsageSection = ({
+  title,
+  description,
+  icon,
+  children
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) => (
+  <motion.div variants={itemVariants}>
+    <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              {icon}
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-800">{title}</h4>
+              <p className="text-sm text-gray-500">{description}</p>
+            </div>
+          </div>
+          <div className="pt-2 space-y-1 border-t border-gray-100">
+            {children}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </motion.div>
 );
 
 export default function DiskUsage() {
@@ -90,8 +127,8 @@ export default function DiskUsage() {
     } catch (error) {
       console.error("Failed to fetch disk usage:", error);
       toast({
-        title: "error",
-        description: "failed to fetch disk usage, please try again!",
+        title: "错误",
+        description: "获取磁盘使用信息失败，请重试！",
         variant: "destructive",
       });
     }
@@ -102,145 +139,69 @@ export default function DiskUsage() {
   }, []);
 
   return (
-    <div className="w-full space-y-6 py-4">
-      <h1 className="text-2xl font-bold">
-        disk usage
-        {loading && !diskUsage ? (
-          <span className="text-sm ml-2 !font-normal text-muted-foreground">
-            loading...
-          </span>
-        ) : (
-          ""
-        )}
-      </h1>
-      <div className="flex flex-col items-center justify-center space-y-4">
-        {loading && !diskUsage ? (
-          <div className="w-full space-y-4">
-            <Skeleton className="h-[80px] w-[90%] mx-auto" />
-            <Skeleton className="h-[80px] w-[90%] mx-auto" />
-            <Skeleton className="h-[200px] w-[90%] mx-auto" />
-          </div>
-        ) : (
-          ""
-        )}
-        {diskUsage && diskUsage.pipes && (
-          <Accordion
-            type="single"
-            collapsible
-            className="w-[90%] border rounded-lg"
-          >
-            <AccordionItem value="total-pipes-size">
-              <AccordionTrigger className="mx-4 h-[80px] hover:no-underline">
-                <div className="w-full flex items-center justify-between">
-                  <div className="flex flex-col !float-left items-start">
-                    <span className="font-semibold">disk used by pipes</span>
-                    <span className="text-[14px] !font-normal text-muted-foreground">
-                      total space used by installed pipes
-                    </span>
-                  </div>
-                  <Badge
-                    variant={"outline"}
-                    className="mr-4 font-semibold min-w-[5.5rem] flex flex-row justify-center"
-                  >
-                    {diskUsage.pipes.total_pipes_size}
-                  </Badge>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="w-full">
-                {diskUsage.pipes.pipes.map(([name, size], index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between px-1 py-1"
-                  >
-                    <span className="text-base ml-8">{name}</span>
-                    <Badge
-                      variant={"outline"}
-                      className="mr-10 min-w-[5.5rem] flex flex-row justify-center"
-                    >
-                      {size}
-                    </Badge>
-                  </div>
-                ))}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        )}
-        {diskUsage && diskUsage.media && (
-          <Accordion
-            type="single"
-            collapsible
-            className="w-[90%] border rounded-lg"
-          >
-            <AccordionItem value="total-pipes-size">
-              <AccordionTrigger className="mx-4 h-[80px] hover:no-underline">
-                <div className="w-full flex items-center justify-between">
-                  <div className="flex flex-col !float-left items-start">
-                    <span className="font-semibold">total data captured</span>
-                    <span className="text-[14px] !font-normal text-muted-foreground">
-                      amount of data captured by screenpipe over the time
-                    </span>
-                  </div>
-                  <Badge
-                    variant={"outline"}
-                    className="mr-4 font-semibold min-w-[5.5rem] flex flex-row justify-center"
-                  >
-                    {diskUsage.media.total_media_size}
-                  </Badge>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="w-full">
-                <div
-                  key={"video"}
-                  className="flex items-center justify-between px-1 py-1"
-                >
-                  <span className="text-base ml-8">video data</span>
-                  <Badge
-                    variant={"outline"}
-                    className="mr-10 min-w-[5.5rem] flex flex-row justify-center"
-                  >
-                    {diskUsage.media.videos_size}
-                  </Badge>
-                </div>
-                <div
-                  key={"audio"}
-                  className="flex items-center justify-between px-1 py-1"
-                >
-                  <span className="text-base ml-8">audio data</span>
-                  <Badge
-                    variant={"outline"}
-                    className="mr-10 min-w-[5.5rem] flex flex-row justify-center "
-                  >
-                    {diskUsage.media.audios_size}
-                  </Badge>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        )}
-        {diskUsage && diskUsage.total_data_size && diskUsage.avaiable_space && (
-          <div className="w-[90%] border rounded-lg p-8">
-            <div className="w-full space-y-6">
-              <BadgeItem
-                label="screenpipe cache size"
-                description="disk space used for models, frames..."
+    <motion.div
+      className="w-full space-y-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {loading && !diskUsage ? (
+        <div className="space-y-4">
+          <Skeleton className="h-[120px] w-full rounded-lg" />
+          <Skeleton className="h-[120px] w-full rounded-lg" />
+          <Skeleton className="h-[120px] w-full rounded-lg" />
+        </div>
+      ) : (
+        <>
+          {diskUsage && diskUsage.pipes && (
+            <DiskUsageSection
+              title="管道占用空间"
+              description="已安装管道的总空间使用量"
+              icon={<Package size={20} />}
+            >
+              {diskUsage.pipes.pipes.map(([name, size], index) => (
+                <UsageItem key={index} label={name} value={size} icon={<Package size={16} />} />
+              ))}
+            </DiskUsageSection>
+          )}
+
+          {diskUsage && diskUsage.media && (
+            <DiskUsageSection
+              title="已捕获的数据总量"
+              description="Screenpipe 随时间捕获的数据量"
+              icon={<Database size={20} />}
+            >
+              <UsageItem label="视频数据" value={diskUsage.media.videos_size} icon={<FileVideo size={16} />} />
+              <UsageItem label="音频数据" value={diskUsage.media.audios_size} icon={<FileAudio size={16} />} />
+            </DiskUsageSection>
+          )}
+
+          {diskUsage && diskUsage.total_data_size && diskUsage.avaiable_space && (
+            <DiskUsageSection
+              title="磁盘使用概览"
+              description="Screenpipe 应用程序的磁盘使用情况"
+              icon={<HardDrive size={20} />}
+            >
+              <UsageItem
+                label="Screenpipe 缓存大小"
                 value={diskUsage.total_cache_size}
+                icon={<HardDrive size={16} />}
               />
-              <Divider />
-              <BadgeItem
-                label="disk space used by screenpipe"
-                description="total disk space utilized by the screenpipe application"
+              <UsageItem
+                label="Screenpipe 使用的磁盘空间"
                 value={diskUsage.total_data_size}
+                icon={<FileVideo size={16} />}
               />
-              <Divider />
-              <BadgeItem
-                label="available disk space"
-                description="remaining free disk space on your device"
+              <UsageItem
+                label="可用磁盘空间"
                 value={diskUsage.avaiable_space}
+                icon={<HardDriveDownload size={16} />}
               />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+            </DiskUsageSection>
+          )}
+        </>
+      )}
+    </motion.div>
   );
 }
+
