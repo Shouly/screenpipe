@@ -133,6 +133,11 @@
   }
   body {
     @apply bg-background text-foreground !pointer-events-auto;
+    /* 中文字体优化 */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "palt";
   }
 
   *,
@@ -222,4 +227,23 @@
 .canva-hover-effect:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 中文字体特殊样式 */
+.cn-text-title {
+  @apply font-medium tracking-tight;
+  letter-spacing: -0.01em;
+}
+
+.cn-text-body {
+  @apply font-normal;
+  letter-spacing: 0.01em;
+}
+
+.cn-text-bold {
+  @apply font-bold;
+}
+
+.cn-text-light {
+  @apply font-light;
 }

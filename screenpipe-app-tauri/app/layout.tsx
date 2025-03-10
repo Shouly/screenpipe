@@ -1,11 +1,16 @@
 "use client";
-import { Inter } from "next/font/google";
+import { Noto_Sans_SC } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toaster";
 import { useEffect, useState } from "react";
 
-const inter = Inter({ subsets: ["latin"] });
+const notoSansSC = Noto_Sans_SC({ 
+  weight: ['300', '400', '500', '700', '900'],
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-noto-sans-sc',
+});
 
 // Debounced localStorage writer
 const createDebouncer = (wait: number) => {
@@ -84,9 +89,9 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en" suppressHydrationWarning className={theme}>
+    <html lang="zh-CN" suppressHydrationWarning className={`${theme} ${notoSansSC.variable}`}>
       <Providers>
-        <body className={inter.className}>
+        <body className={notoSansSC.className}>
           {children}
           <Toaster />
         </body>
