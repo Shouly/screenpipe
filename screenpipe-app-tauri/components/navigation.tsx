@@ -98,29 +98,29 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
 
     return (
         <>
-            <div className="bg-muted flex flex-col py-4 fixed left-0 top-0 w-20 h-screen z-30">
+            <div className="bg-muted flex flex-col py-3 fixed left-0 top-0 w-16 h-screen z-30">
                 {/* Logo 区域 */}
-                <div className="flex flex-col items-center justify-center mb-8 px-3">
-                    <div className="w-10 h-10 flex-shrink-0">
-                        <img src="/logo.svg" alt="ScreenPipe" className="w-10 h-10" />
+                <div className="flex flex-col items-center justify-center mb-6 px-2">
+                    <div className="w-8 h-8 flex-shrink-0">
+                        <img src="/logo.svg" alt="ScreenPipe" className="w-8 h-8" />
                     </div>
                 </div>
 
                 {/* 主导航项 */}
-                <div className="flex-1 flex flex-col space-y-6 px-2">
+                <div className="flex-1 flex flex-col space-y-4 px-1">
                     {/* 首页 */}
                     <Button
                         variant={activePage === "home" ? "secondary" : "ghost"}
                         size="sm"
                         onClick={() => onNavigate("home")}
                         className={cn(
-                            "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
+                            "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
                             "hover:bg-accent hover:text-primary rounded-lg transition-colors",
                             activePage === "home" ? "bg-accent text-primary" : ""
                         )}
                     >
-                        <Home className="h-6 w-6 mb-1" />
-                        <span className="text-xs text-center">首页</span>
+                        <Home className="h-5 w-5 mb-0.5" />
+                        <span className="text-[10px] text-center">首页</span>
                     </Button>
 
                     {/* Pipe商店 */}
@@ -129,18 +129,18 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         size="sm"
                         onClick={() => onNavigate("store")}
                         className={cn(
-                            "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
+                            "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
                             "hover:bg-accent hover:text-primary rounded-lg transition-colors",
                             activePage === "store" ? "bg-accent text-primary" : ""
                         )}
                     >
-                        <ShoppingBag className="h-6 w-6 mb-1" />
-                        <span className="text-xs text-center">商店</span>
+                        <ShoppingBag className="h-5 w-5 mb-0.5" />
+                        <span className="text-[10px] text-center">商店</span>
                     </Button>
                 </div>
 
                 {/* 底部工具栏 */}
-                <div className="mt-auto px-2 space-y-6 mb-4">
+                <div className="mt-auto px-1 space-y-4 mb-3">
                     <div className="hidden">
                         <HealthStatus className="status-trigger" />
                     </div>
@@ -151,14 +151,14 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         size="sm"
                         onClick={() => setShowInbox(!showInbox)}
                         className={cn(
-                            "flex flex-col items-center justify-center h-auto py-2 px-1 w-full relative",
+                            "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full relative",
                             "hover:bg-accent hover:text-primary rounded-lg transition-colors"
                         )}
                     >
-                        <Bell className="h-6 w-6 mb-1" />
-                        <span className="text-xs text-center">通知</span>
+                        <Bell className="h-5 w-5 mb-0.5" />
+                        <span className="text-[10px] text-center">通知</span>
                         {unreadCount > 0 && (
-                            <span className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-[8px] rounded-full h-4 w-4 flex items-center justify-center">
+                            <span className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-[8px] rounded-full h-3.5 w-3.5 flex items-center justify-center">
                                 {unreadCount}
                             </span>
                         )}
@@ -170,12 +170,12 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         size="sm"
                         onClick={handleSettingsClick}
                         className={cn(
-                            "flex flex-col items-center justify-center h-auto py-2 px-1 w-full",
+                            "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
                             "hover:bg-accent hover:text-primary rounded-lg transition-colors"
                         )}
                     >
-                        <Settings className="h-6 w-6 mb-1" />
-                        <span className="text-xs text-center">设置</span>
+                        <Settings className="h-5 w-5 mb-0.5" />
+                        <span className="text-[10px] text-center">设置</span>
                     </Button>
                 </div>
             </div>
