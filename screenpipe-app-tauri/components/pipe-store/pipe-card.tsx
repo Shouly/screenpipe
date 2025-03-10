@@ -8,6 +8,7 @@ import {
   Power,
   ArrowUpCircle,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 import { PipeStoreMarkdown } from "@/components/pipe-store-markdown";
 import { BuildStatus, PipeWithStatus } from "./types";
@@ -21,6 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface PipeCardProps {
   pipe: PipeWithStatus;
@@ -182,12 +184,10 @@ export const PipeCard: React.FC<PipeCardProps> = ({
           size="sm"
           variant="outline"
           disabled
-          className="hover:bg-muted font-medium relative hover:!bg-muted no-card-hover rounded-lg shadow-sm"
+          className="hover:bg-muted font-medium relative hover:!bg-muted no-card-hover rounded-lg shadow-sm h-8 px-2.5 w-full"
         >
-          <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-          <div className="flex flex-col items-start">
-            <span>{getBuildStepMessage(buildStatus)}</span>
-          </div>
+          <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+          <span className="text-xs">{getBuildStepMessage(buildStatus)}</span>
         </Button>
       );
     }
@@ -205,11 +205,11 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                   setIsLoading(true);
                   onToggle(pipe, () => setIsLoading(false));
                 }}
-                className="font-medium no-card-hover rounded-lg shadow-sm"
+                className="font-medium no-card-hover rounded-lg shadow-sm h-8 px-2.5 w-full"
                 disabled={isLoading}
               >
-                <AlertCircle className="h-3.5 w-3.5 mr-2" />
-                重试
+                <AlertCircle className="h-3 w-3 mr-1.5" />
+                <span className="text-xs">重试</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -232,11 +232,11 @@ export const PipeCard: React.FC<PipeCardProps> = ({
             setIsLoading(true);
             onToggle(pipe, () => setIsLoading(false));
           }}
-          className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg shadow-sm"
+          className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg shadow-sm h-8 px-2.5 w-full"
           disabled={isLoading}
         >
-          <Power className="h-3.5 w-3.5 mr-2" />
-          启用
+          <Power className="h-3 w-3 mr-1.5" />
+          <span className="text-xs">启用</span>
         </Button>
       );
     }
@@ -245,84 +245,91 @@ export const PipeCard: React.FC<PipeCardProps> = ({
       <Button
         size="sm"
         variant="outline"
-        onClick={handleOpenWindow}
-        className="hover:bg-accent/20 font-medium relative no-card-hover rounded-lg shadow-sm transition-colors"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleOpenWindow(e);
+        }}
+        className="hover:bg-accent/20 font-medium relative no-card-hover rounded-lg shadow-sm transition-colors h-8 px-2.5 w-full"
       >
-        <Puzzle className="h-3.5 w-3.5 mr-2" />
-        打开
+        <Puzzle className="h-3 w-3 mr-1.5" />
+        <span className="text-xs">打开</span>
       </Button>
     );
-  }, [pipe.installed_config?.buildStatus]);
+  }, [pipe.installed_config?.buildStatus, isLoading, onToggle, pipe, handleOpenWindow]);
 
   return (
     <motion.div
-      className="border rounded-xl p-5 hover:bg-accent/20 has-[.no-card-hover:hover]:hover:bg-transparent transition-all duration-300 cursor-pointer relative shadow-sm hover:shadow-md canva-hover-effect"
+      className="group border rounded-xl p-4 hover:bg-accent/10 transition-all duration-300 cursor-pointer relative shadow-sm hover:shadow-md h-full flex flex-col"
       onClick={() => onClick(pipe)}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      layout
     >
-      <div className="flex flex-col h-full justify-between space-y-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+      {/* 状态指示器 */}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+        {pipe.is_installed && (
+          <div className={cn(
+            "w-2 h-2 rounded-full",
+            pipe.is_enabled ? "bg-green-500" : "bg-amber-500"
+          )} />
+        )}
+        
+        {pipe.has_update && (
+          <div className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full font-medium flex items-center">
+            <ArrowUpCircle className="h-2.5 w-2.5 mr-0.5" />
+            更新
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col h-full justify-between space-y-3">
+        <div>
+          {/* 头部信息 */}
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
               <Puzzle className="h-5 w-5 text-primary" />
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-lg tracking-tight">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-base tracking-tight truncate">
                 {pipe.name}
               </h3>
-              <div className="text-sm text-muted-foreground">
-                <PipeStoreMarkdown
-                  content={
-                    (pipe.description
-                      ? stripMarkdown(pipe.description).substring(0, 90)
-                      : "") + "..."
-                  }
-                  variant="compact"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 isolate">
-            {pipe.is_installed ? (
-              renderInstallationStatus()
-            ) : (
-              <Button
-                size="sm"
-                variant={pipe.is_paid ? "default" : "outline"}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsLoading(true);
-                  onInstall(pipe, () => setIsLoading(false));
-                }}
-                className="font-medium no-card-hover rounded-lg shadow-sm hover:shadow transition-all"
-                disabled={isLoading || isLoadingInstall}
-              >
-                {isLoadingInstall ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <Download className="h-3.5 w-3.5 mr-2" />
-                    {pipe.is_paid ? `$${pipe.price}` : "安装"}
-                  </>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <UserIcon className="h-3 w-3" />
+                <span className="truncate">{pipe.developer_accounts.developer_name}</span>
+                
+                {pipe.plugin_analytics.downloads_count != null && (
+                  <div className="flex items-center gap-1 ml-2">
+                    <Download className="h-2.5 w-2.5" />
+                    <span>{pipe.plugin_analytics.downloads_count}</span>
+                  </div>
                 )}
-              </Button>
-            )}
-          </div>
-        </div>
-        {pipe.developer_accounts.developer_name && (
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-auto flex-wrap">
-            <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-full">
-              <div className="size-5 rounded-full bg-muted flex items-center justify-center">
-                <UserIcon className="size-3" />
               </div>
-              <span className="font-medium">{pipe.developer_accounts.developer_name}</span>
             </div>
-            {pipe.plugin_analytics.downloads_count != null && (
-              <span className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-full">
-                <Download className="h-3 w-3" />
-                <span className="font-medium">{pipe.plugin_analytics.downloads_count}</span>
+          </div>
+          
+          {/* 描述 */}
+          <div className="text-xs text-muted-foreground line-clamp-2 h-9 mb-3">
+            <PipeStoreMarkdown
+              content={
+                (pipe.description
+                  ? stripMarkdown(pipe.description).substring(0, 80)
+                  : "") + "..."
+              }
+              variant="compact"
+            />
+          </div>
+          
+          {/* 标签 */}
+          <div className="flex flex-wrap gap-1.5">
+            {pipe.installed_config?.version && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/40 font-mono text-xs">
+                v{pipe.installed_config?.version}
+              </span>
+            )}
+            {pipe.is_local && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-secondary/20 text-secondary-foreground text-xs">
+                本地
               </span>
             )}
             {pipe.source_code && (
@@ -331,30 +338,61 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-accent/20 hover:text-accent transition-colors no-card-hover"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/40 text-xs hover:bg-primary/10 hover:text-primary transition-colors"
               >
-                <Download className="h-3 w-3" />
-                <span className="font-mono font-medium">source</span>
+                <ExternalLink className="h-2.5 w-2.5" />
+                源码
               </a>
             )}
-            {pipe.is_local && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-secondary/20 text-secondary-foreground font-medium text-xs">
-                local
-              </span>
-            )}
-            {pipe.installed_config?.version && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted/50 font-mono text-xs font-medium">
-                v{pipe.installed_config?.version}
-              </span>
-            )}
-            {pipe.has_update && (
-              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10 text-primary font-medium text-xs">
-                <ArrowUpCircle className="h-3 w-3" />
-                update
-              </span>
-            )}
           </div>
-        )}
+        </div>
+        
+        {/* 操作按钮 */}
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-muted/40">
+          {pipe.is_installed ? (
+            <div className="flex items-center gap-2 w-full">
+              {renderInstallationStatus()}
+              
+              {/* 额外操作按钮，仅在悬停时显示 */}
+              {pipe.is_enabled && pipe.installed_config?.buildStatus === "success" && (
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenWindow(e);
+                    }}
+                    className="h-8 w-8 p-0 rounded-full"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              variant={pipe.is_paid ? "default" : "outline"}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsLoading(true);
+                onInstall(pipe, () => setIsLoading(false));
+              }}
+              className="font-medium no-card-hover rounded-lg shadow-sm hover:shadow transition-all h-8 w-full justify-center"
+              disabled={isLoading || isLoadingInstall}
+            >
+              {isLoadingInstall ? (
+                <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+              ) : (
+                <>
+                  <Download className="h-3 w-3 mr-1.5" />
+                  <span className="text-xs">{pipe.is_paid ? `$${pipe.price}` : "安装"}</span>
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </motion.div>
   );

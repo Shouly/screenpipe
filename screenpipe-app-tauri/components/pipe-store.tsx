@@ -37,6 +37,8 @@ import { InstalledPipe, PipeWithStatus } from "./pipe-store/types";
 import { PermissionButtons } from "./status/permission-buttons";
 import { Progress } from "./ui/progress";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { ArrowUpCircle } from "lucide-react";
 
 const corePipes: string[] = [];
 
@@ -1100,26 +1102,84 @@ export const PipeStore: React.FC = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-accent/30 p-4 rounded-xl"
+          className="bg-accent/30 p-4 rounded-xl"
         >
-          <div className="relative w-full md:w-[400px]">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="搜索 Pipe..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-10 bg-white border-0 shadow-sm focus-visible:ring-primary"
-              autoCorrect="off"
-              autoComplete="off"
-            />
+          <div className="flex items-center justify-between">
+            <div className="relative w-full md:w-[400px]">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="搜索 Pipe..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-10 bg-white border-0 shadow-sm focus-visible:ring-primary"
+                autoCorrect="off"
+                autoComplete="off"
+              />
+            </div>
+            <div className="hidden md:flex">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchQuery("")}
+                className="text-xs text-muted-foreground hover:text-foreground"
+                disabled={!searchQuery}
+              >
+                清除搜索
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium">仅显示已安装</span>
-            <Switch
-              checked={showInstalledOnly}
-              onCheckedChange={setShowInstalledOnly}
-              className="data-[state=checked]:bg-primary"
-            />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "rounded-full px-4 text-sm font-medium",
+              !showInstalledOnly && "bg-primary/10 text-primary"
+            )}
+            onClick={() => setShowInstalledOnly(false)}
+          >
+            全部
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "rounded-full px-4 text-sm font-medium",
+              showInstalledOnly && !pipes.some(p => p.is_installed && p.has_update) && "bg-primary/10 text-primary"
+            )}
+            onClick={() => setShowInstalledOnly(true)}
+          >
+            已安装
+          </Button>
+          {pipes.some(pipe => pipe.has_update) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "rounded-full px-4 text-sm font-medium",
+                showInstalledOnly && pipes.some(p => p.is_installed && p.has_update) && "bg-primary/10 text-primary"
+              )}
+              onClick={() => {
+                setShowInstalledOnly(true);
+                // 这里可以添加更多筛选逻辑，如果需要
+              }}
+            >
+              <ArrowUpCircle className="h-3.5 w-3.5 mr-1.5 text-primary" />
+              可更新
+            </Button>
+          )}
+          
+          <div className="ml-auto flex items-center">
+            <span className="text-xs text-muted-foreground">
+              {filteredPipes.length} 个插件
+            </span>
           </div>
         </motion.div>
 
@@ -1165,13 +1225,18 @@ export const PipeStore: React.FC = () => {
           className="flex-1 overflow-y-auto pr-1"
         >
           {filteredPipes.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredPipes.map((pipe, index) => (
                 <motion.div
                   key={pipe.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.05 * index }}
+                  transition={{ 
+                    duration: 0.3, 
+                    delay: 0.05 * (index % 3), 
+                    ease: "easeOut" 
+                  }}
+                  className="h-full"
                 >
                   <PipeCard
                     pipe={pipe}
