@@ -268,6 +268,8 @@ export default function Home() {
         return <HomeDashboard onNavigate={handleNavigate} />;
       case "store":
         return <PipeStore />;
+      case "settings":
+        return <Settings onNavigate={handleNavigate} />;
       default:
         return <HomeDashboard onNavigate={handleNavigate} />;
     }
@@ -284,7 +286,6 @@ export default function Home() {
         </div>
       </div>
       <NotificationHandler />
-      <Settings />
     </main>
   );
 }

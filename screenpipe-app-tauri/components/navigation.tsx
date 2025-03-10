@@ -91,9 +91,9 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
 
     const unreadCount = messages.filter(msg => !msg.read).length;
 
-    // 处理设置点击，同时可以打开状态对话框
+    // 处理设置点击，现在直接导航到设置页面
     const handleSettingsClick = () => {
-        setSettingsOpen(true);
+        onNavigate("settings");
     };
 
     return (
@@ -166,12 +166,13 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
 
                     {/* 设置 */}
                     <Button
-                        variant="ghost"
+                        variant={activePage === "settings" ? "secondary" : "ghost"}
                         size="sm"
                         onClick={handleSettingsClick}
                         className={cn(
                             "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
-                            "hover:bg-accent hover:text-primary rounded-lg transition-colors"
+                            "hover:bg-accent hover:text-primary rounded-lg transition-colors",
+                            activePage === "settings" ? "bg-accent text-primary" : ""
                         )}
                     >
                         <Settings className="h-5 w-5 mb-0.5" />
