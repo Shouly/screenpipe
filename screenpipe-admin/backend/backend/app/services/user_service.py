@@ -62,11 +62,11 @@ class UserService:
     @staticmethod
     async def create_login_code(db: AsyncSession, email: str) -> str:
         """创建登录码"""
-        # 生成6位大写字母数字验证码
-        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        # 生成6位纯数字验证码
+        code = ''.join(random.choices(string.digits, k=6))
         
-        # 设置过期时间（1小时后）
-        expires_at = datetime.now() + timedelta(hours=1)
+        # 设置过期时间（10分钟）
+        expires_at = datetime.now() + timedelta(minutes=10)
         
         # 创建登录码记录
         login_code = LoginCode(
