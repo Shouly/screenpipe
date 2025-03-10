@@ -18,7 +18,8 @@ module.exports = {
 	  },
 	  extend: {
 		fontFamily: {
-		  sans: ["var(--font-noto-sans-sc)", "sans-serif"],
+		  noto: ["Noto Sans SC", "Roboto", "sans-serif"],
+		  sans: ["Roboto", "Noto Sans SC", "sans-serif"],
 		  mono: ["var(--font-geist-mono)", "monospace"],
 		},
 		colors: {
