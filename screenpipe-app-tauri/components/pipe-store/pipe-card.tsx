@@ -257,14 +257,11 @@ export const PipeCard: React.FC<PipeCardProps> = ({
 
   return (
     <motion.div
-      className="group border rounded-xl p-5 hover:bg-muted/40 has-[.no-card-hover:hover]:hover:bg-transparent transition-all duration-200 cursor-pointer backdrop-blur-sm relative"
+      className="border rounded-xl p-5 hover:bg-muted/20 has-[.no-card-hover:hover]:hover:bg-transparent transition-all duration-200 cursor-pointer relative shadow-sm hover:shadow"
       onClick={() => onClick(pipe)}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{
-        boxShadow: "0 0 10px rgba(255,255,255,0.1)",
-        transition: { duration: 0.2 },
-      }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
       <div className="flex flex-col h-full justify-between space-y-4">
         <div className="flex items-start justify-between gap-4">
@@ -309,7 +306,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                 ) : (
                   <>
                     <Download className="h-3.5 w-3.5 mr-2" />
-                    {pipe.is_paid ? `$${pipe.price}` : "get"}
+                    {pipe.is_paid ? `$${pipe.price}` : "安装"}
                   </>
                 )}
               </Button>
@@ -317,7 +314,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
           </div>
         </div>
         {pipe.developer_accounts.developer_name && (
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-auto">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-auto flex-wrap">
             <div className="flex items-center gap-1">
               <div className="size-6 rounded-full bg-muted flex items-center justify-center">
                 <UserIcon className="size-3" />
@@ -331,48 +328,28 @@ export const PipeCard: React.FC<PipeCardProps> = ({
               </span>
             )}
             {pipe.source_code && (
-              <motion.a
+              <a
                 href={pipe.source_code}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted hover:bg-accent hover:text-accent-foreground transition-all duration-200 no-card-hover relative overflow-hidden"
-                whileHover={{
-                  scale: 1.05,
-                  transition: {
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 10,
-                  },
-                }}
-                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted hover:bg-accent/10 hover:text-accent transition-colors no-card-hover"
               >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                  initial={{ x: "-100%" }}
-                  whileHover={{
-                    x: "100%",
-                    transition: {
-                      duration: 0.6,
-                      ease: "easeInOut",
-                    },
-                  }}
-                />
                 <Download className="h-3 w-3" />
-                <span className="relative z-10 font-mono">source</span>
-              </motion.a>
+                <span className="font-mono">source</span>
+              </a>
             )}
             {pipe.is_local && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted font-mono text-xs">
                 local
               </span>
             )}
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 font-mono text-xs">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted font-mono text-xs">
               {pipe.installed_config?.version && "v"}
               {pipe.installed_config?.version}
             </span>
             {pipe.has_update && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 font-mono text-xs animate-pulse">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono text-xs">
                 <ArrowUpCircle className="h-3 w-3" />
                 update
               </span>

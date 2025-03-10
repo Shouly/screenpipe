@@ -1058,128 +1058,149 @@ export const PipeStore: React.FC = () => {
   }
 
   return (
-    <div className="overflow-hidden flex flex-col space-y-4">
-      <div className="flex flex-col flex-1 overflow-hidden space-y-4 p-4">
-        <div className="space-y-4">
-          <div className="flex flex-col gap-4 md:w-[50%] w-full">
-            <div className="flex-1 relative py-2">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="search community pipes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-                autoCorrect="off"
-                autoComplete="off"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">show installed only</span>
-              <Switch
-                checked={showInstalledOnly}
-                onCheckedChange={setShowInstalledOnly}
-              />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setConfirmOpen(true)}
-                      className="flex items-center gap-2"
-                      disabled={isPurging}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>reset all pipes</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>confirm deletion of all pipes?</DialogTitle>
-                    <DialogDescription>
-                      are you sure you want to delete all pipes? <br/> you&apos;ll have to download them again
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="flex justify-end gap-4">
-                    <Button 
-                      onClick={() => setConfirmOpen(false)} 
-                      disabled={isPurging}
-                      variant={"outline"}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      onClick={handleResetAllPipes} 
-                      disabled={isPurging}
-                    >
-                      {isPurging ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          reseting all pipes...
-                        </>
-                      ) : (
-                          "Confirm"
-                        )}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleUpdateAllPipes()}
-                      className="flex items-center gap-2"
-                      disabled={
-                        !pipes.some(
-                          (pipe) => pipe.is_installed && pipe.has_update
-                        )
-                      }
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>update all pipes</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+    <div className="overflow-hidden flex flex-col h-full">
+      <div className="p-6 flex flex-col flex-1 overflow-hidden space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Pipe 商店</h1>
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setConfirmOpen(true)}
+                    className="h-9 w-9"
+                    disabled={isPurging}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>重置所有 Pipe</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleUpdateAllPipes()}
+                    className="h-9 w-9"
+                    disabled={
+                      !pipes.some(
+                        (pipe) => pipe.is_installed && pipe.has_update
+                      )
+                    }
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>更新所有 Pipe</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredPipes.map((pipe) => (
-              <PipeCard
-                key={pipe.id}
-                pipe={pipe}
-                setPipe={(updatedPipe) => {
-                  setPipes((prev) =>
-                    prev.map((p) => (p.id === updatedPipe.id ? updatedPipe : p))
-                  );
-                }}
-                onInstall={handleInstallPipe}
-                onClick={setSelectedPipe}
-                isLoadingInstall={loadingInstalls.has(pipe.id)}
-                onToggle={handleTogglePipe}
-              />
-            ))}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="relative w-full md:w-[400px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="搜索 Pipe..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10"
+              autoCorrect="off"
+              autoComplete="off"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">仅显示已安装</span>
+            <Switch
+              checked={showInstalledOnly}
+              onCheckedChange={setShowInstalledOnly}
+            />
           </div>
         </div>
 
-        <AddPipeForm
-          onAddPipe={handleInstallSideload}
-          isHealthy={health?.status !== "error"}
-          onLoadFromLocalFolder={handleLoadFromLocalFolder}
-        />
+        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>确认删除所有 Pipe？</DialogTitle>
+              <DialogDescription>
+                您确定要删除所有 Pipe 吗？<br/>您需要重新下载它们。
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-4">
+              <Button 
+                onClick={() => setConfirmOpen(false)} 
+                disabled={isPurging}
+                variant={"outline"}
+              >
+                取消
+              </Button>
+              <Button 
+                onClick={handleResetAllPipes} 
+                disabled={isPurging}
+              >
+                {isPurging ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    正在重置...
+                  </>
+                ) : (
+                    "确认"
+                  )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <div className="flex-1 overflow-y-auto pr-1">
+          {filteredPipes.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredPipes.map((pipe) => (
+                <PipeCard
+                  key={pipe.id}
+                  pipe={pipe}
+                  setPipe={(updatedPipe) => {
+                    setPipes((prev) =>
+                      prev.map((p) => (p.id === updatedPipe.id ? updatedPipe : p))
+                    );
+                  }}
+                  onInstall={handleInstallPipe}
+                  onClick={setSelectedPipe}
+                  isLoadingInstall={loadingInstalls.has(pipe.id)}
+                  onToggle={handleTogglePipe}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 text-center">
+              <p className="text-muted-foreground mb-2">没有找到匹配的 Pipe</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSearchQuery("")}
+                className="mt-2"
+              >
+                清除搜索
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="pt-4 border-t">
+          <AddPipeForm
+            onAddPipe={handleInstallSideload}
+            isHealthy={health?.status !== "error"}
+            onLoadFromLocalFolder={handleLoadFromLocalFolder}
+          />
+        </div>
       </div>
     </div>
   );

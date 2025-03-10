@@ -20,21 +20,26 @@ export const AddPipeForm: React.FC<AddPipeFormProps> = ({
   const [newRepoUrl, setNewRepoUrl] = useState("");
 
   return (
-    <div className="border rounded-lg p-4 space-y-3 md:w-[50%] w-full mx-auto">
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium flex items-center gap-2">
+        <Puzzle className="h-4 w-4 text-primary" />
+        添加自定义 Pipe
+      </h3>
       <div className="flex gap-2">
         <div className="flex-1 relative">
           <Input
             type="url"
             placeholder={
               !isHealthy
-                ? "screenpipe not running..."
-                : "enter github url or local path"
+                ? "screenpipe 未运行..."
+                : "输入 GitHub 链接或本地路径"
             }
             value={newRepoUrl}
             onChange={(e) => setNewRepoUrl(e.target.value)}
             autoCorrect="off"
             autoComplete="off"
             disabled={!isHealthy}
+            className="h-10"
           />
         </div>
         <Button
@@ -60,10 +65,10 @@ export const AddPipeForm: React.FC<AddPipeFormProps> = ({
           href="https://docs.screenpi.pe/docs/plugins"
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline flex items-center gap-1"
+          className="hover:text-primary transition-colors flex items-center gap-1"
         >
           <Puzzle className="h-3 w-3" />
-          learn how to create your own pipe
+          了解如何创建您自己的 Pipe
         </a>
       </div>
     </div>
