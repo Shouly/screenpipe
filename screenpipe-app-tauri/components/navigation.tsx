@@ -18,6 +18,7 @@ import {
 } from "./inbox-messages";
 import HealthStatus from "./screenpipe-status";
 import { Button } from "./ui/button";
+import { motion } from "framer-motion";
 
 interface NavigationProps {
     activePage: string;
@@ -109,34 +110,44 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                 {/* 主导航项 */}
                 <div className="flex-1 flex flex-col space-y-4 px-1">
                     {/* 首页 */}
-                    <Button
-                        variant={activePage === "home" ? "secondary" : "ghost"}
-                        size="sm"
-                        onClick={() => onNavigate("home")}
-                        className={cn(
-                            "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
-                            "hover:bg-accent hover:text-primary rounded-lg transition-colors",
-                            activePage === "home" ? "bg-accent text-primary" : ""
-                        )}
+                    <motion.div
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
-                        <Home className="h-5 w-5 mb-0.5" />
-                        <span className="text-[10px] text-center">首页</span>
-                    </Button>
+                        <Button
+                            variant={activePage === "home" ? "secondary" : "ghost"}
+                            size="sm"
+                            onClick={() => onNavigate("home")}
+                            className={cn(
+                                "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
+                                "hover:bg-accent hover:text-primary rounded-lg transition-colors",
+                                activePage === "home" ? "bg-accent text-primary" : ""
+                            )}
+                        >
+                            <Home className="h-5 w-5 mb-0.5" />
+                            <span className="text-[10px] text-center">首页</span>
+                        </Button>
+                    </motion.div>
 
                     {/* Pipe商店 */}
-                    <Button
-                        variant={activePage === "store" ? "secondary" : "ghost"}
-                        size="sm"
-                        onClick={() => onNavigate("store")}
-                        className={cn(
-                            "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
-                            "hover:bg-accent hover:text-primary rounded-lg transition-colors",
-                            activePage === "store" ? "bg-accent text-primary" : ""
-                        )}
+                    <motion.div
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
-                        <ShoppingBag className="h-5 w-5 mb-0.5" />
-                        <span className="text-[10px] text-center">商店</span>
-                    </Button>
+                        <Button
+                            variant={activePage === "store" ? "secondary" : "ghost"}
+                            size="sm"
+                            onClick={() => onNavigate("store")}
+                            className={cn(
+                                "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
+                                "hover:bg-accent hover:text-primary rounded-lg transition-colors",
+                                activePage === "store" ? "bg-accent text-primary" : ""
+                            )}
+                        >
+                            <ShoppingBag className="h-5 w-5 mb-0.5" />
+                            <span className="text-[10px] text-center">商店</span>
+                        </Button>
+                    </motion.div>
                 </div>
 
                 {/* 底部工具栏 */}
@@ -146,38 +157,48 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                     </div>
 
                     {/* 通知 */}
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowInbox(!showInbox)}
-                        className={cn(
-                            "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full relative",
-                            "hover:bg-accent hover:text-primary rounded-lg transition-colors"
-                        )}
+                    <motion.div
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
-                        <Bell className="h-5 w-5 mb-0.5" />
-                        <span className="text-[10px] text-center">通知</span>
-                        {unreadCount > 0 && (
-                            <span className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-[8px] rounded-full h-3.5 w-3.5 flex items-center justify-center">
-                                {unreadCount}
-                            </span>
-                        )}
-                    </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowInbox(!showInbox)}
+                            className={cn(
+                                "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full relative",
+                                "hover:bg-accent hover:text-primary rounded-lg transition-colors"
+                            )}
+                        >
+                            <Bell className="h-5 w-5 mb-0.5" />
+                            <span className="text-[10px] text-center">通知</span>
+                            {unreadCount > 0 && (
+                                <span className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-[8px] rounded-full h-3.5 w-3.5 flex items-center justify-center">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </Button>
+                    </motion.div>
 
                     {/* 设置 */}
-                    <Button
-                        variant={activePage === "settings" ? "secondary" : "ghost"}
-                        size="sm"
-                        onClick={handleSettingsClick}
-                        className={cn(
-                            "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
-                            "hover:bg-accent hover:text-primary rounded-lg transition-colors",
-                            activePage === "settings" ? "bg-accent text-primary" : ""
-                        )}
+                    <motion.div
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
-                        <Settings className="h-5 w-5 mb-0.5" />
-                        <span className="text-[10px] text-center">设置</span>
-                    </Button>
+                        <Button
+                            variant={activePage === "settings" ? "secondary" : "ghost"}
+                            size="sm"
+                            onClick={handleSettingsClick}
+                            className={cn(
+                                "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
+                                "hover:bg-accent hover:text-primary rounded-lg transition-colors",
+                                activePage === "settings" ? "bg-accent text-primary" : ""
+                            )}
+                        >
+                            <Settings className="h-5 w-5 mb-0.5" />
+                            <span className="text-[10px] text-center">设置</span>
+                        </Button>
+                    </motion.div>
                 </div>
             </div>
 

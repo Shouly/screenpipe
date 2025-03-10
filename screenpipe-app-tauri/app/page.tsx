@@ -19,6 +19,7 @@ import { listen } from "@tauri-apps/api/event";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
   const { settings, updateSettings, loadUser, reloadStore } = useSettings();
@@ -263,16 +264,31 @@ export default function Home() {
 
   // 渲染当前活动页面
   const renderActivePage = () => {
-    switch (activePage) {
-      case "home":
-        return <HomeDashboard onNavigate={handleNavigate} />;
-      case "store":
-        return <PipeStore />;
-      case "settings":
-        return <Settings onNavigate={handleNavigate} />;
-      default:
-        return <HomeDashboard onNavigate={handleNavigate} />;
-    }
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activePage}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3 }}
+          className="w-full h-full"
+        >
+          {(() => {
+            switch (activePage) {
+              case "home":
+                return <HomeDashboard onNavigate={handleNavigate} />;
+              case "store":
+                return <PipeStore />;
+              case "settings":
+                return <Settings onNavigate={handleNavigate} />;
+              default:
+                return <HomeDashboard onNavigate={handleNavigate} />;
+            }
+          })()}
+        </motion.div>
+      </AnimatePresence>
+    );
   };
 
   return (
