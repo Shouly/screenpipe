@@ -224,7 +224,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
       <div className="flex h-full">
         {/* 侧边栏 */}
         <motion.div 
-          className="w-64 border-r border-gray-100 bg-white flex flex-col h-full shadow-sm"
+          className="w-64 border-r border-border bg-card flex flex-col h-full shadow-sm"
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.4 }}
@@ -237,10 +237,10 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
               transition={{ delay: 0.1, duration: 0.3 }}
             >
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="搜索设置..."
-                  className="pl-9 rounded-lg border-gray-200 bg-gray-50 focus-visible:ring-primary/20 focus-visible:ring-offset-0"
+                  className="pl-9 rounded-lg border-input bg-card focus-visible:ring-primary/20 focus-visible:ring-offset-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -260,7 +260,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                   transition={{ delay: categoryIndex * 0.1 }}
                   className="pb-2"
                 >
-                  <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3 px-2">
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-2">
                     {category}
                   </h3>
                   <div className="space-y-1">
@@ -276,7 +276,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                             "w-full justify-start rounded-lg py-2.5 px-3 text-sm font-medium",
                             activeSection === section.id
                               ? "bg-primary/10 text-primary"
-                              : "text-gray-700 hover:bg-gray-100"
+                              : "text-foreground hover:bg-accent"
                           )}
                           onClick={() => setActiveSection(section.id as SettingsSection)}
                         >
@@ -284,7 +284,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                             "w-7 h-7 rounded-full flex items-center justify-center mr-3",
                             activeSection === section.id
                               ? "bg-primary/20 text-primary"
-                              : "bg-gray-100 text-gray-500"
+                              : "bg-muted text-muted-foreground"
                           )}>
                             {section.icon}
                           </div>
@@ -300,14 +300,14 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
 
           {/* 登出按钮固定在底部 */}
           <motion.div 
-            className="p-6 border-t border-gray-100"
+            className="p-6 border-t border-border"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.3 }}
           >
             <Button
               variant="outline"
-              className="w-full justify-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100"
+              className="w-full justify-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
               onClick={() => {
                 updateSettings({ authToken: "", user: undefined });
                 if (onNavigate) {
@@ -324,25 +324,25 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
 
         {/* 主内容区域 */}
         <motion.div 
-          className="flex-1 flex flex-col h-full bg-white"
+          className="flex-1 flex flex-col h-full bg-background"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.4 }}
         >
           <motion.div 
-            className="flex justify-between items-center border-b border-gray-100 p-6 bg-white flex-shrink-0"
+            className="flex justify-between items-center border-b border-border p-6 bg-card flex-shrink-0"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.3 }}
           >
             <div>
-              <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
-              <p className="text-sm text-gray-500">{description}</p>
+              <h2 className="text-xl font-semibold text-foreground">{title}</h2>
+              <p className="text-sm text-muted-foreground">{description}</p>
             </div>
           </motion.div>
 
           <motion.div 
-            className="flex-1 overflow-y-auto bg-gray-50"
+            className="flex-1 overflow-y-auto bg-muted"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.4 }}
