@@ -298,9 +298,11 @@ export default function LoginPage() {
                 >
                   <div className="text-center">
                     <h2 className="text-lg font-semibold mb-2 cn-text-title">验证您的邮箱</h2>
-                    <p className="text-sm text-muted-foreground">
-                      我们已向 <span className="font-medium">{email}</span> 发送了验证码
-                    </p>
+                    <div className="inline-flex flex-wrap justify-center items-center gap-x-1 text-sm mb-2">
+                      <span className="text-muted-foreground">我们已向</span>
+                      <span className="font-medium text-foreground max-w-full break-all">{email}</span>
+                      <span className="text-muted-foreground">发送了验证码</span>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -351,12 +353,12 @@ export default function LoginPage() {
                   <div className="text-center pt-2">
                     <Button
                       variant="link"
-                      className="p-0 h-auto font-normal text-sm text-muted-foreground hover:text-primary"
+                      className="p-0 h-auto font-normal text-sm hover:no-underline"
                       onClick={handleResendCode}
                       disabled={isEmailLoading}
                     >
-                      没收到验证码？
-                      <span className="text-primary ml-1">重新发送</span>
+                      <span className="text-muted-foreground hover:text-muted-foreground">没收到验证码？</span>
+                      <span className="text-primary hover:text-primary/80 ml-1">重新发送</span>
                       {isEmailLoading && <Loader2 className="inline ml-1 h-3 w-3 animate-spin" />}
                     </Button>
                   </div>
@@ -432,14 +434,17 @@ export default function LoginPage() {
           </motion.div>
 
           {/* 底部隐私条款 */}
-          <div className="w-full mt-auto py-6 text-center text-xs mt-8">
+          <div className="w-full mt-auto py-6 text-center text-xs mt-20">
             <div className="flex flex-col md:flex-row justify-center gap-2 md:gap-6">
-              <a href="https://screenpi.pe/terms" className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.google.com/terms" className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
                 服务条款
               </a>
-              <a href="https://screenpi.pe/privacy" className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.google.com/privacy" className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
                 隐私政策
               </a>
+            </div>
+            <div className="mt-2 text-muted-foreground/70">
+              <p>© {new Date().getFullYear()} Terix Technology Inc. 保留所有权利</p>
             </div>
           </div>
         </div>
