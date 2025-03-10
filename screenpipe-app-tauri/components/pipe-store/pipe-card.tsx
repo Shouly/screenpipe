@@ -264,12 +264,12 @@ export const PipeCard: React.FC<PipeCardProps> = ({
         variant="outline"
         onClick={(e) => {
           e.stopPropagation();
-          handleOpenInBrowser(e);
+          handleOpenWindow(e);
         }}
         className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border/50"
       >
         <Puzzle className="h-3 w-3 mr-1.5" />
-        <span className="text-xs">在浏览器中打开</span>
+        <span className="text-xs">打开</span>
       </Button>
     );
   }, [pipe.installed_config?.buildStatus, isLoading, onToggle, pipe, handleOpenWindow, handleOpenInBrowser]);
@@ -389,7 +389,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent side="top">
-                        <p>在独立窗口中打开</p>
+                        <p>在浏览器中打开</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
