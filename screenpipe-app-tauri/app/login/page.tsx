@@ -9,7 +9,7 @@ import { platform } from "@tauri-apps/plugin-os";
 import { motion } from "framer-motion";
 import { ChevronRight, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function LoginPage() {
   const { saveSettings } = useSettings();
@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [showVerificationForm, setShowVerificationForm] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  const codeInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // 从URL参数中获取邮箱地址
   useEffect(() => {
@@ -95,6 +96,58 @@ export default function LoginPage() {
       });
     } finally {
       setIsEmailLoading(false);
+    }
+  };
+
+  // 处理验证码输入
+  const handleCodeChange = (index: number, value: string) => {
+    // 只允许输入数字
+    if (!/^\d*$/.test(value)) return;
+
+    // 更新验证码
+    const newCode = verificationCode.split('');
+    newCode[index] = value.slice(-1); // 只取最后一个字符
+    const updatedCode = newCode.join('');
+    setVerificationCode(updatedCode);
+
+    // 自动聚焦到下一个输入框
+    if (value && index < 5) {
+      codeInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  // 处理验证码输入框的键盘事件
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 处理删除键
+    if (e.key === 'Backspace') {
+      if (!verificationCode[index] && index > 0) {
+        // 如果当前框为空且不是第一个框，聚焦到前一个框
+        codeInputRefs.current[index - 1]?.focus();
+      }
+    }
+    // 处理左右箭头键
+    else if (e.key === 'ArrowLeft' && index > 0) {
+      codeInputRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      codeInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  // 处理粘贴事件
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').trim();
+    // 检查是否是6位数字
+    if (/^\d{6}$/.test(pastedData)) {
+      setVerificationCode(pastedData);
+      // 填充所有输入框
+      for (let i = 0; i < 6; i++) {
+        if (codeInputRefs.current[i]) {
+          codeInputRefs.current[i]!.value = pastedData[i];
+        }
+      }
+      // 聚焦到最后一个输入框
+      codeInputRefs.current[5]?.focus();
     }
   };
 
@@ -250,23 +303,41 @@ export default function LoginPage() {
                     </p>
                   </div>
 
-                  <div>
-                    <Input
-                      id="verification-code"
-                      type="text"
-                      placeholder="输入6位验证码"
-                      value={verificationCode}
-                      onChange={(e) => setVerificationCode(e.target.value)}
-                      className="h-11 bg-background border-input focus:border-primary focus:ring-1 focus:ring-primary rounded-md text-center text-lg tracking-wider"
-                      disabled={isVerifying}
-                      autoComplete="one-time-code"
-                      maxLength={6}
-                    />
+                  <div className="space-y-2">
+                    <label htmlFor="verification-code-0" className="block text-sm font-medium text-foreground">
+                      输入6位验证码
+                    </label>
+                    <div className="flex justify-between gap-2">
+                      {[0, 1, 2, 3, 4, 5].map((index) => (
+                        <div key={index} className="relative flex-1">
+                          <input
+                            ref={(el) => {
+                              codeInputRefs.current[index] = el;
+                            }}
+                            id={`verification-code-${index}`}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={verificationCode[index] || ''}
+                            onChange={(e) => handleCodeChange(index, e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(index, e)}
+                            onPaste={index === 0 ? handlePaste : undefined}
+                            disabled={isVerifying}
+                            autoComplete={index === 0 ? "one-time-code" : undefined}
+                            className="w-full h-12 text-center text-xl font-medium bg-background border-input border rounded-md focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
+                            autoFocus={index === 0}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      验证码有效期为10分钟
+                    </div>
                   </div>
 
                   <Button
                     onClick={handleVerifyCode}
-                    disabled={isVerifying || !verificationCode.trim() || verificationCode.length < 6}
+                    disabled={isVerifying || verificationCode.length < 6}
                     className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md flex items-center justify-center transition-all"
                   >
                     {isVerifying ? (
@@ -277,14 +348,15 @@ export default function LoginPage() {
                     ) : "验证并登录"}
                   </Button>
 
-                  <div className="text-center">
+                  <div className="text-center pt-2">
                     <Button
                       variant="link"
                       className="p-0 h-auto font-normal text-sm text-muted-foreground hover:text-primary"
                       onClick={handleResendCode}
                       disabled={isEmailLoading}
                     >
-                      没收到验证码？重新发送
+                      没收到验证码？
+                      <span className="text-primary ml-1">重新发送</span>
                       {isEmailLoading && <Loader2 className="inline ml-1 h-3 w-3 animate-spin" />}
                     </Button>
                   </div>
