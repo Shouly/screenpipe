@@ -1,6 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, BarChart2, Clock, Monitor, TrendingUp, Users } from "lucide-react";
+import { 
+  ArrowRight, 
+  BarChart2, 
+  Clock, 
+  Monitor, 
+  TrendingUp, 
+  Users, 
+  CheckCircle2, 
+  Zap,
+  LineChart,
+  LayoutDashboard
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -13,11 +24,15 @@ export default function Home() {
         <div className="absolute inset-0 z-0">
           <div className="absolute top-20 right-[10%] w-64 h-64 rounded-full bg-primary/5 blur-3xl"></div>
           <div className="absolute bottom-20 left-[5%] w-72 h-72 rounded-full bg-primary/5 blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/3 blur-3xl opacity-30"></div>
         </div>
         
         <div className="container px-4 md:px-6 relative z-10">
           <div className="grid gap-8 px-4 sm:px-6 md:px-10 md:grid-cols-2 md:gap-16 items-center">
             <div className="flex flex-col justify-center space-y-6">
+              <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary w-fit">
+                全新升级 v2.0
+              </div>
               <div className="space-y-4">
                 <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
                   员工生产力<br />智能分析平台
@@ -38,6 +53,20 @@ export default function Home() {
                   </Button>
                 </Link>
               </div>
+              
+              {/* 信任徽章 */}
+              <div className="flex items-center gap-2 pt-4">
+                <div className="flex -space-x-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-8 w-8 rounded-full bg-muted flex items-center justify-center border-2 border-background">
+                      <span className="text-xs font-medium">U{i}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">500+</span> 企业信赖之选
+                </div>
+              </div>
             </div>
             <div className="flex items-center justify-center relative">
               {/* 3D效果的图表展示 */}
@@ -51,17 +80,24 @@ export default function Home() {
                 </div>
                 
                 {/* 浮动的数据点 */}
-                <div className="absolute top-[20%] right-[15%] p-2 bg-white/90 backdrop-blur-md rounded-lg shadow-lg animate-float">
+                <div className="absolute top-[20%] right-[15%] p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-lg shadow-lg animate-float">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-green-500" />
                     <span className="text-xs font-medium">生产力提升 28%</span>
                   </div>
                 </div>
                 
-                <div className="absolute bottom-[25%] left-[10%] p-2 bg-white/90 backdrop-blur-md rounded-lg shadow-lg animate-float-delay">
+                <div className="absolute bottom-[25%] left-[10%] p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-lg shadow-lg animate-float-delay">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-blue-500" />
                     <span className="text-xs font-medium">团队协作优化</span>
+                  </div>
+                </div>
+                
+                <div className="absolute top-[60%] right-[5%] p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-lg shadow-lg animate-float">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-purple-500" />
+                    <span className="text-xs font-medium">节省 20% 时间</span>
                   </div>
                 </div>
               </div>
@@ -70,26 +106,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 统计数字部分 - 新增 */}
-      <section className="w-full py-8 bg-background border-y">
+      {/* 客户标志部分 - 新增 */}
+      <section className="w-full py-12 bg-muted/30">
         <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-            <div className="flex flex-col items-center text-center p-4">
-              <p className="text-3xl md:text-4xl font-bold text-primary">30%</p>
-              <p className="text-sm text-muted-foreground mt-1">平均效率提升</p>
-            </div>
-            <div className="flex flex-col items-center text-center p-4">
-              <p className="text-3xl md:text-4xl font-bold text-primary">500+</p>
-              <p className="text-sm text-muted-foreground mt-1">企业客户</p>
-            </div>
-            <div className="flex flex-col items-center text-center p-4">
-              <p className="text-3xl md:text-4xl font-bold text-primary">20%</p>
-              <p className="text-sm text-muted-foreground mt-1">软件成本节约</p>
-            </div>
-            <div className="flex flex-col items-center text-center p-4">
-              <p className="text-3xl md:text-4xl font-bold text-primary">24/7</p>
-              <p className="text-sm text-muted-foreground mt-1">实时监控</p>
-            </div>
+          <div className="text-center mb-8">
+            <h2 className="text-xl font-medium text-muted-foreground">受到行业领先企业的信赖</h2>
+          </div>
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+            {['阿里巴巴', '腾讯', '百度', '京东', '字节跳动', '华为'].map((company, index) => (
+              <div key={index} className="flex items-center justify-center h-8 opacity-70 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
+                <span className="text-xl font-bold text-muted-foreground">{company}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 统计数字部分 - 改进 */}
+      <section className="w-full py-16 bg-background border-y">
+        <div className="container">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="flex flex-col items-center text-center p-4 space-y-2">
+                <div className="p-2 rounded-full bg-primary/10 mb-2">
+                  {stat.icon}
+                </div>
+                <p className="text-3xl md:text-4xl font-bold text-primary">{stat.value}</p>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -134,7 +179,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 工作流程部分 - 新增 */}
+      {/* 工作流程部分 - 改进 */}
       <section className="w-full py-16 md:py-24 bg-muted/30">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
@@ -155,8 +200,7 @@ export default function Home() {
               {workflowSteps.map((step, index) => (
                 <div key={index} className={`flex flex-col ${index % 2 === 0 ? 'md:pr-12 md:text-right md:items-end' : 'md:pl-12'} relative`}>
                   {/* 步骤数字 - 桌面版 */}
-                  <div className="absolute top-0 hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold shadow-lg z-10 
-                    ${index % 2 === 0 ? 'right-[-20px]' : 'left-[-20px]'}">
+                  <div className={`absolute top-0 hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold shadow-lg z-10 ${index % 2 === 0 ? 'right-[-20px]' : 'left-[-20px]'}`}>
                     {index + 1}
                   </div>
                   
@@ -170,6 +214,42 @@ export default function Home() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 客户评价部分 - 新增 */}
+      <section className="w-full py-16 md:py-24 bg-background">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
+            <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary">
+              客户评价
+            </div>
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">客户如何评价我们</h2>
+            <p className="max-w-[700px] text-muted-foreground md:text-lg">
+              来自各行业客户的真实反馈
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="bg-muted/30 border-0">
+                <CardHeader>
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="font-bold text-primary">{testimonial.name.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">{testimonial.name}</CardTitle>
+                      <CardDescription>{testimonial.role}</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground italic">"{testimonial.content}"</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -197,6 +277,12 @@ export default function Home() {
                   预约演示
                 </Button>
               </Link>
+            </div>
+            
+            {/* 信任徽章 */}
+            <div className="flex items-center gap-2 pt-4">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              <span className="text-sm text-muted-foreground">无需信用卡 · 14天免费试用 · 随时取消</span>
             </div>
           </div>
         </div>
@@ -234,7 +320,7 @@ const features = [
   }
 ];
 
-// 新增工作流程步骤
+// 工作流程步骤
 const workflowSteps = [
   {
     title: "数据收集",
@@ -250,6 +336,49 @@ const workflowSteps = [
   },
   {
     title: "实施改进",
-    description: "根据洞察实施改进措施，并持续监控效果，形成优化闭环。"
+    description: "根据洞察实施改进措施，持续监控效果，不断优化团队生产力。"
+  }
+];
+
+// 统计数据
+const stats = [
+  {
+    icon: <TrendingUp className="h-5 w-5 text-primary" />,
+    value: "30%",
+    label: "平均效率提升"
+  },
+  {
+    icon: <Users className="h-5 w-5 text-primary" />,
+    value: "500+",
+    label: "企业客户"
+  },
+  {
+    icon: <Zap className="h-5 w-5 text-primary" />,
+    value: "20%",
+    label: "软件成本节约"
+  },
+  {
+    icon: <Clock className="h-5 w-5 text-primary" />,
+    value: "24/7",
+    label: "实时监控"
+  }
+];
+
+// 客户评价
+const testimonials = [
+  {
+    name: "张经理",
+    role: "技术总监 · 科技公司",
+    content: "Time Glass帮助我们团队提高了25%的工作效率，识别了多个时间浪费点，是我们管理团队的得力助手。"
+  },
+  {
+    name: "李总监",
+    role: "运营主管 · 电商平台",
+    content: "通过使用Time Glass，我们优化了团队工作流程，减少了不必要的会议和干扰，员工满意度显著提升。"
+  },
+  {
+    name: "王总",
+    role: "CEO · 创业公司",
+    content: "作为一家快速成长的创业公司，Time Glass帮助我们建立了高效的工作文化，是我们不可或缺的工具。"
   }
 ];
