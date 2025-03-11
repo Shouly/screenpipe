@@ -12,6 +12,7 @@ import HomeDashboard from "@/components/home-dashboard";
 import Navigation from "@/components/navigation";
 import { PipeStore } from "@/components/pipe-store";
 import { Settings } from "@/components/settings";
+import { Notifications } from "@/components/notifications";
 import { PipeApi } from "@/lib/api";
 import { useProfiles } from "@/lib/hooks/use-profiles";
 import { invoke } from "@tauri-apps/api/core";
@@ -282,6 +283,8 @@ export default function Home() {
                 return <PipeStore />;
               case "settings":
                 return <Settings onNavigate={handleNavigate} />;
+              case "notifications":
+                return <Notifications onNavigate={handleNavigate} />;
               default:
                 return <HomeDashboard onNavigate={handleNavigate} />;
             }

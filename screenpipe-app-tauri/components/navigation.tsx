@@ -12,8 +12,6 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
-    InboxMessageAction,
-    InboxMessages,
     Message,
 } from "./inbox-messages";
 import HealthStatus from "./screenpipe-status";
@@ -25,7 +23,6 @@ interface NavigationProps {
 }
 
 export default function Navigation({ activePage, onNavigate }: NavigationProps) {
-    const [showInbox, setShowInbox] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
 
     useEffect(() => {
@@ -42,7 +39,7 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
         const unlisten = listen<{
             title: string;
             body: string;
-            actions?: InboxMessageAction[];
+            actions?: any[];
         }>("inbox-message-received", async (event) => {
             console.log("inbox-message-received", event);
             const newMessage: Message = {
@@ -65,34 +62,16 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
         };
     }, []);
 
-    const handleMessageRead = async (id: string) => {
-        setMessages((prevMessages) => {
-            const updatedMessages = prevMessages.map((msg) =>
-                msg.id === id ? { ...msg, read: true } : msg
-            );
-            localforage.setItem("inboxMessages", updatedMessages);
-            return updatedMessages;
-        });
-    };
-
-    const handleMessageDelete = async (id: string) => {
-        setMessages((prevMessages) => {
-            const updatedMessages = prevMessages.filter((msg) => msg.id !== id);
-            localforage.setItem("inboxMessages", updatedMessages);
-            return updatedMessages;
-        });
-    };
-
-    const handleClearAll = async () => {
-        setMessages([]);
-        await localforage.setItem("inboxMessages", []);
-    };
-
     const unreadCount = messages.filter(msg => !msg.read).length;
 
     // 处理设置点击，现在直接导航到设置页面
     const handleSettingsClick = () => {
         onNavigate("settings");
+    };
+
+    // 处理通知点击，现在直接导航到通知页面
+    const handleNotificationsClick = () => {
+        onNavigate("notifications");
     };
 
     return (
@@ -160,12 +139,13 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
                         <Button
-                            variant="ghost"
+                            variant={activePage === "notifications" ? "secondary" : "ghost"}
                             size="sm"
-                            onClick={() => setShowInbox(!showInbox)}
+                            onClick={handleNotificationsClick}
                             className={cn(
                                 "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full relative",
-                                "hover:bg-accent hover:text-primary rounded-lg transition-colors"
+                                "hover:bg-accent hover:text-primary rounded-lg transition-colors",
+                                activePage === "notifications" ? "bg-accent text-primary" : ""
                             )}
                         >
                             <Bell className="h-5 w-5 mb-0.5" />
@@ -199,19 +179,6 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                     </motion.div>
                 </div>
             </div>
-
-            {/* 通知面板 */}
-            {showInbox && (
-                <div className="fixed top-0 right-0 h-screen w-80 bg-muted border-l border-border shadow-lg z-50 rounded-l-xl">
-                    <InboxMessages
-                        messages={messages}
-                        onClose={() => setShowInbox(false)}
-                        onMessageRead={handleMessageRead}
-                        onMessageDelete={handleMessageDelete}
-                        onClearAll={handleClearAll}
-                    />
-                </div>
-            )}
         </>
     );
 } 
