@@ -201,7 +201,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
           size="sm"
           variant="outline"
           disabled
-          className="hover:bg-muted font-medium relative hover:!bg-muted no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border/50 transition-colors"
+          className="hover:bg-muted font-medium relative hover:!bg-muted no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border transition-colors"
         >
           <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
           <span className="text-xs">{getBuildStepMessage(buildStatus)}</span>
@@ -249,7 +249,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
             setIsLoading(true);
             onToggle(pipe, () => setIsLoading(false));
           }}
-          className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border/50"
+          className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border"
           disabled={isLoading}
         >
           <Power className="h-3 w-3 mr-1.5" />
@@ -266,7 +266,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
           e.stopPropagation();
           handleOpenWindow(e);
         }}
-        className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border/50"
+        className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border"
       >
         <Puzzle className="h-3 w-3 mr-1.5" />
         <span className="text-xs">打开</span>
@@ -276,7 +276,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
 
   return (
     <motion.div
-      className="group border border-border/50 rounded-xl p-4 hover:bg-accent/5 transition-all duration-300 cursor-pointer relative shadow-sm hover:shadow-md h-full flex flex-col"
+      className="group border border-border rounded-xl p-4 hover:bg-accent/5 transition-all duration-300 cursor-pointer relative shadow-sm hover:shadow-md h-full flex flex-col"
       onClick={() => onClick(pipe)}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -407,7 +407,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
               }}
               className={cn(
                 "font-medium no-card-hover rounded-lg h-8 w-full justify-center transition-colors",
-                pipe.is_paid ? "" : "border-border/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30"
+                pipe.is_paid ? "" : "border-border hover:bg-primary/10 hover:text-primary hover:border-primary/30"
               )}
               disabled={isLoading || isLoadingInstall}
             >
