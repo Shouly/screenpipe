@@ -20,11 +20,21 @@ import {
   Settings, 
   LogOut,
   HelpCircle,
-  ChevronDown
+  ChevronDown,
+  LogIn
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+
+// 定义导航项类型
+interface NavItem {
+  href: string;
+  label: string;
+  icon?: React.ReactNode;
+  hasSubmenu?: boolean;
+}
 
 // 临时Avatar组件，如果没有实际组件，可以创建一个
 const Avatar = ({ className, children }: { className?: string, children: React.ReactNode }) => (
@@ -45,19 +55,34 @@ const AvatarFallback = ({ className, children }: { className?: string, children:
 
 export function Header() {
   const pathname = usePathname() || "";
+  const { user, isAuthenticated, logout } = useAuth();
 
   const isActive = (path: string) => {
     return pathname === path || pathname.startsWith(`${path}/`);
   };
 
-  const navItems = [
+  // 公开导航项
+  const publicNavItems: NavItem[] = [
     { href: "/", label: "首页" },
-    { href: "/productivity", label: "生产力分析", icon: <BarChart2 className="mr-2 h-4 w-4" />, hasSubmenu: true },
+    { href: "/about", label: "关于我们" },
+  ];
+
+  // 需要登录才能访问的导航项
+  const privateNavItems: NavItem[] = [
+    { 
+      href: "/productivity", 
+      label: "生产力分析", 
+      icon: <BarChart2 className="mr-2 h-4 w-4" />,
+      hasSubmenu: false // 修改为false，因为只有一个应用使用分析页面
+    },
     { href: "/ui-monitoring", label: "UI监控", icon: <Monitor className="mr-2 h-4 w-4" /> },
     { href: "/ocr-text", label: "OCR文本", icon: <EyeIcon className="mr-2 h-4 w-4" /> },
     { href: "/remote-control", label: "远程控制", icon: <LockIcon className="mr-2 h-4 w-4" /> },
     { href: "/plugin-management", label: "插件管理", icon: <Puzzle className="mr-2 h-4 w-4" /> },
   ];
+
+  // 根据登录状态选择显示的导航项
+  const navItems = isAuthenticated ? [...publicNavItems, ...privateNavItems] : publicNavItems;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -99,12 +124,6 @@ export function Header() {
                       >
                         应用使用分析
                       </Link>
-                      <Link 
-                        href="/productivity/trends" 
-                        className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-accent"
-                      >
-                        趋势分析
-                      </Link>
                     </div>
                   </div>
                 )}
@@ -114,38 +133,59 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="hidden sm:flex">
-            <HelpCircle className="h-5 w-5 text-muted-foreground" />
-            <span className="sr-only">帮助</span>
-          </Button>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src="/avatar.png" alt="用户头像" />
-                  <AvatarFallback className="bg-primary/10 text-primary">TG</AvatarFallback>
-                </Avatar>
+          {isAuthenticated ? (
+            // 已登录状态
+            <>
+              <Button variant="ghost" size="icon" className="hidden sm:flex">
+                <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                <span className="sr-only">帮助</span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>我的账户</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>个人资料</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>设置</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>退出登录</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src="/avatar.png" alt="用户头像" />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {user?.name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>我的账户</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>个人资料</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>设置</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>退出登录</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            // 未登录状态
+            <>
+              <Button variant="ghost" asChild>
+                <Link href="/login">
+                  登录
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href="/register">
+                  注册
+                </Link>
+              </Button>
+            </>
+          )}
 
           <div className="md:hidden">
             <DropdownMenu>
@@ -164,21 +204,8 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                 ))}
-                {navItems.find(item => item.hasSubmenu) && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/productivity/app-usage" className="flex items-center pl-8">
-                        应用使用分析
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/productivity/trends" className="flex items-center pl-8">
-                        趋势分析
-                      </Link>
-                    </DropdownMenuItem>
-                  </>
-                )}
+                
+                {/* 移除子菜单，因为生产力分析页面只有一个页面 */}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

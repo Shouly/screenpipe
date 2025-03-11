@@ -4,6 +4,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/lib/auth";
+import { ProtectedRoute } from "@/components/auth/protected-route";
 import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
@@ -37,12 +39,14 @@ export default function RootLayout({
       <head />
       <body className="font-sans min-h-screen flex flex-col antialiased">
         <ThemeProvider>
-          <Header />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-          <Toaster position="bottom-right" />
+          <AuthProvider>
+            <Header />
+            <main className="flex-1">
+              <ProtectedRoute>{children}</ProtectedRoute>
+            </main>
+            <Footer />
+            <Toaster position="bottom-right" />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
