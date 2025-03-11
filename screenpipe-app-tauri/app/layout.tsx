@@ -84,7 +84,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning className={theme}>
       <Providers>
-        <body className="font-noto">
+        <body className="font-noto hide-scrollbar">
           {children}
           <Toaster />
         </body>

@@ -299,7 +299,7 @@ export default function Home() {
       <div className="flex w-full h-full">
         <Navigation activePage={activePage} onNavigate={handleNavigate} />
         <div className="bg-muted flex-1 pt-2 pr-2 ml-16 h-screen flex flex-col">
-          <div className="w-full flex-1 bg-white rounded-xl overflow-y-auto">
+          <div className="w-full flex-1 bg-white rounded-xl overflow-y-auto hide-scrollbar">
             {renderActivePage()}
           </div>
         </div>

@@ -138,6 +138,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "palt";
+    overflow-x: hidden; /* 防止水平滚动条 */
   }
 
   *,
