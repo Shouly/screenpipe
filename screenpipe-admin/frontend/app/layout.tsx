@@ -1,11 +1,9 @@
 import "./globals.css";
 import "./fonts.css";
 import { Toaster } from "@/components/ui/sonner";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth";
-import { ProtectedRoute } from "@/components/auth/protected-route";
+import { ClientLayoutWrapper } from "@/components/layout/client-layout-wrapper";
 import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
@@ -40,11 +38,7 @@ export default function RootLayout({
       <body className="font-sans min-h-screen flex flex-col antialiased">
         <ThemeProvider>
           <AuthProvider>
-            <Header />
-            <main className="flex-1">
-              <ProtectedRoute>{children}</ProtectedRoute>
-            </main>
-            <Footer />
+            <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
             <Toaster position="bottom-right" />
           </AuthProvider>
         </ThemeProvider>
