@@ -1110,7 +1110,7 @@ export const PipeStore: React.FC = () => {
               placeholder="搜索 Pipe..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-10 border-muted focus-visible:ring-primary"
+              className="pl-9 h-10 border-border focus-visible:ring-primary"
               autoCorrect="off"
               autoComplete="off"
             />
