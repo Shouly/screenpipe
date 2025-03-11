@@ -1,14 +1,14 @@
 "use client";
 
-import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
 import { cn } from "@/lib/utils";
 import { listen } from "@tauri-apps/api/event";
+import { motion } from "framer-motion";
 import localforage from "localforage";
 import {
-    Home,
-    ShoppingBag,
     Bell,
-    Settings
+    Home,
+    Settings,
+    ShoppingBag
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -18,7 +18,6 @@ import {
 } from "./inbox-messages";
 import HealthStatus from "./screenpipe-status";
 import { Button } from "./ui/button";
-import { motion } from "framer-motion";
 
 interface NavigationProps {
     activePage: string;
@@ -28,7 +27,6 @@ interface NavigationProps {
 export default function Navigation({ activePage, onNavigate }: NavigationProps) {
     const [showInbox, setShowInbox] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
-    const { setIsOpen: setSettingsOpen } = useSettingsDialog();
 
     useEffect(() => {
         const loadMessages = async () => {
