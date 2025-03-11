@@ -16,8 +16,8 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-noto-sans-sc)", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
+        sans: ["Noto Sans SC", "Roboto", "sans-serif"],
+        mono: ["monospace"],
       },
       colors: {
         border: "hsl(var(--border))",

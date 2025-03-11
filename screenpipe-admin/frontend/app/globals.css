@@ -6,15 +6,15 @@
   :root {
     /* 基础背景和前景 */
     --background: 0 0% 100%;
-    --foreground: 0 0% 10%;  /* 黑色作为主要文本颜色 */
+    --foreground: 0 0% 0%;  /* 纯黑色作为主要文本颜色，从10%改为0% */
 
     /* 卡片 */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 0 0% 0%;  /* 从10%改为0% */
 
     /* 弹出框 */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 0 0% 0%;  /* 从10%改为0% */
 
     /* 主要颜色 - #126dff */
     --primary: 217 100% 54%;  /* #126dff */
@@ -26,7 +26,7 @@
 
     /* 柔和颜色 */
     --muted: 0 0% 95%;
-    --muted-foreground: 0 0% 45%;  /* 浅黑色/灰色 */
+    --muted-foreground: 0 0% 35%;  /* 从45%改为35%，使其更深一些 */
 
     /* 强调色 */
     --accent: 217 70% 95%;
@@ -54,34 +54,34 @@
 
     /* 侧边栏 */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 45%;  /* 浅黑色/灰色 */
+    --sidebar-foreground: 0 0% 35%;  /* 从45%改为35%，使其更深一些 */
     --sidebar-primary: 217 100% 54%;    /* 主色 */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 95%;
-    --sidebar-accent-foreground: 0 0% 30%;
+    --sidebar-accent-foreground: 0 0% 20%;  /* 从30%改为20%，使其更深一些 */
     --sidebar-border: 0 0% 90%;
     --sidebar-ring: 217 100% 60%;
     
     /* 基础颜色 */
     --blue: 217 100% 54%;      /* 主蓝色 #126dff */
     --blue-light: 217 90% 70%; /* 浅蓝色 */
-    --black: 0 0% 10%;         /* 纯黑色 */
-    --gray: 0 0% 45%;          /* 浅黑色/灰色 */
+    --black: 0 0% 0%;          /* 纯黑色，从10%改为0% */
+    --gray: 0 0% 35%;          /* 浅黑色/灰色，从45%改为35% */
     --white: 0 0% 100%;        /* 纯白色 */
   }
 
   .dark {
     /* 基础背景和前景 */
     --background: 0 0% 10%;    /* 黑色背景 */
-    --foreground: 0 0% 95%;    /* 浅灰白文本 */
+    --foreground: 0 0% 100%;    /* 纯白色文本，从95%改为100% */
 
     /* 卡片 */
     --card: 0 0% 15%;
-    --card-foreground: 0 0% 95%;
+    --card-foreground: 0 0% 100%;  /* 从95%改为100% */
 
     /* 弹出框 */
     --popover: 0 0% 15%;
-    --popover-foreground: 0 0% 95%;
+    --popover-foreground: 0 0% 100%;  /* 从95%改为100% */
 
     /* 主要颜色 - #126dff */
     --primary: 217 100% 54%;  /* 保持主色不变 */
@@ -89,19 +89,19 @@
 
     /* 次要颜色 */
     --secondary: 0 0% 25%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary-foreground: 0 0% 100%;  /* 从95%改为100% */
 
     /* 柔和颜色 */
     --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 70%;  /* 浅灰色 */
+    --muted-foreground: 0 0% 80%;  /* 从70%改为80%，使其更亮一些 */
 
     /* 强调色 */
     --accent: 0 0% 25%;
-    --accent-foreground: 0 0% 95%;
+    --accent-foreground: 0 0% 100%;  /* 从95%改为100% */
 
     /* 危险色 */
     --destructive: 0 70% 45%;
-    --destructive-foreground: 0 0% 95%;
+    --destructive-foreground: 0 0% 100%;  /* 从95%改为100% */
 
     /* 边框和输入框 */
     --border: 0 0% 25%;
@@ -117,11 +117,11 @@
     
     /* 侧边栏 */
     --sidebar-background: 0 0% 12%;
-    --sidebar-foreground: 0 0% 80%;
+    --sidebar-foreground: 0 0% 90%;  /* 从80%改为90%，使其更亮一些 */
     --sidebar-primary: 217 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 20%;
-    --sidebar-accent-foreground: 0 0% 80%;
+    --sidebar-accent-foreground: 0 0% 90%;  /* 从80%改为90%，使其更亮一些 */
     --sidebar-border: 0 0% 20%;
     --sidebar-ring: 217 100% 60%;
   }
