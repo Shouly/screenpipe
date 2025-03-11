@@ -28,7 +28,7 @@ import { listen } from "@tauri-apps/api/event";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { open } from "@tauri-apps/plugin-dialog";
 import localforage from "localforage";
-import { Loader2, Power, RefreshCw, Search, Trash2 } from "lucide-react";
+import { Loader2, Power, RefreshCw, Search, Trash2, Plus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { AddPipeForm } from "./pipe-store/add-pipe-form";
 import { PipeCard } from "./pipe-store/pipe-card";
@@ -57,6 +57,7 @@ export const PipeStore: React.FC = () => {
   );
   const { isMac: isMacOS } = usePlatform();
   const [isRestarting, setIsRestarting] = useState(false);
+  const [isAddPipeDialogOpen, setIsAddPipeDialogOpen] = useState(false);
   const filteredPipes = pipes
     .filter(
       (pipe) =>
@@ -1041,7 +1042,7 @@ export const PipeStore: React.FC = () => {
 
   return (
     <div className="overflow-hidden flex flex-col h-full">
-      <div className="p-6 flex flex-col flex-1 overflow-hidden space-y-6">
+      <div className="p-7 flex flex-col flex-1 overflow-hidden space-y-7">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1050,11 +1051,25 @@ export const PipeStore: React.FC = () => {
         >
           <div>
             <h1 className="text-3xl font-bold text-foreground">Pipe 商店</h1>
-            <p className="text-muted-foreground mt-1">
-              浏览和安装强大的 Pipe 插件，提升您的工作流程
-            </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setIsAddPipeDialogOpen(true)}
+                    className="h-9 w-9 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>添加自定义 Pipe</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -1104,7 +1119,7 @@ export const PipeStore: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="flex items-center justify-between"
         >
-          <div className="relative w-full md:w-[400px]">
+          <div className="relative w-full md:w-[420px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="搜索 Pipe..."
@@ -1131,7 +1146,7 @@ export const PipeStore: React.FC = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
-          className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar"
+          className="flex items-center gap-3 overflow-x-auto pb-2 hide-scrollbar"
         >
           <Button
             variant="ghost"
@@ -1222,7 +1237,7 @@ export const PipeStore: React.FC = () => {
           className="flex-1 overflow-y-auto pr-1"
         >
           {filteredPipes.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 px-1">
               {filteredPipes.map((pipe, index) => (
                 <motion.div
                   key={pipe.id}
@@ -1230,7 +1245,7 @@ export const PipeStore: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ 
                     duration: 0.3, 
-                    delay: 0.05 * (index % 3), 
+                    delay: 0.05 * (index % 4), 
                     ease: "easeOut" 
                   }}
                   className="h-full"
@@ -1274,18 +1289,13 @@ export const PipeStore: React.FC = () => {
           )}
         </motion.div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="pt-6 border-t"
-        >
-          <AddPipeForm
-            onAddPipe={handleInstallSideload}
-            isHealthy={health?.status !== "error"}
-            onLoadFromLocalFolder={handleLoadFromLocalFolder}
-          />
-        </motion.div>
+        <AddPipeForm
+          onAddPipe={handleInstallSideload}
+          isHealthy={health?.status !== "error"}
+          onLoadFromLocalFolder={handleLoadFromLocalFolder}
+          isOpen={isAddPipeDialogOpen}
+          onOpenChange={setIsAddPipeDialogOpen}
+        />
       </div>
     </div>
   );

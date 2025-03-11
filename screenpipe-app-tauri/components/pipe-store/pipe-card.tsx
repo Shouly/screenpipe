@@ -201,10 +201,10 @@ export const PipeCard: React.FC<PipeCardProps> = ({
           size="sm"
           variant="outline"
           disabled
-          className="hover:bg-muted font-medium relative hover:!bg-muted no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border transition-colors"
+          className="hover:bg-muted font-medium relative hover:!bg-muted no-card-hover rounded-lg h-7 px-2.5 flex-1 border-border transition-colors"
         >
           <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
-          <span className="text-xs">{getBuildStepMessage(buildStatus)}</span>
+          <span className="text-[11px]">{getBuildStepMessage(buildStatus)}</span>
         </Button>
       );
     }
@@ -222,11 +222,11 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                   setIsLoading(true);
                   onToggle(pipe, () => setIsLoading(false));
                 }}
-                className="font-medium no-card-hover rounded-lg h-8 px-2.5 flex-1 transition-colors"
+                className="font-medium no-card-hover rounded-lg h-7 px-2.5 flex-1 transition-colors"
                 disabled={isLoading}
               >
                 <AlertCircle className="h-3 w-3 mr-1.5" />
-                <span className="text-xs">重试</span>
+                <span className="text-[11px]">重试</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -249,11 +249,11 @@ export const PipeCard: React.FC<PipeCardProps> = ({
             setIsLoading(true);
             onToggle(pipe, () => setIsLoading(false));
           }}
-          className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border"
+          className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-7 px-2.5 flex-1 border-border"
           disabled={isLoading}
         >
           <Power className="h-3 w-3 mr-1.5" />
-          <span className="text-xs">启用</span>
+          <span className="text-[11px]">启用</span>
         </Button>
       );
     }
@@ -266,10 +266,10 @@ export const PipeCard: React.FC<PipeCardProps> = ({
           e.stopPropagation();
           handleOpenWindow(e);
         }}
-        className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-8 px-2.5 flex-1 border-border"
+        className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-7 px-2.5 flex-1 border-border"
       >
         <Puzzle className="h-3 w-3 mr-1.5" />
-        <span className="text-xs">打开</span>
+        <span className="text-[11px]">打开</span>
       </Button>
     );
   }, [pipe.installed_config?.buildStatus, isLoading, onToggle, pipe, handleOpenWindow, handleOpenInBrowser]);
@@ -284,7 +284,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
       layout
     >
       {/* 状态指示器 */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+      <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5">
         {pipe.is_installed && (
           <div className={cn(
             "w-2 h-2 rounded-full",
@@ -304,21 +304,21 @@ export const PipeCard: React.FC<PipeCardProps> = ({
         {/* 头部信息 */}
         <div className="mb-auto">
           <div className="flex items-start gap-3 mb-2.5">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Puzzle className="h-4.5 w-4.5 text-primary" />
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Puzzle className="h-4 w-4 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-base tracking-tight truncate cn-text-title">
+              <h3 className="font-semibold text-sm tracking-tight truncate cn-text-title">
                 {pipe.name}
               </h3>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <UserIcon className="h-3 w-3" />
-                <span className="truncate">{pipe.developer_accounts.developer_name}</span>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                <UserIcon className="h-2.5 w-2.5" />
+                <span className="truncate text-[11px]">{pipe.developer_accounts.developer_name}</span>
                 
                 {pipe.plugin_analytics.downloads_count != null && (
                   <div className="flex items-center gap-1 ml-2">
                     <Download className="h-2.5 w-2.5" />
-                    <span>{pipe.plugin_analytics.downloads_count}</span>
+                    <span className="text-[11px]">{pipe.plugin_analytics.downloads_count}</span>
                   </div>
                 )}
               </div>
@@ -330,7 +330,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
             <PipeStoreMarkdown
               content={
                 (pipe.description
-                  ? stripMarkdown(pipe.description).substring(0, 80)
+                  ? stripMarkdown(pipe.description).substring(0, 75)
                   : "") + "..."
               }
               variant="compact"
@@ -340,32 +340,15 @@ export const PipeCard: React.FC<PipeCardProps> = ({
           {/* 标签 */}
           <div className="flex flex-wrap gap-1.5">
             {pipe.installed_config?.version && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/30 font-mono text-xs">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/30 font-mono text-[10px]">
                 v{pipe.installed_config?.version}
               </span>
-            )}
-            {pipe.is_local && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary-foreground text-xs">
-                本地
-              </span>
-            )}
-            {pipe.source_code && (
-              <a
-                href={pipe.source_code}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/30 text-xs hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                <ExternalLink className="h-2.5 w-2.5" />
-                源码
-              </a>
             )}
           </div>
         </div>
         
         {/* 操作按钮 */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
+        <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-border/30">
           {pipe.is_installed ? (
             <div className="flex items-center gap-2 w-full">
               {renderInstallationStatus()}
@@ -406,7 +389,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
                 onInstall(pipe, () => setIsLoading(false));
               }}
               className={cn(
-                "font-medium no-card-hover rounded-lg h-8 w-full justify-center transition-colors",
+                "font-medium no-card-hover rounded-lg h-7 w-full justify-center transition-colors",
                 pipe.is_paid ? "" : "border-border hover:bg-primary/10 hover:text-primary hover:border-primary/30"
               )}
               disabled={isLoading || isLoadingInstall}
@@ -416,7 +399,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
               ) : (
                 <>
                   <Download className="h-3 w-3 mr-1.5" />
-                  <span className="text-xs">{pipe.is_paid ? `$${pipe.price}` : "安装"}</span>
+                  <span className="text-[11px]">{pipe.is_paid ? `$${pipe.price}` : "安装"}</span>
                 </>
               )}
             </Button>
