@@ -23,11 +23,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       />
       <div
         className={cn(
-          "min-h-screen transition-all duration-300 pt-4",
+          "min-h-screen transition-all duration-300",
           sidebarCollapsed ? "ml-[70px]" : "ml-[240px]"
         )}
       >
-        <main className="p-6">{children}</main>
+        <main className="p-8">
+          <div className="content-container bg-background rounded-xl">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

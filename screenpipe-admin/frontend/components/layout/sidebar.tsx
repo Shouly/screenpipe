@@ -107,18 +107,18 @@ export function Sidebar({ className, isCollapsed = false, onToggleCollapse }: Si
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-20 flex flex-col border-r bg-sidebar transition-all duration-300",
+        "fixed inset-y-0 left-0 z-20 flex flex-col border-r bg-sidebar transition-all duration-300 canva-shadow",
         isCollapsed ? "w-[70px]" : "w-[240px]",
         className
       )}
     >
       <div className="flex h-16 items-center justify-between border-b px-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <BarChart2 className="h-5 w-5" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground canva-shadow">
+            <BarChart2 className="h-6 w-6" />
           </div>
           {!isCollapsed && (
-            <span className="font-bold text-lg">Time Glass</span>
+            <span className="font-bold text-lg tracking-tight">Time Glass</span>
           )}
         </Link>
         
@@ -127,7 +127,7 @@ export function Sidebar({ className, isCollapsed = false, onToggleCollapse }: Si
             variant="ghost"
             size="icon"
             onClick={onToggleCollapse}
-            className="h-8 w-8"
+            className="h-8 w-8 rounded-full hover:bg-sidebar-accent"
           >
             {isCollapsed ? (
               <ChevronRight className="h-4 w-4" />
@@ -141,8 +141,8 @@ export function Sidebar({ className, isCollapsed = false, onToggleCollapse }: Si
         )}
       </div>
       
-      <div className="flex-1 py-2 h-[calc(100vh-8rem)] overflow-y-auto">
-        <nav className="grid gap-1 px-2">
+      <div className="flex-1 py-4 h-[calc(100vh-8rem)] overflow-y-auto">
+        <nav className="grid gap-2 px-2">
           {navItems.map((item) => (
             <Button
               key={item.href}
@@ -150,8 +150,10 @@ export function Sidebar({ className, isCollapsed = false, onToggleCollapse }: Si
               size="sm"
               asChild
               className={cn(
-                "w-full justify-start font-normal",
-                isActive(item.href) && "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+                "w-full justify-start font-normal h-10 rounded-xl transition-all duration-200",
+                isActive(item.href) 
+                  ? "bg-primary text-primary-foreground font-medium shadow-md" 
+                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
                 isCollapsed && "justify-center px-0"
               )}
             >
@@ -168,12 +170,15 @@ export function Sidebar({ className, isCollapsed = false, onToggleCollapse }: Si
       <div className="border-t p-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className={cn(
-              "w-full justify-start font-normal",
-              isCollapsed && "justify-center px-0"
-            )}>
+            <Button 
+              variant="ghost" 
+              className={cn(
+                "w-full justify-start font-normal rounded-xl transition-all duration-200 hover:bg-sidebar-accent",
+                isCollapsed && "justify-center px-0"
+              )}
+            >
               <div className="flex items-center">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary mr-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary mr-2 border-2 border-primary/20">
                   {user?.name?.charAt(0) || "U"}
                 </div>
                 {!isCollapsed && (
@@ -185,7 +190,7 @@ export function Sidebar({ className, isCollapsed = false, onToggleCollapse }: Si
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align={isCollapsed ? "center" : "end"} className="w-56 rounded-xl overflow-hidden">
+          <DropdownMenuContent align={isCollapsed ? "center" : "end"} className="w-56 rounded-xl overflow-hidden canva-shadow">
             <DropdownMenuLabel className="font-medium">我的账户</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="rounded-lg cursor-pointer">
