@@ -164,44 +164,6 @@
   @apply transition-all duration-200 hover:shadow-md;
 }
 
-/* 添加Canva风格的自定义样式 */
-.canva-card {
-  @apply bg-white rounded-xl shadow-sm transition-all duration-200 hover:shadow-md;
-}
-
-.canva-button {
-  @apply rounded-lg transition-all duration-200 hover:shadow-sm;
-}
-
-.canva-section {
-  @apply mb-8;
-}
-
-.canva-title {
-  @apply text-xl font-semibold mb-4;
-}
-
-.canva-subtitle {
-  @apply text-sm text-gray-500 mb-2;
-}
-
-.canva-container {
-  @apply p-4 rounded-xl;
-}
-
-.canva-shadow {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.canva-hover-effect {
-  @apply transition-all duration-200;
-}
-
-.canva-hover-effect:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
 /* 中文字体特殊样式 */
 .cn-text-title {
   @apply font-medium tracking-tight;
