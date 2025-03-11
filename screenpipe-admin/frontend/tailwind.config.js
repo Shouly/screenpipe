@@ -122,6 +122,12 @@ module.exports = {
         "float": "float 6s ease-in-out infinite",
         "float-delay": "float-delay 6s ease-in-out infinite 2s",
       },
+      backgroundImage: {
+        'grid-pattern': "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
+      },
+      backgroundSize: {
+        'grid-pattern': '40px 40px',
+      },
     },
   },
   plugins: [
@@ -131,6 +137,15 @@ module.exports = {
       const newUtilities = {
         '.perspective-1000': {
           perspective: '1000px',
+        },
+        '.canva-shadow-sm': {
+          'box-shadow': '0 4px 20px -5px rgba(18, 109, 255, 0.1)',
+        },
+        '.canva-shadow': {
+          'box-shadow': '0 10px 30px -5px rgba(18, 109, 255, 0.1)',
+        },
+        '.canva-shadow-lg': {
+          'box-shadow': '0 20px 40px -5px rgba(18, 109, 255, 0.15)',
         },
       }
       addUtilities(newUtilities)

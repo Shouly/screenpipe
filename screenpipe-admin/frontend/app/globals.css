@@ -4,20 +4,20 @@
 
 @layer base {
   :root {
-    /* 基础背景和前景 */
+    /* 基础背景和前景 - Canva风格更明亮 */
     --background: 0 0% 100%;  /* 纯白色背景 */
-    --foreground: 0 0% 10%;   /* 深黑色文本，但不是纯黑，减轻视觉疲劳 */
+    --foreground: 240 10% 20%;   /* 深蓝灰色文本，更现代 */
 
     /* 卡片 */
     --card: 0 0% 100%;        /* 纯白色卡片 */
-    --card-foreground: 0 0% 10%;  /* 深黑色卡片文本 */
+    --card-foreground: 240 10% 20%;  /* 深蓝灰色卡片文本 */
 
     /* 弹出框 */
     --popover: 0 0% 100%;     /* 纯白色弹出框 */
-    --popover-foreground: 0 0% 10%;  /* 深黑色弹出框文本 */
+    --popover-foreground: 240 10% 20%;  /* 深蓝灰色弹出框文本 */
 
     /* 主要颜色 - #126dff */
-    --primary: 217 100% 54%;  /* #126dff - 主蓝色 */
+    --primary: 217 100% 54%;  /* #126dff - 原始主蓝色 */
     --primary-foreground: 0 0% 100%;  /* 纯白色文本在蓝色背景上 */
 
     /* 次要颜色 - 浅蓝色 */
@@ -25,63 +25,63 @@
     --secondary-foreground: 217 100% 54%;  /* 主蓝色作为次要区域的文本 */
 
     /* 柔和颜色 */
-    --muted: 0 0% 96%;  /* 非常浅的灰色，几乎是白色 */
-    --muted-foreground: 0 0% 45%;  /* 中灰色，更加柔和 */
+    --muted: 240 5% 96%;  /* 非常浅的蓝灰色，几乎是白色 */
+    --muted-foreground: 240 5% 45%;  /* 中蓝灰色，更加柔和 */
 
-    /* 强调色 */
-    --accent: 217 30% 95%;  /* 与次要颜色相同，保持一致性 */
-    --accent-foreground: 217 100% 54%;  /* 主蓝色 */
+    /* 强调色 - 保持紫色 #8B3DFF 作为辅助色 */
+    --accent: 263 100% 62%;  /* Canva风格的紫色 */
+    --accent-foreground: 0 0% 100%;  /* 纯白色 */
 
     /* 危险色 */
-    --destructive: 0 100% 50%;  /* 纯红色 */
+    --destructive: 0 100% 60%;  /* 鲜红色，更加明亮 */
     --destructive-foreground: 0 0% 100%;  /* 纯白色 */
 
-    /* 边框和输入框 - 改为中性灰色 */
-    --border: 0 0% 90%;  /* 浅灰色边框，更加自然 */
-    --input: 0 0% 90%;   /* 浅灰色输入框 */
+    /* 边框和输入框 - 改为更柔和的颜色 */
+    --border: 240 5% 90%;  /* 浅蓝灰色边框，更加自然 */
+    --input: 240 5% 90%;   /* 浅蓝灰色输入框 */
     --ring: 217 100% 54%;    /* 主蓝色环 */
 
-    --radius: 0.5rem;  /* 稍微减小圆角半径，更现代简洁 */
+    --radius: 0.75rem;  /* 增大圆角半径，更符合Canva风格 */
 
     --app-background: 0 0% 100%;  /* 纯白色应用背景 */
 
     /* 颜色变体 */
     --color-1: 217 100% 54%;  /* 主蓝色 #126dff */
-    --color-2: 217 100% 70%;  /* 浅蓝色 */
-    --color-3: 0 0% 10%;      /* 深黑色 */
-    --color-4: 0 0% 45%;      /* 中灰色 */
-    --color-5: 0 0% 90%;      /* 浅灰色 */
+    --color-2: 263 100% 62%;  /* 紫色 #8B3DFF */
+    --color-3: 240 10% 20%;   /* 深蓝灰色 */
+    --color-4: 240 5% 45%;    /* 中蓝灰色 */
+    --color-5: 240 5% 90%;    /* 浅蓝灰色 */
 
     /* 侧边栏 */
     --sidebar-background: 0 0% 100%;  /* 纯白色侧边栏背景 */
-    --sidebar-foreground: 0 0% 10%;   /* 深黑色侧边栏文本 */
+    --sidebar-foreground: 240 10% 20%;   /* 深蓝灰色侧边栏文本 */
     --sidebar-primary: 217 100% 54%;  /* 主蓝色 */
     --sidebar-primary-foreground: 0 0% 100%;  /* 纯白色 */
     --sidebar-accent: 217 30% 95%;    /* 非常浅的蓝灰色 */
     --sidebar-accent-foreground: 217 100% 54%;  /* 主蓝色 */
-    --sidebar-border: 0 0% 90%;       /* 浅灰色边框 */
+    --sidebar-border: 240 5% 90%;     /* 浅蓝灰色边框 */
     --sidebar-ring: 217 100% 54%;     /* 主蓝色环 */
     
     /* 基础颜色 */
     --blue: 217 100% 54%;      /* 主蓝色 #126dff */
-    --blue-light: 217 100% 70%; /* 浅蓝色 */
-    --black: 0 0% 10%;         /* 深黑色，不是纯黑 */
-    --gray: 0 0% 45%;          /* 中灰色 */
+    --purple: 263 100% 62%;    /* 紫色 #8B3DFF */
+    --black: 240 10% 20%;      /* 深蓝灰色，不是纯黑 */
+    --gray: 240 5% 45%;        /* 中蓝灰色 */
     --white: 0 0% 100%;        /* 纯白色 */
   }
 
   .dark {
     /* 基础背景和前景 */
-    --background: 0 0% 8%;     /* 深黑色背景，不是纯黑 */
-    --foreground: 0 0% 98%;    /* 接近白色的文本，减轻视觉疲劳 */
+    --background: 240 10% 8%;     /* 深蓝黑色背景 */
+    --foreground: 240 5% 98%;    /* 接近白色的文本，减轻视觉疲劳 */
 
     /* 卡片 */
-    --card: 0 0% 12%;          /* 深黑色，比背景稍浅 */
-    --card-foreground: 0 0% 98%;  /* 接近白色的卡片文本 */
+    --card: 240 10% 12%;          /* 深蓝黑色，比背景稍浅 */
+    --card-foreground: 240 5% 98%;  /* 接近白色的卡片文本 */
 
     /* 弹出框 */
-    --popover: 0 0% 12%;       /* 深黑色 */
-    --popover-foreground: 0 0% 98%;  /* 接近白色的弹出框文本 */
+    --popover: 240 10% 12%;       /* 深蓝黑色 */
+    --popover-foreground: 240 5% 98%;  /* 接近白色的弹出框文本 */
 
     /* 主要颜色 - #126dff */
     --primary: 217 100% 54%;   /* 保持主蓝色不变 */
@@ -92,37 +92,37 @@
     --secondary-foreground: 217 100% 70%;  /* 浅蓝色 */
 
     /* 柔和颜色 */
-    --muted: 0 0% 15%;         /* 深灰色 */
-    --muted-foreground: 0 0% 75%;  /* 浅灰色，不是纯白 */
+    --muted: 240 5% 15%;         /* 深蓝灰色 */
+    --muted-foreground: 240 5% 75%;  /* 浅蓝灰色，不是纯白 */
 
-    /* 强调色 */
-    --accent: 217 15% 18%;     /* 深蓝灰色，与次要颜色相同 */
-    --accent-foreground: 217 100% 70%;  /* 浅蓝色 */
+    /* 强调色 - 保持紫色 #8B3DFF */
+    --accent: 263 100% 62%;     /* 保持紫色不变 */
+    --accent-foreground: 0 0% 100%;  /* 纯白色 */
 
     /* 危险色 */
-    --destructive: 0 100% 50%;  /* 纯红色 */
+    --destructive: 0 100% 60%;  /* 鲜红色 */
     --destructive-foreground: 0 0% 100%;  /* 纯白色 */
 
-    /* 边框和输入框 - 改为中性灰色 */
-    --border: 0 0% 20%;        /* 深灰色边框，更加自然 */
-    --input: 0 0% 20%;         /* 深灰色输入框 */
+    /* 边框和输入框 */
+    --border: 240 5% 20%;        /* 深蓝灰色边框 */
+    --input: 240 5% 20%;         /* 深蓝灰色输入框 */
     --ring: 217 100% 54%;      /* 主蓝色环 */
     
     /* 颜色变体 */
     --color-1: 217 100% 54%;   /* 主蓝色 #126dff */
-    --color-2: 217 100% 70%;   /* 浅蓝色 */
-    --color-3: 0 0% 98%;       /* 接近白色 */
-    --color-4: 0 0% 75%;       /* 浅灰色 */
-    --color-5: 0 0% 25%;       /* 深灰色 */
+    --color-2: 263 100% 62%;   /* 紫色 #8B3DFF */
+    --color-3: 240 5% 98%;     /* 接近白色 */
+    --color-4: 240 5% 75%;     /* 浅蓝灰色 */
+    --color-5: 240 5% 25%;     /* 深蓝灰色 */
     
     /* 侧边栏 */
-    --sidebar-background: 0 0% 10%;    /* 深黑色 */
-    --sidebar-foreground: 0 0% 98%;    /* 接近白色 */
+    --sidebar-background: 240 10% 10%;    /* 深蓝黑色 */
+    --sidebar-foreground: 240 5% 98%;    /* 接近白色 */
     --sidebar-primary: 217 100% 54%;   /* 主蓝色 */
     --sidebar-primary-foreground: 0 0% 100%;  /* 纯白色 */
     --sidebar-accent: 217 15% 18%;     /* 深蓝灰色 */
     --sidebar-accent-foreground: 217 100% 70%;  /* 浅蓝色 */
-    --sidebar-border: 0 0% 20%;        /* 深灰色边框 */
+    --sidebar-border: 240 5% 20%;        /* 深蓝灰色边框 */
     --sidebar-ring: 217 100% 54%;      /* 主蓝色环 */
   }
 }
@@ -157,11 +157,33 @@
 
 /* 添加自定义样式 */
 .content-container {
-  @apply p-6 rounded-lg;
+  @apply p-6 rounded-xl; /* 增大圆角 */
 }
 
 .card-hover {
-  @apply transition-all duration-200 hover:shadow-md;
+  @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1; /* 增强悬停效果 */
+}
+
+/* Canva风格卡片 */
+.canva-card {
+  @apply bg-white rounded-xl shadow-md border-0 overflow-hidden transition-all duration-300 hover:shadow-lg;
+}
+
+/* Canva风格按钮 */
+.canva-button {
+  @apply rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95;
+}
+
+/* Canva风格标题 */
+.canva-title {
+  @apply font-bold tracking-tight text-2xl md:text-3xl;
+  letter-spacing: -0.02em;
+}
+
+/* Canva风格副标题 */
+.canva-subtitle {
+  @apply font-medium tracking-tight text-xl text-muted-foreground;
+  letter-spacing: -0.01em;
 }
 
 /* 中文字体特殊样式 */
@@ -181,4 +203,20 @@
 
 .cn-text-light {
   @apply font-light;
+}
+
+/* Canva风格渐变背景 */
+.canva-gradient-bg {
+  @apply bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-rainbow;
+  --speed: 10s;
+}
+
+/* Canva风格阴影 */
+.canva-shadow {
+  box-shadow: 0 10px 30px -5px rgba(18, 109, 255, 0.1);
+}
+
+/* Canva风格分隔线 */
+.canva-divider {
+  @apply h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent my-8;
 } 

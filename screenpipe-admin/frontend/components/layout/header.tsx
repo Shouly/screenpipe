@@ -87,28 +87,29 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <BarChart2 className="h-5 w-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground canva-shadow">
+              <BarChart2 className="h-6 w-6" />
             </div>
-            <span className="font-bold text-xl hidden sm:inline-block">Time Glass</span>
+            <span className="font-bold text-xl hidden sm:inline-block tracking-tight">Time Glass</span>
           </Link>
         </div>
 
         <div className="hidden md:flex">
-          <nav className="flex items-center space-x-1 text-sm font-medium">
+          <nav className="flex items-center space-x-2 text-sm font-medium">
             {navItems.map((item) => (
               <div key={item.href} className="relative group">
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex items-center px-3 py-2 rounded-md transition-colors hover:bg-accent",
+                    "flex items-center px-4 py-2 rounded-full transition-all duration-300",
                     isActive(item.href) 
-                      ? "text-primary font-medium" 
-                      : "text-foreground/70 hover:text-foreground"
+                      ? "bg-primary text-primary-foreground font-medium shadow-md" 
+                      : "text-foreground/70 hover:text-foreground hover:bg-secondary"
                   )}
                 >
+                  {item.icon && <span className="mr-2">{item.icon}</span>}
                   {item.label}
                   {item.hasSubmenu && (
                     <ChevronDown className="ml-1 h-4 w-4 opacity-70" />
@@ -117,10 +118,10 @@ export function Header() {
                 
                 {item.hasSubmenu && (
                   <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                    <div className="bg-card rounded-md shadow-md border p-2 w-48">
+                    <div className="bg-card rounded-xl shadow-lg border p-2 w-48 canva-shadow">
                       <Link 
                         href="/productivity/app-usage" 
-                        className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-accent"
+                        className="flex items-center px-3 py-2 text-sm rounded-lg hover:bg-accent hover:text-accent-foreground"
                       >
                         应用使用分析
                       </Link>
@@ -132,19 +133,19 @@ export function Header() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {isAuthenticated ? (
             // 已登录状态
             <>
-              <Button variant="ghost" size="icon" className="hidden sm:flex">
+              <Button variant="ghost" size="icon" className="hidden sm:flex rounded-full hover:bg-secondary">
                 <HelpCircle className="h-5 w-5 text-muted-foreground" />
                 <span className="sr-only">帮助</span>
               </Button>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                    <Avatar className="h-9 w-9">
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-secondary">
+                    <Avatar className="h-9 w-9 border-2 border-primary/20">
                       <AvatarImage src="/avatar.png" alt="用户头像" />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {user?.name?.charAt(0) || "U"}
@@ -152,19 +153,19 @@ export function Header() {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>我的账户</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 rounded-xl overflow-hidden canva-shadow">
+                  <DropdownMenuLabel className="font-medium">我的账户</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem className="rounded-lg cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     <span>个人资料</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem className="rounded-lg cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>设置</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout}>
+                  <DropdownMenuItem onClick={logout} className="rounded-lg cursor-pointer text-destructive focus:text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>退出登录</span>
                   </DropdownMenuItem>
@@ -174,12 +175,13 @@ export function Header() {
           ) : (
             // 未登录状态
             <>
-              <Button variant="ghost" asChild>
+              <Button variant="ghost" asChild className="rounded-full hover:bg-secondary">
                 <Link href="/login">
+                  <LogIn className="mr-2 h-4 w-4" />
                   登录
                 </Link>
               </Button>
-              <Button asChild>
+              <Button asChild className="rounded-full canva-shadow bg-primary hover:bg-primary/90">
                 <Link href="/register">
                   注册
                 </Link>
@@ -190,22 +192,20 @@ export function Header() {
           <div className="md:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-secondary">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">打开菜单</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56 rounded-xl overflow-hidden canva-shadow">
                 {navItems.map((item) => (
-                  <DropdownMenuItem key={item.href} asChild>
+                  <DropdownMenuItem key={item.href} asChild className="rounded-lg">
                     <Link href={item.href} className="flex items-center">
                       {item.icon && item.icon}
                       {item.label}
                     </Link>
                   </DropdownMenuItem>
                 ))}
-                
-                {/* 移除子菜单，因为生产力分析页面只有一个页面 */}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
