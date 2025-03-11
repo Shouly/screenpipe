@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import { debounce } from "lodash";
 
 interface HealthCheckResponse {
@@ -39,94 +39,111 @@ interface HealthCheckHook {
   debouncedFetchHealth: () => Promise<void>;
 }
 
+// 创建一个全局的WebSocket实例和状态
+let globalWs: WebSocket | null = null;
+let globalRetryInterval: NodeJS.Timeout | null = null;
+let globalHealth: HealthCheckResponse | null = null;
+let globalIsServerDown = false;
+let globalIsLoading = true;
+let listeners: Set<(health: HealthCheckResponse | null) => void> = new Set();
+
+// 初始化WebSocket连接
+function initWebSocket() {
+  if (globalWs && (globalWs.readyState === WebSocket.CONNECTING || globalWs.readyState === WebSocket.OPEN)) {
+    return; // 已经有活跃的连接
+  }
+
+  if (globalRetryInterval) {
+    clearInterval(globalRetryInterval);
+    globalRetryInterval = null;
+  }
+
+  globalWs = new WebSocket("ws://127.0.0.1:3030/ws/health");
+  
+  globalWs.onopen = () => {
+    globalIsLoading = false;
+    globalIsServerDown = false;
+    notifyListeners();
+  };
+
+  globalWs.onmessage = (event) => {
+    const data: HealthCheckResponse = JSON.parse(event.data);
+    if (!globalHealth || isHealthChanged(globalHealth, data)) {
+      globalHealth = data;
+      notifyListeners();
+    }
+  };
+
+  globalWs.onerror = (event) => {
+    const error = event as ErrorEvent;
+    const errorHealth: HealthCheckResponse = {
+      status: "error",
+      status_code: 500,
+      last_frame_timestamp: null,
+      last_audio_timestamp: null,
+      last_ui_timestamp: null,
+      frame_status: "error",
+      audio_status: "error",
+      ui_status: "error",
+      message: error.message,
+    };
+    globalHealth = errorHealth;
+    globalIsServerDown = true;
+    globalIsLoading = false;
+    notifyListeners();
+    
+    if (!globalRetryInterval) {
+      globalRetryInterval = setInterval(initWebSocket, 2000);
+    }
+  };
+
+  globalWs.onclose = () => {
+    const errorHealth: HealthCheckResponse = {
+      status: "error",
+      status_code: 500,
+      last_frame_timestamp: null,
+      last_audio_timestamp: null,
+      last_ui_timestamp: null,
+      frame_status: "error",
+      audio_status: "error",
+      ui_status: "error",
+      message: "WebSocket connection closed",
+    };
+    globalHealth = errorHealth;
+    globalIsServerDown = true;
+    notifyListeners();
+    
+    if (!globalRetryInterval) {
+      globalRetryInterval = setInterval(initWebSocket, 2000);
+    }
+  };
+}
+
+// 通知所有监听器
+function notifyListeners() {
+  listeners.forEach(listener => listener(globalHealth));
+}
+
+// 初始化全局WebSocket
+if (typeof window !== 'undefined') {
+  initWebSocket();
+}
+
 export function useHealthCheck() {
-  const [health, setHealth] = useState<HealthCheckResponse | null>(null);
-  const [isServerDown, setIsServerDown] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const healthRef = useRef(health);
-  const wsRef = useRef<WebSocket | null>(null);
-  const previousHealthStatus = useRef<string | null>(null);
-  const unhealthyTransitionsRef = useRef<number>(0);
-  const retryIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [health, setHealth] = useState<HealthCheckResponse | null>(globalHealth);
+  const [isServerDown, setIsServerDown] = useState(globalIsServerDown);
+  const [isLoading, setIsLoading] = useState(globalIsLoading);
 
   const fetchHealth = useCallback(async () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
-
-    const ws = new WebSocket("ws://127.0.0.1:3030/ws/health");
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      setIsLoading(false);
-      if (retryIntervalRef.current) {
-        clearInterval(retryIntervalRef.current);
-        retryIntervalRef.current = null;
-      }
-    };
-
-    ws.onmessage = (event) => {
-      const data: HealthCheckResponse = JSON.parse(event.data);
-      if (isHealthChanged(healthRef.current, data)) {
-        setHealth(data);
-        healthRef.current = data;
-      }
-
-      if (
-        data.status === "unhealthy" &&
-        previousHealthStatus.current === "healthy"
-      ) {
-        unhealthyTransitionsRef.current += 1;
-      }
-
-      previousHealthStatus.current = data.status;
-    };
-
-    ws.onerror = (event) => {
-      const error = event as ErrorEvent;
-      const errorHealth: HealthCheckResponse = {
-        status: "error",
-        status_code: 500,
-        last_frame_timestamp: null,
-        last_audio_timestamp: null,
-        last_ui_timestamp: null,
-        frame_status: "error",
-        audio_status: "error",
-        ui_status: "error",
-        message: error.message,
-      };
-      setHealth(errorHealth);
-      setIsServerDown(true);
-      setIsLoading(false);
-      if (!retryIntervalRef.current) {
-        retryIntervalRef.current = setInterval(fetchHealth, 2000);
-      }
-    };
-
-    ws.onclose = () => {
-      const errorHealth: HealthCheckResponse = {
-        status: "error",
-        status_code: 500,
-        last_frame_timestamp: null,
-        last_audio_timestamp: null,
-        last_ui_timestamp: null,
-        frame_status: "error",
-        audio_status: "error",
-        ui_status: "error",
-        message: "WebSocket connection closed",
-      };
-      setHealth(errorHealth);
-      setIsServerDown(true);
-      if (!retryIntervalRef.current) {
-        retryIntervalRef.current = setInterval(fetchHealth, 2000);
-      }
-    };
+    // 重新初始化WebSocket连接
+    initWebSocket();
+    return Promise.resolve();
   }, []);
 
   const debouncedFetchHealth = useCallback(() => {
     return new Promise<void>((resolve) => {
       debounce(() => {
-        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        if (globalWs && globalWs.readyState === WebSocket.OPEN) {
           fetchHealth().then(resolve);
         } else {
           resolve();
@@ -136,16 +153,23 @@ export function useHealthCheck() {
   }, [fetchHealth]);
 
   useEffect(() => {
-    fetchHealth();
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-      if (retryIntervalRef.current) {
-        clearInterval(retryIntervalRef.current);
-      }
+    // 添加监听器
+    const listener = (newHealth: HealthCheckResponse | null) => {
+      setHealth(newHealth);
+      setIsServerDown(globalIsServerDown);
+      setIsLoading(globalIsLoading);
     };
-  }, [fetchHealth]);
+    
+    listeners.add(listener);
+    
+    // 立即同步状态
+    listener(globalHealth);
+    
+    return () => {
+      // 移除监听器
+      listeners.delete(listener);
+    };
+  }, []);
 
   return {
     health,
