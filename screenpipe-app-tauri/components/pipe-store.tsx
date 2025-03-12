@@ -7,7 +7,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -23,12 +22,14 @@ import { useHealthCheck } from "@/lib/hooks/use-health-check";
 import { usePlatform } from "@/lib/hooks/use-platform";
 import { useSettings } from "@/lib/hooks/use-settings";
 import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
+import { cn } from "@/lib/utils";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { open } from "@tauri-apps/plugin-dialog";
+import { motion } from "framer-motion";
 import localforage from "localforage";
-import { Loader2, Power, RefreshCw, Search, Trash2, Plus } from "lucide-react";
+import { ArrowUpCircle, Loader2, Plus, Power, RefreshCw, Search, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { AddPipeForm } from "./pipe-store/add-pipe-form";
 import { PipeCard } from "./pipe-store/pipe-card";
@@ -36,9 +37,6 @@ import { PipeDetails } from "./pipe-store/pipe-details";
 import { InstalledPipe, PipeWithStatus } from "./pipe-store/types";
 import { PermissionButtons } from "./status/permission-buttons";
 import { Progress } from "./ui/progress";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { ArrowUpCircle } from "lucide-react";
 
 const corePipes: string[] = [];
 
@@ -1043,7 +1041,7 @@ export const PipeStore: React.FC = () => {
   return (
     <div className="overflow-hidden flex flex-col h-full">
       <div className="p-7 flex flex-col flex-1 overflow-hidden space-y-7">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -1187,7 +1185,7 @@ export const PipeStore: React.FC = () => {
               可更新
             </Button>
           )}
-          
+
           <div className="ml-auto flex items-center">
             <span className="text-xs text-muted-foreground">
               {filteredPipes.length} 个插件
@@ -1230,7 +1228,7 @@ export const PipeStore: React.FC = () => {
           </DialogContent>
         </Dialog>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -1243,10 +1241,10 @@ export const PipeStore: React.FC = () => {
                   key={pipe.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    duration: 0.3, 
-                    delay: 0.05 * (index % 4), 
-                    ease: "easeOut" 
+                  transition={{
+                    duration: 0.3,
+                    delay: 0.05 * (index % 4),
+                    ease: "easeOut"
                   }}
                   className="h-full"
                 >
@@ -1266,7 +1264,7 @@ export const PipeStore: React.FC = () => {
               ))}
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
