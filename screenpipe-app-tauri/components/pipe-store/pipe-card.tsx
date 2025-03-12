@@ -269,7 +269,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
         className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 font-medium relative transition-colors no-card-hover rounded-lg h-7 px-2.5 flex-1 border-border"
       >
         <Puzzle className="h-3 w-3 mr-1.5" />
-        <span className="text-[11px]">打开</span>
+        <span className="text-sm">打开</span>
       </Button>
     );
   }, [pipe.installed_config?.buildStatus, isLoading, onToggle, pipe, handleOpenWindow, handleOpenInBrowser]);
@@ -399,7 +399,7 @@ export const PipeCard: React.FC<PipeCardProps> = ({
               ) : (
                 <>
                   <Download className="h-3 w-3 mr-1.5" />
-                  <span className="text-[11px]">{pipe.is_paid ? `$${pipe.price}` : "安装"}</span>
+                  <span className="text-sm">{pipe.is_paid ? `$${pipe.price}` : "安装"}</span>
                 </>
               )}
             </Button>
