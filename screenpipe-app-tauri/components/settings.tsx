@@ -4,6 +4,7 @@ import { useSettings } from "@/lib/hooks/use-settings";
 import { useSettingsDialog } from "@/lib/hooks/use-settings-dialog";
 import { useStatusDialog } from "@/lib/hooks/use-status-dialog";
 import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
   Brain,
@@ -28,7 +29,6 @@ import ShortcutSection from "./settings/shortcut-section";
 import { StatusSection } from "./settings/status-section";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { motion, AnimatePresence } from "framer-motion";
 
 type SettingsSection =
   | "general"
@@ -208,14 +208,8 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
 
   const { title, description } = getSectionInfo(activeSection);
 
-  const handleBackToHome = () => {
-    if (onNavigate) {
-      onNavigate("home");
-    }
-  };
-
   return (
-    <motion.div 
+    <motion.div
       className="h-full flex flex-col"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -223,14 +217,14 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
     >
       <div className="flex h-full">
         {/* 侧边栏 */}
-        <motion.div 
+        <motion.div
           className="w-64 border-r border-border bg-card flex flex-col h-full shadow-sm"
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
           <div className="flex-1 overflow-y-auto p-6">
-            <motion.div 
+            <motion.div
               className="mb-6"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -247,14 +241,14 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
               </div>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="space-y-8"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
               {Object.entries(groupedSections).map(([category, sections], categoryIndex) => (
-                <motion.div 
+                <motion.div
                   key={category}
                   variants={itemVariants}
                   transition={{ delay: categoryIndex * 0.1 }}
@@ -299,7 +293,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
           </div>
 
           {/* 登出按钮固定在底部 */}
-          <motion.div 
+          <motion.div
             className="p-6 border-t border-border"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -323,13 +317,13 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
         </motion.div>
 
         {/* 主内容区域 */}
-        <motion.div 
+        <motion.div
           className="flex-1 flex flex-col h-full bg-background"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.4 }}
         >
-          <motion.div 
+          <motion.div
             className="flex justify-between items-center border-b border-border p-6 bg-card flex-shrink-0"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -341,7 +335,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             className="flex-1 overflow-y-auto bg-muted"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
