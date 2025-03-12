@@ -211,9 +211,11 @@ export function Notifications({ onNavigate }: NotificationsProps = {}) {
                     className="flex items-center justify-between"
                 >
                     <div>
-                        <h1 className="text-3xl font-bold text-foreground">通知中心</h1>
+                        <h1 className="text-3xl font-bold text-foreground">通知<span className="text-primary">中心</span></h1>
                         <p className="text-sm text-muted-foreground mt-1">
-                            {`共 ${messages.length} 条通知，其中 ${unreadCount} 条未读`}
+                            {`共 ${messages.length} 条通知，其中 `}
+                            <span className="text-primary font-medium">{unreadCount}</span>
+                            {` 条未读`}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -253,7 +255,7 @@ export function Notifications({ onNavigate }: NotificationsProps = {}) {
                             placeholder="搜索通知..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 h-10 border-border focus-visible:ring-primary"
+                            className="pl-9 h-10 border-border focus-visible:ring-primary focus-visible:border-primary"
                             autoCorrect="off"
                             autoComplete="off"
                         />
@@ -263,7 +265,7 @@ export function Notifications({ onNavigate }: NotificationsProps = {}) {
                             variant="ghost"
                             size="sm"
                             onClick={() => setSearchQuery("")}
-                            className="ml-2 text-xs text-muted-foreground hover:text-foreground"
+                            className="ml-2 text-xs text-muted-foreground hover:text-primary"
                         >
                             清除
                         </Button>
@@ -282,7 +284,7 @@ export function Notifications({ onNavigate }: NotificationsProps = {}) {
                         size="sm"
                         className={cn(
                             "rounded-full px-4 text-sm font-medium",
-                            activeTab === 'all' && "bg-primary/10 text-primary"
+                            activeTab === 'all' && "bg-primary/10 text-primary font-medium"
                         )}
                         onClick={() => setActiveTab('all')}
                     >
@@ -293,7 +295,7 @@ export function Notifications({ onNavigate }: NotificationsProps = {}) {
                         size="sm"
                         className={cn(
                             "rounded-full px-4 text-sm font-medium",
-                            activeTab === 'unread' && "bg-primary/10 text-primary"
+                            activeTab === 'unread' && "bg-primary/10 text-primary font-medium"
                         )}
                         onClick={() => setActiveTab('unread')}
                     >
@@ -367,7 +369,7 @@ export function Notifications({ onNavigate }: NotificationsProps = {}) {
                                             }
                                         }}
                                     >
-                                        <Card className={`w-full ${message.read ? "bg-secondary/50" : "bg-background"} hover:shadow-md transition-shadow`}>
+                                        <Card className={`w-full ${message.read ? "bg-secondary/50" : "bg-background border-l-2 border-primary"} hover:shadow-md transition-shadow`}>
                                             <CardHeader className="flex flex-row items-center justify-between py-3">
                                                 <div className="flex items-center space-x-2 flex-1 mr-2">
                                                     <Bot className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
@@ -449,7 +451,7 @@ export function Notifications({ onNavigate }: NotificationsProps = {}) {
                                                             e.stopPropagation();
                                                             handleAction(action.action, action.port);
                                                         }}
-                                                        className="text-xs"
+                                                        className="text-xs hover:bg-primary/10 hover:text-primary hover:border-primary/30"
                                                     >
                                                         {action.label}
                                                     </Button>
@@ -473,7 +475,7 @@ export function Notifications({ onNavigate }: NotificationsProps = {}) {
                                                         e.stopPropagation();
                                                         openDialog(message);
                                                     }}
-                                                    className="text-xs"
+                                                    className="text-xs hover:text-primary"
                                                 >
                                                     <Maximize2 className="mr-1 h-4 w-4" />
                                                     查看详情
@@ -544,7 +546,7 @@ export function Notifications({ onNavigate }: NotificationsProps = {}) {
                                 关闭
                             </Button>
                         </DialogClose>
-                        <Button variant="default" onClick={handleDeleteAndClose}>
+                        <Button variant="default" onClick={handleDeleteAndClose} className="bg-primary hover:bg-primary/90">
                             删除
                         </Button>
                     </div>

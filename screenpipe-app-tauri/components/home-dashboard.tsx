@@ -221,7 +221,7 @@ export default function HomeDashboard({ onNavigate }: HomeDashboardProps = {}) {
       >
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            欢迎使用 ScreenPipe
+            欢迎使用 <span className="text-primary">ScreenPipe</span>
           </h1>
         </div>
         <Button
@@ -229,7 +229,7 @@ export default function HomeDashboard({ onNavigate }: HomeDashboardProps = {}) {
           size="sm"
           onClick={handleRefresh}
           disabled={isRefreshing}
-          className="flex items-center gap-2 h-9 px-4"
+          className="flex items-center gap-2 h-9 px-4 hover:border-primary hover:text-primary"
         >
           <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
           刷新
@@ -246,7 +246,7 @@ export default function HomeDashboard({ onNavigate }: HomeDashboardProps = {}) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            系统概览
+            <span>系统概览</span>
           </h2>
           <Badge variant={isStatusOk ? "default" : "destructive"} className={cn("px-3 py-1", isStatusOk ? "bg-green-100 text-green-800 hover:bg-green-100" : "")}>
             {isStatusOk ? "系统正常" : "需要注意"}
@@ -370,13 +370,13 @@ export default function HomeDashboard({ onNavigate }: HomeDashboardProps = {}) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />
-            最近使用的 Pipe
+            <span>最近使用的 Pipe</span>
           </h2>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onNavigate && onNavigate("store")}
-            className="text-primary"
+            className="text-primary hover:bg-primary/10"
           >
             查看全部 <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
@@ -444,7 +444,7 @@ export default function HomeDashboard({ onNavigate }: HomeDashboardProps = {}) {
                   <p className="text-muted-foreground mb-4">前往 Pipe 商店安装您需要的功能</p>
                   <Button
                     onClick={() => onNavigate && onNavigate("store")}
-                    className="gap-2"
+                    className="gap-2 bg-primary hover:bg-primary/90 text-white"
                   >
                     <ShoppingBag className="h-4 w-4" />
                     浏览 Pipe 商店
@@ -466,7 +466,7 @@ export default function HomeDashboard({ onNavigate }: HomeDashboardProps = {}) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" />
-            快速操作
+            <span>快速操作</span>
           </h2>
         </div>
 
@@ -543,7 +543,7 @@ export default function HomeDashboard({ onNavigate }: HomeDashboardProps = {}) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            功能亮点
+            <span>功能亮点</span>
           </h2>
         </div>
 

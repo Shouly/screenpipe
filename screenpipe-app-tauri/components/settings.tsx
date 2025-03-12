@@ -240,7 +240,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="搜索设置..."
-                  className="pl-9 rounded-lg border-input bg-card focus-visible:ring-primary/20 focus-visible:ring-offset-0"
+                  className="pl-9 rounded-lg border-input bg-card focus-visible:ring-primary/20 focus-visible:ring-offset-0 focus-visible:border-primary"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -260,7 +260,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                   transition={{ delay: categoryIndex * 0.1 }}
                   className="pb-2"
                 >
-                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-2">
+                  <h3 className="text-xs font-medium text-primary/80 uppercase tracking-wider mb-3 px-2">
                     {category}
                   </h3>
                   <div className="space-y-1">
@@ -276,7 +276,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                             "w-full justify-start rounded-lg py-2.5 px-3 text-sm font-medium",
                             activeSection === section.id
                               ? "bg-primary/10 text-primary"
-                              : "text-foreground hover:bg-accent"
+                              : "text-foreground hover:bg-accent hover:text-primary/80"
                           )}
                           onClick={() => setActiveSection(section.id as SettingsSection)}
                         >

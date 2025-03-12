@@ -21,16 +21,16 @@
     --primary-foreground: 0 0% 100%;
 
     /* 次要颜色 - 浅蓝色 */
-    --secondary: 217 85% 85%;
-    --secondary-foreground: 217 50% 30%;
+    --secondary: 217 85% 95%;
+    --secondary-foreground: 217 100% 40%;
 
     /* 柔和颜色 */
-    --muted: 0 0% 95%;
-    --muted-foreground: 0 0% 25%;  /* 浅黑色/灰色 */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;  /* 中灰色 */
 
     /* 强调色 */
-    --accent: 217 70% 95%;
-    --accent-foreground: 217 50% 30%;
+    --accent: 217 100% 97%;
+    --accent-foreground: 217 100% 40%;
 
     /* 危险色 */
     --destructive: 0 84% 60%;
@@ -50,23 +50,23 @@
     --color-2: 217 90% 70%;   /* 浅蓝色 */
     --color-3: 0 0% 20%;      /* 深灰色/浅黑色 */
     --color-4: 0 0% 50%;      /* 中灰色 */
-    --color-5: 0 0% 80%;      /* 浅灰色 */
+    --color-5: 0 0% 90%;      /* 浅灰色 */
 
     /* 侧边栏 */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 45%;  /* 浅黑色/灰色 */
+    --sidebar-foreground: 0 0% 45%;  /* 中灰色 */
     --sidebar-primary: 217 100% 54%;    /* 主色 */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 95%;
-    --sidebar-accent-foreground: 0 0% 30%;
+    --sidebar-accent: 217 100% 97%;
+    --sidebar-accent-foreground: 217 100% 40%;
     --sidebar-border: 0 0% 90%;
     --sidebar-ring: 217 100% 60%;
     
     /* 基础颜色 */
     --blue: 217 100% 54%;      /* 主蓝色 #126dff */
-    --blue-light: 217 90% 70%; /* 浅蓝色 */
+    --blue-light: 217 90% 85%; /* 浅蓝色 */
     --black: 0 0% 10%;         /* 纯黑色 */
-    --gray: 0 0% 45%;          /* 浅黑色/灰色 */
+    --gray: 0 0% 45%;          /* 中灰色 */
     --white: 0 0% 100%;        /* 纯白色 */
   }
 
@@ -88,16 +88,16 @@
     --primary-foreground: 0 0% 100%;
 
     /* 次要颜色 */
-    --secondary: 0 0% 25%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 217 70% 20%;
+    --secondary-foreground: 217 100% 85%;
 
     /* 柔和颜色 */
     --muted: 0 0% 20%;
     --muted-foreground: 0 0% 70%;  /* 浅灰色 */
 
     /* 强调色 */
-    --accent: 0 0% 25%;
-    --accent-foreground: 0 0% 95%;
+    --accent: 217 70% 20%;
+    --accent-foreground: 217 100% 85%;
 
     /* 危险色 */
     --destructive: 0 70% 45%;
@@ -120,8 +120,8 @@
     --sidebar-foreground: 0 0% 80%;
     --sidebar-primary: 217 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 20%;
-    --sidebar-accent-foreground: 0 0% 80%;
+    --sidebar-accent: 217 70% 20%;
+    --sidebar-accent-foreground: 217 100% 85%;
     --sidebar-border: 0 0% 20%;
     --sidebar-ring: 217 100% 60%;
   }

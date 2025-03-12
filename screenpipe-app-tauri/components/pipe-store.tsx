@@ -1048,7 +1048,7 @@ export const PipeStore: React.FC = () => {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Pipe 商店</h1>
+            <h1 className="text-3xl font-bold text-foreground">Pipe <span className="text-primary">商店</span></h1>
           </div>
           <div className="flex items-center gap-3">
             <TooltipProvider>
@@ -1123,7 +1123,7 @@ export const PipeStore: React.FC = () => {
               placeholder="搜索 Pipe..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-10 border-border focus-visible:ring-primary"
+              className="pl-9 h-10 border-border focus-visible:ring-primary focus-visible:border-primary"
               autoCorrect="off"
               autoComplete="off"
             />
@@ -1151,7 +1151,7 @@ export const PipeStore: React.FC = () => {
             size="sm"
             className={cn(
               "rounded-full px-4 text-sm font-medium",
-              !showInstalledOnly && "bg-primary/10 text-primary"
+              !showInstalledOnly && "bg-primary/10 text-primary font-medium"
             )}
             onClick={() => setShowInstalledOnly(false)}
           >
@@ -1162,7 +1162,7 @@ export const PipeStore: React.FC = () => {
             size="sm"
             className={cn(
               "rounded-full px-4 text-sm font-medium",
-              showInstalledOnly && !pipes.some(p => p.is_installed && p.has_update) && "bg-primary/10 text-primary"
+              showInstalledOnly && !pipes.some(p => p.is_installed && p.has_update) && "bg-primary/10 text-primary font-medium"
             )}
             onClick={() => setShowInstalledOnly(true)}
           >
@@ -1174,7 +1174,7 @@ export const PipeStore: React.FC = () => {
               size="sm"
               className={cn(
                 "rounded-full px-4 text-sm font-medium",
-                showInstalledOnly && pipes.some(p => p.is_installed && p.has_update) && "bg-primary/10 text-primary"
+                showInstalledOnly && pipes.some(p => p.is_installed && p.has_update) && "bg-primary/10 text-primary font-medium"
               )}
               onClick={() => {
                 setShowInstalledOnly(true);
@@ -1279,7 +1279,7 @@ export const PipeStore: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setSearchQuery("")}
-                className="mt-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+                className="mt-2 rounded-lg hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors"
               >
                 清除搜索
               </Button>

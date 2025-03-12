@@ -96,12 +96,14 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                             size="sm"
                             onClick={() => onNavigate("home")}
                             className={cn(
-                                "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
+                                "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full relative",
                                 "hover:bg-accent hover:text-primary rounded-lg transition-colors",
-                                activePage === "home" ? "bg-accent text-primary" : ""
+                                activePage === "home" 
+                                    ? "bg-primary/10 text-primary font-medium" 
+                                    : ""
                             )}
                         >
-                            <Home className="h-5 w-5 mb-0.5" />
+                            <Home className={cn("h-5 w-5 mb-0.5", activePage === "home" ? "text-primary" : "")} />
                             <span className="text-[10px] text-center">首页</span>
                         </Button>
                     </motion.div>
@@ -116,12 +118,14 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                             size="sm"
                             onClick={() => onNavigate("store")}
                             className={cn(
-                                "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
+                                "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full relative",
                                 "hover:bg-accent hover:text-primary rounded-lg transition-colors",
-                                activePage === "store" ? "bg-accent text-primary" : ""
+                                activePage === "store" 
+                                    ? "bg-primary/10 text-primary font-medium" 
+                                    : ""
                             )}
                         >
-                            <ShoppingBag className="h-5 w-5 mb-0.5" />
+                            <ShoppingBag className={cn("h-5 w-5 mb-0.5", activePage === "store" ? "text-primary" : "")} />
                             <span className="text-[10px] text-center">商店</span>
                         </Button>
                     </motion.div>
@@ -145,10 +149,12 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                             className={cn(
                                 "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full relative",
                                 "hover:bg-accent hover:text-primary rounded-lg transition-colors",
-                                activePage === "notifications" ? "bg-accent text-primary" : ""
+                                activePage === "notifications" 
+                                    ? "bg-primary/10 text-primary font-medium" 
+                                    : ""
                             )}
                         >
-                            <Bell className="h-5 w-5 mb-0.5" />
+                            <Bell className={cn("h-5 w-5 mb-0.5", activePage === "notifications" ? "text-primary" : "")} />
                             <span className="text-[10px] text-center">通知</span>
                             {unreadCount > 0 && (
                                 <span className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-[8px] rounded-full h-3.5 w-3.5 flex items-center justify-center">
@@ -168,12 +174,14 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                             size="sm"
                             onClick={handleSettingsClick}
                             className={cn(
-                                "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
+                                "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full relative",
                                 "hover:bg-accent hover:text-primary rounded-lg transition-colors",
-                                activePage === "settings" ? "bg-accent text-primary" : ""
+                                activePage === "settings" 
+                                    ? "bg-primary/10 text-primary font-medium" 
+                                    : ""
                             )}
                         >
-                            <Settings className="h-5 w-5 mb-0.5" />
+                            <Settings className={cn("h-5 w-5 mb-0.5", activePage === "settings" ? "text-primary" : "")} />
                             <span className="text-[10px] text-center">设置</span>
                         </Button>
                     </motion.div>

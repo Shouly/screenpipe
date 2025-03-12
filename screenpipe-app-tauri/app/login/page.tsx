@@ -372,7 +372,7 @@ export default function LoginPage() {
         <div className="w-full max-w-4xl flex flex-col items-center">
           {/* 标题 */}
           <div className="text-center mb-10 w-full">
-            <h1 className="text-4xl font-bold mb-3 cn-text-title">登录</h1>
+            <h1 className="text-4xl font-bold mb-3 cn-text-title">登录 <span className="text-primary">ScreenPipe</span></h1>
             <p className="text-muted-foreground max-w-md mx-auto">使用您的账号登录以访问所有功能</p>
           </div>
 
@@ -459,7 +459,7 @@ export default function LoginPage() {
                       <h2 className="text-lg font-semibold mb-2 cn-text-title">验证您的邮箱</h2>
                       <div className="inline-flex flex-wrap justify-center items-center gap-x-1 text-sm mb-2">
                         <span className="text-muted-foreground">我们已向</span>
-                        <span className="font-medium text-foreground max-w-full break-all">{email}</span>
+                        <span className="font-medium text-primary max-w-full break-all">{email}</span>
                         <span className="text-muted-foreground">发送了验证码</span>
                       </div>
                     </div>
@@ -499,18 +499,14 @@ export default function LoginPage() {
                               type="text"
                               inputMode="numeric"
                               maxLength={1}
-                              value={verificationCode[index] || ''}
+                              pattern="[0-9]"
+                              autoComplete="one-time-code"
+                              className="w-full h-14 text-center text-lg font-medium bg-background border-2 border-input focus:border-primary focus:ring-1 focus:ring-primary rounded-md transition-all"
+                              value={verificationCode[index] || ""}
                               onChange={(e) => handleCodeChange(index, e.target.value)}
                               onKeyDown={(e) => handleKeyDown(index, e)}
                               onPaste={index === 0 ? handlePaste : undefined}
-                              disabled={isVerifying}
-                              autoComplete={index === 0 ? "one-time-code" : undefined}
                               aria-label={`验证码第${index + 1}位`}
-                              className="w-full h-12 text-center text-xl font-medium bg-background border-input border rounded-md 
-                                focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50
-                                transition-all duration-200 ease-in-out
-                                focus:scale-105 focus:shadow-sm"
-                              autoFocus={index === 0}
                             />
                           </motion.div>
                         ))}
