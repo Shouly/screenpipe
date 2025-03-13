@@ -19,6 +19,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::fs;
 use tracing::error;
+use tracing::warn;
 use tracing::{debug, info};
 use uuid::Uuid;
 use walkdir::WalkDir;
@@ -186,9 +187,11 @@ pub async fn handle_index_command(
                 OcrEngine::WindowsNative => perform_ocr_windows(&frame).await.unwrap(),
                 _ => {
                     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-                    perform_ocr_tesseract(&frame, vec![]);
-
-                    panic!("unsupported ocr engine");
+                    {
+                        perform_ocr_tesseract(&frame, Vec::new());
+                    }
+                    warn!("unsupported ocr engine");
+                    ("".to_string(), "".to_string(), None)
                 }
             };
 

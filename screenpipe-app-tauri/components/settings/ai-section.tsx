@@ -37,7 +37,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 
-interface AIProviderCardProps {
+export interface AIProviderCardProps {
   type: "screenpipe-cloud" | "openai" | "native-ollama" | "custom" | "embedded";
   title: string;
   description: string;
@@ -49,20 +49,20 @@ interface AIProviderCardProps {
   imageClassName?: string;
 }
 
-interface OllamaModel {
+export interface OllamaModel {
   name: string;
   size: number;
   digest: string;
   modified_at: string;
 }
 
-interface AIModel {
+export interface AIModel {
   id: string;
   name: string;
   provider: string;
 }
 
-const AIProviderCard = ({
+export const AIProviderCard = ({
   type,
   title,
   description,
@@ -161,7 +161,7 @@ const AISection = () => {
   };
 
   const handleCustomPromptChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
     updateSettings({ customPrompt: e.target.value });
   };
@@ -217,7 +217,7 @@ const AISection = () => {
               headers: {
                 Authorization: `Bearer ${settings.user?.id || ""}`,
               },
-            }
+            },
           );
           if (!response.ok) throw new Error("Failed to fetch models");
           const data = await response.json();
@@ -236,7 +236,7 @@ const AISection = () => {
               id: model.name,
               name: model.name,
               provider: "ollama",
-            }))
+            })),
           );
           break;
 
@@ -263,12 +263,12 @@ const AISection = () => {
                 id: model.id,
                 name: model.id,
                 provider: "custom",
-              }))
+              })),
             );
           } catch (error) {
             console.error(
               "Failed to fetch custom models, allowing manual input:",
-              error
+              error,
             );
             setModels([]);
           }
@@ -280,7 +280,7 @@ const AISection = () => {
     } catch (error) {
       console.error(
         `Failed to fetch models for ${settings.aiProviderType}:`,
-        error
+        error,
       );
       setModels([]);
     } finally {

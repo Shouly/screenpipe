@@ -31,13 +31,7 @@ use screenpipe_vision::monitor::list_monitors;
 use screenpipe_vision::run_ui;
 use serde_json::{json, Value};
 use std::{
-    env, fs,
-    io::Write,
-    net::SocketAddr,
-    ops::Deref,
-    path::PathBuf,
-    sync::{atomic::AtomicBool, Arc},
-    time::Duration,
+    env, fs, io::Write, net::SocketAddr, ops::Deref, path::PathBuf, sync::Arc, time::Duration,
 };
 use tokio::{runtime::Runtime, signal, sync::broadcast};
 use tracing::{debug, error, info, warn};
@@ -588,9 +582,15 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    if find_ffmpeg_path().is_none() {
-        eprintln!("ffmpeg not found. please install ffmpeg and ensure it is in your path.");
-        std::process::exit(1);
+    // Replace the current conditional check with:
+    let ffmpeg_path = find_ffmpeg_path();
+    if ffmpeg_path.is_none() {
+        // Try one more time, which might trigger the installation
+        let ffmpeg_path = find_ffmpeg_path();
+        if ffmpeg_path.is_none() {
+            eprintln!("ffmpeg not found and installation failed. please install ffmpeg manually.");
+            std::process::exit(1);
+        }
     }
 
     if !is_local_ipv4_port_free(cli.port) {
@@ -664,9 +664,6 @@ async fn main() -> anyhow::Result<()> {
 
     let db_server = db.clone();
 
-    // Channel for controlling the recorder ! TODO RENAME SHIT
-    let vision_control = Arc::new(AtomicBool::new(true));
-
     let warning_ocr_engine_clone = cli.ocr_engine.clone();
     let warning_audio_transcription_engine_clone = cli.audio_transcription_engine.clone();
     let monitor_ids = if cli.monitor_id.is_empty() {
@@ -692,7 +689,6 @@ async fn main() -> anyhow::Result<()> {
 
     let db_clone = Arc::clone(&db);
     let output_path_clone = Arc::new(local_data_dir.join("data").to_string_lossy().into_owned());
-    let vision_control_clone = Arc::clone(&vision_control);
     let shutdown_tx_clone = shutdown_tx.clone();
     let monitor_ids_clone = monitor_ids.clone();
     let ignored_windows_clone = cli.ignored_windows.clone();
@@ -737,7 +733,6 @@ async fn main() -> anyhow::Result<()> {
                     output_path_clone.clone(),
                     fps,
                     Duration::from_secs(cli.video_chunk_duration),
-                    vision_control_clone.clone(),
                     Arc::new(cli.ocr_engine.clone().into()),
                     monitor_ids_clone.clone(),
                     cli.use_pii_removal,

@@ -21,6 +21,19 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AccountSection } from "./settings/account-section";
 import AISection from "./settings/ai-section";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { relaunch } from "@tauri-apps/plugin-process";
+import { invoke } from "@tauri-apps/api/core";
+import { useProfiles } from "@/lib/hooks/use-profiles";
+import { toast } from "./ui/use-toast";
 import { DataImportSection } from "./settings/data-import-section";
 import DiskUsage from "./settings/disk-usage";
 import GeneralSettings from "./settings/general-settings";

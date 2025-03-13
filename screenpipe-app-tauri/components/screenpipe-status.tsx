@@ -129,8 +129,8 @@ const HealthStatus = ({ className }: { className?: string }) => {
         )}
         onClick={handleOpenStatusDialog}
       >
-        {/* <Activity className="mr-2 h-4 w-4" /> */}
-        <Power className="mr-2 h-4 w-4" />
+        {/* <Power className="mr-2 h-4 w-4" /> */}
+        <Activity className="mr-2 h-4 w-4" />
         <span
           className={`ml-1 w-2 h-2 rounded-full ${statusColor} inline-block ${statusColor === "bg-red-500" ? "animate-pulse" : ""
             }`}
