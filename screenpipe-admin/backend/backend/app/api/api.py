@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from .endpoints import data, query, app_usage, remote_control, user
+from .endpoints import data, query, app_usage, remote_control, user, pattern_recognition, work_summary
 from .endpoints.plugin import admin_plugin, client_plugin, license_plugin, review_plugin, stats_plugin
 
 api_router = APIRouter()
@@ -18,6 +18,12 @@ api_router.include_router(remote_control.router, prefix="/remote-control", tags=
 
 # 添加用户管理路由
 api_router.include_router(user.router, prefix="/user", tags=["user"])
+
+# 添加模式识别路由
+api_router.include_router(pattern_recognition.router, prefix="/pattern-recognition", tags=["pattern-recognition"])
+
+# 添加工作内容总结路由
+api_router.include_router(work_summary.router, prefix="/work-summary", tags=["work-summary"])
 
 # 插件相关路由
 
