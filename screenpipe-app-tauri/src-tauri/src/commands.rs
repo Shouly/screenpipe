@@ -3,6 +3,9 @@ use serde::Serialize;
 use serde_json::Value;
 use tauri::Manager;
 use tracing::{error, info};
+use tauri::AppHandle;
+use serde::Deserialize;
+use crate::automation;  // 导入新模块
 
 #[tauri::command]
 pub fn set_tray_unhealth_icon(app_handle: tauri::AppHandle<tauri::Wry>) {
@@ -127,9 +130,6 @@ pub fn hide_main_window(app_handle: &tauri::AppHandle<tauri::Wry>) {
         let _ = window.close();
     }
 }
-
-
-
 
 const DEFAULT_SHORTCUT: &str = "Super+Alt+S";
 
@@ -298,4 +298,96 @@ pub async fn get_disk_usage(
             Err(format!("Failed to get disk usage: {}", e))
         }
     }
+}
+
+// 以下是自动化相关的tauri命令，转发到automation模块
+
+/// 获取所有运行的应用程序名称
+#[tauri::command]
+pub async fn get_applications() -> Result<Vec<String>, String> {
+    automation::get_applications().await
+}
+
+/// 获取应用程序的顶层元素，不包含子元素
+#[tauri::command]
+pub async fn get_app_elements(app_name: String) -> Result<Vec<automation::UIElementProps>, String> {
+    automation::get_app_elements(app_name).await
+}
+
+/// 根据应用名称和元素选择器，获取特定元素的子元素
+#[tauri::command]
+pub async fn get_element_children(
+    app_name: String, 
+    selector_type: String,
+    selector_value: String
+) -> Result<Vec<automation::UIElementProps>, String> {
+    automation::get_element_children(app_name, selector_type, selector_value).await
+}
+
+/// 对元素执行操作
+#[tauri::command]
+pub async fn perform_element_action(
+    app_name: String, 
+    selector: automation::SelectorInput, 
+    action: String,
+    text: Option<String>
+) -> Result<automation::ElementActionResult, String> {
+    automation::perform_element_action(app_name, selector, action, text).await
+}
+
+/// 列出所有已保存的自动化脚本
+#[tauri::command]
+pub async fn list_automation_scripts(app: AppHandle) -> Result<Vec<automation::ScriptInfo>, String> {
+    automation::list_automation_scripts(&app).await
+}
+
+/// 加载自动化脚本内容
+#[tauri::command]
+pub async fn load_automation_script(path: String) -> Result<String, String> {
+    automation::load_automation_script(path).await
+}
+
+/// 保存自动化脚本
+#[tauri::command]
+pub async fn save_automation_script(app: AppHandle, script: String) -> Result<(), String> {
+    automation::save_automation_script(&app, script).await
+}
+
+/// 运行自动化脚本
+#[tauri::command]
+pub async fn run_automation_script(script: String) -> Result<automation::ElementActionResult, String> {
+    automation::run_automation_script(script).await
+}
+
+/// 删除自动化脚本
+#[tauri::command]
+pub async fn delete_automation_script(path: String) -> Result<(), String> {
+    automation::delete_automation_script(&path).await
+}
+
+/// 编辑并保存自动化脚本
+#[tauri::command]
+pub async fn update_automation_script(path: String, content: String) -> Result<(), String> {
+    automation::update_automation_script(&path, content).await
+}
+
+/// 获取脚本预览信息
+#[tauri::command]
+pub async fn get_script_preview(path: String) -> Result<automation::ScriptPreview, String> {
+    automation::get_script_preview(&path).await
+}
+
+/// 获取脚本模板
+#[tauri::command]
+pub fn get_script_template(template_type: automation::ScriptTemplateType) -> String {
+    automation::get_script_template(template_type)
+}
+
+/// 基于模板创建新脚本
+#[tauri::command]
+pub async fn create_script_from_template(
+    app: AppHandle,
+    template_type: automation::ScriptTemplateType
+) -> Result<String, String> {
+    automation::create_script_from_template(&app, template_type).await
 }

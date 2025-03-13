@@ -8,7 +8,8 @@ import {
     Bell,
     Home,
     Settings,
-    ShoppingBag
+    ShoppingBag,
+    Bot
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -103,6 +104,26 @@ export default function Navigation({ activePage, onNavigate }: NavigationProps) 
                         >
                             <Home className="h-5 w-5 mb-0.5" />
                             <span className="text-[10px] text-center">首页</span>
+                        </Button>
+                    </motion.div>
+
+                    {/* 桌面自动化 */}
+                    <motion.div
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
+                        <Button
+                            variant={activePage === "automation" ? "secondary" : "ghost"}
+                            size="sm"
+                            onClick={() => onNavigate("automation")}
+                            className={cn(
+                                "flex flex-col items-center justify-center h-auto py-1.5 px-0.5 w-full",
+                                "hover:bg-accent hover:text-primary rounded-lg transition-colors",
+                                activePage === "automation" ? "bg-accent text-primary" : ""
+                            )}
+                        >
+                            <Bot className="h-5 w-5 mb-0.5" />
+                            <span className="text-[10px] text-center">自动化</span>
                         </Button>
                     </motion.div>
 
