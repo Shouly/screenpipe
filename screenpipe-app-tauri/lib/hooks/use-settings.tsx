@@ -129,7 +129,7 @@ const DEFAULT_SETTINGS: Settings = {
 
 `,
   devMode: false,
-  audioTranscriptionEngine: "deepgram",
+  audioTranscriptionEngine: "whisper-tiny",
   ocrEngine: "default",
   monitorIds: ["default"],
   audioDevices: ["default"],
