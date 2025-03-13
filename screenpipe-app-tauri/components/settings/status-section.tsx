@@ -260,8 +260,8 @@ export function StatusSection() {
                                 <div className="space-y-3 flex-1">
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm text-gray-600">服务状态</span>
-                                        <Badge variant={health?.status === "running" ? "default" : "destructive"} className={cn("text-xs", health?.status === "running" ? "bg-green-100 text-green-800" : "")}>
-                                            {health?.status === "running" ? "运行中" : "已停止"}
+                                        <Badge variant={health?.status === "healthy" ? "default" : "destructive"} className={cn("text-xs", health?.status === "healthy" ? "bg-green-100 text-green-800" : "")}>
+                                            {health?.status === "healthy" ? "运行中" : "已停止"}
                                         </Badge>
                                     </div>
                                     <div className="flex items-center justify-between">
@@ -396,7 +396,7 @@ export function StatusSection() {
                                                 </div>
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-sm text-gray-500">服务状态:</span>
-                                                    <span className="text-sm font-medium">{health?.status === "running" ? "正常运行" : "异常"}</span>
+                                                    <span className="text-sm font-medium">{health?.status === "healthy" ? "正常运行" : "异常"}</span>
                                                 </div>
                                             </div>
                                         </div>

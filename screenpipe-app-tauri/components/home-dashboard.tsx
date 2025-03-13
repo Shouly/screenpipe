@@ -270,7 +270,7 @@ export default function HomeDashboard({ onNavigate }: HomeDashboardProps = {}) {
               </CardHeader>
               <CardContent className="pt-4">
                 <div className="flex items-center gap-2 mb-3">
-                  {health?.status === "running" ? (
+                  {health?.status === "healthy" ? (
                     <CheckCircle className="h-5 w-5 text-green-500" />
                   ) : (
                     <AlertCircle className="h-5 w-5 text-destructive" />
