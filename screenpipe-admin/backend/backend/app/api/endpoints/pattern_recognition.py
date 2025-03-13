@@ -31,8 +31,8 @@ async def analyze_ocr_data_from_db(
     返回:
     - 识别出的模式和建议
     """
-    # 设置OpenAI API密钥（在实际应用中应从环境变量或配置中获取）
-    openai_api_key = os.environ.get("OPENAI_API_KEY", "")
+    # 设置OpenAI
+    openai_api_key = settings.OPENAI_API_KEY
     if not openai_api_key:
         return {
             "error": "未配置OpenAI API密钥，无法进行模式识别",

@@ -79,6 +79,9 @@ class Settings(BaseSettings):
     
     # 远程控制服务配置
     REMOTE_CONTROL_PORT: int = int(os.getenv("REMOTE_CONTROL_PORT", "3031"))
+
+    # OpenAI API配置
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     
     class Config:
         case_sensitive = True

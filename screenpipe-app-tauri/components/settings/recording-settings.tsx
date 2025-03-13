@@ -369,9 +369,10 @@ export function RecordingSettings() {
   };
 
   const handleLanguageChange = (currentValue: Language) => {
-    const updatedLanguages = settings.languages.includes(currentValue)
-      ? settings.languages.filter((id) => id !== currentValue)
-      : [...settings.languages, currentValue];
+    const currentLanguages = settings.languages || [];
+    const updatedLanguages = currentLanguages.includes(currentValue)
+      ? currentLanguages.filter((id) => id !== currentValue)
+      : [...currentLanguages, currentValue];
 
     handleSettingsChange({ languages: updatedLanguages });
   };
@@ -1185,7 +1186,7 @@ export function RecordingSettings() {
                       aria-expanded={openLanguages}
                       className="w-full justify-between"
                     >
-                      {settings.languages.length > 0
+                      {settings.languages && settings.languages.length > 0
                         ? `${settings.languages.join(", ")}`
                         : "select languages"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -1207,7 +1208,7 @@ export function RecordingSettings() {
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    settings.languages.includes(id)
+                                    settings.languages && settings.languages.includes(id)
                                       ? "opacity-100"
                                       : "opacity-0"
                                   )}
