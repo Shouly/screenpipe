@@ -1,11 +1,10 @@
 use serde::{Serialize, Deserialize};
 use tauri::AppHandle;
-use tracing::{error, info};
+use tracing::info;
 use screenpipe_core::operator::{Desktop, Selector, UIElement};
 use std::process::Command;
 use std::collections::HashSet;
 use std::path::Path;
-use crate::get_base_dir;
 
 /// 表示UI元素的属性
 #[derive(Debug, Serialize, Deserialize, Clone)]

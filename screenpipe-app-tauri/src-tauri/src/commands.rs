@@ -4,7 +4,6 @@ use serde_json::Value;
 use tauri::Manager;
 use tracing::{error, info};
 use tauri::AppHandle;
-use serde::Deserialize;
 use crate::automation;  // 导入新模块
 
 #[tauri::command]
