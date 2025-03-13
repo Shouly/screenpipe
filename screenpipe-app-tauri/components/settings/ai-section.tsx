@@ -8,32 +8,32 @@ import {
   CommandItem,
   CommandList
 } from "@/components/ui/command";
-import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AIProviderType, useSettings } from "@/lib/hooks/use-settings";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import {
   ChevronsUpDown,
+  Cloud,
   Eye,
   EyeOff,
-  HelpCircle,
+  Key,
   Loader2,
+  MessageSquare,
   RefreshCw,
+  Server,
+  Sparkles,
+  Zap
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 
@@ -74,41 +74,83 @@ const AIProviderCard = ({
   imageClassName,
 }: AIProviderCardProps) => {
   return (
-    <Card
-      onClick={onClick}
-      className={cn(
-        "flex py-4 px-4 rounded-lg hover:bg-accent transition-colors h-[145px] w-full cursor-pointer",
-        selected ? "border-black/60 border-[1.5px]" : "",
-        disabled && "opacity-50 cursor-not-allowed"
-      )}
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
-      <CardContent className="flex flex-col p-0 w-full">
-        <div className="flex items-center gap-2 mb-2">
-          <img
-            src={imageSrc}
-            alt={title}
-            className={cn(
-              "rounded-lg shrink-0 size-8",
-              type === "native-ollama" &&
-              "outline outline-gray-300 outline-1 outline-offset-2",
-              imageClassName
+      <Card
+        onClick={onClick}
+        className={cn(
+          "flex py-4 px-4 rounded-lg hover:bg-accent transition-colors h-[145px] w-full cursor-pointer border shadow-sm",
+          selected ? "border-primary border-[1.5px] bg-primary/5" : "",
+          disabled && "opacity-50 cursor-not-allowed"
+        )}
+      >
+        <CardContent className="flex flex-col p-0 w-full">
+          <div className="flex items-center gap-2 mb-2">
+            <div className={cn(
+              "w-10 h-10 rounded-lg flex items-center justify-center",
+              selected ? "bg-primary/20" : "bg-muted"
+            )}>
+              <img
+                src={imageSrc}
+                alt={title}
+                className={cn(
+                  "rounded-lg shrink-0 size-8",
+                  type === "native-ollama" &&
+                  "outline outline-gray-300 outline-1 outline-offset-2",
+                  imageClassName
+                )}
+              />
+            </div>
+            <span className="text-lg font-medium truncate">{title}</span>
+            {selected && (
+              <Badge className="ml-auto bg-primary/20 text-primary border-none">
+                已选择
+              </Badge>
             )}
-          />
-          <span className="text-lg font-medium truncate">{title}</span>
-        </div>
-        <p className="text-sm text-muted-foreground line-clamp-3">
-          {description}
-        </p>
-        {warningText && <Badge className="w-fit mt-2">{warningText}</Badge>}
-      </CardContent>
-    </Card>
+          </div>
+          <p className="text-sm text-muted-foreground line-clamp-3">
+            {description}
+          </p>
+          {warningText && <Badge variant="outline" className="w-fit mt-2 bg-amber-50 text-amber-700 border-amber-200">{warningText}</Badge>}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
 const AISection = () => {
   const { settings, updateSettings, resetSetting } = useSettings();
-
   const [showApiKey, setShowApiKey] = React.useState(false);
+  const [activeTab, setActiveTab] = useState("provider");
+  const [models, setModels] = useState<AIModel[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+
+  // 动画变体
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.06
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 10, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }
+    }
+  };
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateSettings({ openaiApiKey: e.target.value });
@@ -162,9 +204,6 @@ const AISection = () => {
     settings.aiUrl !== "https://ai-proxy.i-f9f.workers.dev/v1" &&
     settings.aiUrl !== "http://localhost:11434/v1" &&
     settings.aiUrl !== "embedded";
-
-  const [models, setModels] = useState<AIModel[]>([]);
-  const [isLoadingModels, setIsLoadingModels] = useState(false);
 
   const fetchModels = async () => {
     setIsLoadingModels(true);
@@ -254,234 +293,322 @@ const AISection = () => {
   }, [settings.aiProviderType, settings.openaiApiKey, settings.aiUrl]);
 
   return (
-    <div className="w-full space-y-6 py-4">
-      <h1 className="text-2xl font-bold">ai settings</h1>
-      <div className="w-full">
-        <Label htmlFor="aiUrl" className="min-w-[80px]">
-          ai provider
-        </Label>
-        <div className="grid grid-cols-2 gap-4 mb-4 mt-4">
-          <AIProviderCard
-            type="openai"
-            title="openai"
-            description="use your own openai api key for gpt-4 and other models"
-            imageSrc="/images/openai.png"
-            selected={settings.aiProviderType === "openai"}
-            onClick={() => handleAiProviderChange("openai")}
-          />
-
-          <AIProviderCard
-            type="screenpipe-cloud"
-            title="screenpipe cloud"
-            description="use openai, anthropic and google models without worrying about api keys or usage"
-            imageSrc="/images/screenpipe.png"
-            selected={settings.aiProviderType === "screenpipe-cloud"}
-            onClick={() => handleAiProviderChange("screenpipe-cloud")}
-            disabled={!settings.user}
-            warningText={
-              !settings.user
-                ? "login required"
-                : undefined
-            }
-          />
-
-          <AIProviderCard
-            type="native-ollama"
-            title="ollama"
-            description="run ai models locally using your existing ollama installation"
-            imageSrc="/images/ollama.png"
-            selected={settings.aiProviderType === "native-ollama"}
-            onClick={() => handleAiProviderChange("native-ollama")}
-          />
-
-          <AIProviderCard
-            type="custom"
-            title="custom"
-            description="connect to your own ai provider or self-hosted models"
-            imageSrc="/images/custom.png"
-            selected={settings.aiProviderType === "custom"}
-            onClick={() => handleAiProviderChange("custom")}
-          />
+    <motion.div
+      className="max-w-4xl mx-auto"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <Tabs
+        defaultValue="provider"
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <TabsList className="bg-muted/50">
+            <TabsTrigger value="provider" className="data-[state=active]:bg-white">
+              AI 服务与模型
+            </TabsTrigger>
+            <TabsTrigger value="prompt" className="data-[state=active]:bg-white">
+              提示词配置
+            </TabsTrigger>
+          </TabsList>
         </div>
-      </div>
-      {settings.aiProviderType === "custom" && (
-        <div className="w-full">
-          <div className="flex flex-col gap-4 mb-4">
-            <Label htmlFor="customAiUrl">custom url</Label>
-            <Input
-              id="customAiUrl"
-              value={settings.aiUrl}
-              onChange={(e) => {
-                const newUrl = e.target.value;
-                updateSettings({ aiUrl: newUrl });
-              }}
-              className="flex-grow"
-              placeholder="enter custom ai url"
-              autoCorrect="off"
-              autoCapitalize="off"
-              autoComplete="off"
-              type="text"
-            />
-          </div>
-        </div>
-      )}
-      {isApiKeyRequired && (
-        <div className="w-full">
-          <div className="flex flex-col gap-4 mb-4 w-full">
-            <Label htmlFor="aiApiKey">API Key</Label>
-            <div className="flex-grow relative">
-              <Input
-                id="aiApiKey"
-                type={showApiKey ? "text" : "password"}
-                value={settings.openaiApiKey}
-                onChange={handleApiKeyChange}
-                className="pr-10"
-                placeholder="enter your ai api key"
-                autoCorrect="off"
-                autoCapitalize="off"
-                autoComplete="off"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full"
-                onClick={() => setShowApiKey(!showApiKey)}
-              >
-                {showApiKey ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-      {settings.aiProviderType !== "embedded" && (
-        <div className="w-full">
-          <div className="flex flex-col gap-4 mb-4 w-full">
-            <Label htmlFor="aiModel">ai model</Label>
-            <Popover modal={true}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  className="w-full justify-between"
-                >
-                  {settings.aiModel || "select model..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput
-                    placeholder="select or type model name"
-                    onValueChange={(value) => {
-                      if (value) {
-                        updateSettings({ aiModel: value });
-                      }
-                    }}
+
+        <TabsContent value="provider" className="mt-0 space-y-6">
+          <motion.div variants={itemVariants}>
+            <Card className="overflow-hidden border-none shadow-sm bg-white">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Cloud className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">AI 提供商</CardTitle>
+                    <CardDescription>选择您想要使用的 AI 服务提供商</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <AIProviderCard
+                    type="openai"
+                    title="OpenAI"
+                    description="使用您自己的 OpenAI API 密钥访问 GPT-4 和其他模型"
+                    imageSrc="/images/openai.png"
+                    selected={settings.aiProviderType === "openai"}
+                    onClick={() => handleAiProviderChange("openai")}
                   />
-                  <CommandList>
-                    <CommandEmpty>
-                      press enter to use &quot;{settings.aiModel}&quot;
-                    </CommandEmpty>
-                    <CommandGroup heading="Suggestions">
-                      {isLoadingModels ? (
-                        <CommandItem value="loading" disabled>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          loading models...
-                        </CommandItem>
+
+                  <AIProviderCard
+                    type="screenpipe-cloud"
+                    title="Screenpipe Cloud"
+                    description="使用 OpenAI、Anthropic 和 Google 模型，无需担心 API 密钥或使用量"
+                    imageSrc="/images/screenpipe.png"
+                    selected={settings.aiProviderType === "screenpipe-cloud"}
+                    onClick={() => handleAiProviderChange("screenpipe-cloud")}
+                    disabled={!settings.user}
+                    warningText={
+                      !settings.user
+                        ? "需要登录"
+                        : undefined
+                    }
+                  />
+
+                  <AIProviderCard
+                    type="native-ollama"
+                    title="Ollama"
+                    description="使用您现有的 Ollama 安装在本地运行 AI 模型"
+                    imageSrc="/images/ollama.png"
+                    selected={settings.aiProviderType === "native-ollama"}
+                    onClick={() => handleAiProviderChange("native-ollama")}
+                  />
+
+                  <AIProviderCard
+                    type="custom"
+                    title="自定义"
+                    description="连接到您自己的 AI 提供商或自托管模型"
+                    imageSrc="/images/custom.png"
+                    selected={settings.aiProviderType === "custom"}
+                    onClick={() => handleAiProviderChange("custom")}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {settings.aiProviderType === "custom" && (
+            <motion.div variants={itemVariants}>
+              <Card className="overflow-hidden border-none shadow-sm bg-white">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                      <Server className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">自定义 URL</CardTitle>
+                      <CardDescription>设置您的自定义 AI 服务 URL</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Input
+                    id="customAiUrl"
+                    value={settings.aiUrl}
+                    onChange={(e) => {
+                      const newUrl = e.target.value;
+                      updateSettings({ aiUrl: newUrl });
+                    }}
+                    className="flex-grow"
+                    placeholder="输入自定义 AI URL"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    autoComplete="off"
+                    type="text"
+                  />
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {isApiKeyRequired && (
+            <motion.div variants={itemVariants}>
+              <Card className="overflow-hidden border-none shadow-sm bg-white">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                      <Key className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">API 密钥</CardTitle>
+                      <CardDescription>输入您的 API 密钥以访问 AI 服务</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative">
+                    <Input
+                      id="aiApiKey"
+                      type={showApiKey ? "text" : "password"}
+                      value={settings.openaiApiKey}
+                      onChange={handleApiKeyChange}
+                      className="pr-10"
+                      placeholder="输入您的 AI API 密钥"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      autoComplete="off"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                    >
+                      {showApiKey ? (
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        models.map((model) => (
-                          <CommandItem
-                            key={model.id}
-                            value={model.id}
-                            onSelect={() => {
-                              updateSettings({ aiModel: model.id });
-                            }}
-                          >
-                            {model.name}
-                            <Badge variant="outline" className="ml-2">
-                              {model.provider}
-                            </Badge>
-                          </CommandItem>
-                        ))
+                        <Eye className="h-4 w-4" />
                       )}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
-      <div className="w-full">
-        <div className="flex flex-col gap-4 mb-4 w-full">
-          <Label htmlFor="customPrompt">prompt</Label>
-          <div className="flex-grow relative">
-            <Textarea
-              id="customPrompt"
-              value={settings.customPrompt}
-              onChange={handleCustomPromptChange}
-              className="min-h-[100px]"
-              placeholder="enter your custom prompt here"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-2 top-2"
-              onClick={handleResetCustomPrompt}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              reset
-            </Button>
-          </div>
-        </div>
-      </div>
+          {settings.aiProviderType !== "embedded" && (
+            <motion.div variants={itemVariants}>
+              <Card className="overflow-hidden border-none shadow-sm bg-white">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                      <Sparkles className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">AI 模型</CardTitle>
+                      <CardDescription>选择您想要使用的 AI 模型</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Popover modal={true}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between"
+                      >
+                        {settings.aiModel || "选择模型..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="选择或输入模型名称"
+                          onValueChange={(value) => {
+                            if (value) {
+                              updateSettings({ aiModel: value });
+                            }
+                          }}
+                        />
+                        <CommandList>
+                          <CommandEmpty>
+                            按回车键使用 &quot;{settings.aiModel}&quot;
+                          </CommandEmpty>
+                          <CommandGroup heading="推荐模型">
+                            {isLoadingModels ? (
+                              <CommandItem value="loading" disabled>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                加载模型中...
+                              </CommandItem>
+                            ) : (
+                              models.map((model) => (
+                                <CommandItem
+                                  key={model.id}
+                                  value={model.id}
+                                  onSelect={() => {
+                                    updateSettings({ aiModel: model.id });
+                                  }}
+                                >
+                                  {model.name}
+                                  <Badge variant="outline" className="ml-2">
+                                    {model.provider}
+                                  </Badge>
+                                </CommandItem>
+                              ))
+                            )}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
-      <div className="w-full">
-        <div className="flex flex-col gap-4 mb-4 w-full">
-          <Label htmlFor="aiMaxContextChars" className="flex items-center">
-            max context{" "}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <HelpCircle className="ml-2 h-4 w-4 cursor-default" />
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>
-                    maximum number of characters (think 4 characters per token)
-                    to send to the ai model. <br />
-                    usually, openai models support up to 200k tokens, which is
-                    roughly 1m characters. <br />
-                    we&apos;ll use this for UI purposes to show you how much you
-                    can send.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </Label>
-          <div className="flex-grow flex items-center">
-            <Slider
-              id="aiMaxContextChars"
-              min={10000}
-              max={1000000}
-              step={10000}
-              value={[settings.aiMaxContextChars]}
-              onValueChange={handleMaxContextCharsChange}
-              className="flex-grow"
-            />
-            <span className="ml-2 min-w-[60px] text-right">
-              {settings.aiMaxContextChars.toLocaleString()}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
+          <motion.div variants={itemVariants}>
+            <Card className="overflow-hidden border-none shadow-sm bg-white">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                    <Zap className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">最大上下文</CardTitle>
+                    <CardDescription>设置发送到 AI 模型的最大字符数</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex-grow flex items-center gap-4">
+                  <Slider
+                    id="aiMaxContextChars"
+                    min={10000}
+                    max={1000000}
+                    step={10000}
+                    value={[settings.aiMaxContextChars]}
+                    onValueChange={handleMaxContextCharsChange}
+                    className="flex-grow"
+                  />
+                  <span className="min-w-[80px] text-right font-medium">
+                    {settings.aiMaxContextChars.toLocaleString()}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  通常，OpenAI 模型支持最多 200k 令牌，大约相当于 1M 字符。我们会在 UI 中显示您可以发送的内容量。
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="prompt" className="mt-0 space-y-6">
+          <motion.div variants={itemVariants}>
+            <Card className="overflow-hidden border-none shadow-sm bg-white">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <MessageSquare className="h-4 w-4 text-indigo-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">自定义提示词</CardTitle>
+                    <CardDescription>配置发送给 AI 模型的提示词</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="relative">
+                  <Textarea
+                    id="customPrompt"
+                    value={settings.customPrompt}
+                    onChange={handleCustomPromptChange}
+                    className="min-h-[200px] resize-y"
+                    placeholder="在此输入您的自定义提示词"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="absolute right-2 top-2"
+                    onClick={handleResetCustomPrompt}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    重置
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  提示词将用于指导 AI 模型生成回复。您可以使用变量如 {"{context}"} 来引用上下文内容。
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+      </Tabs>
+    </motion.div>
   );
 };
 
