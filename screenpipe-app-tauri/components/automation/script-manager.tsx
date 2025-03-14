@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
-import { invoke } from "@tauri-apps/api/core";
 import { motion } from "framer-motion";
 import { 
   Loader2, PlayIcon, FileText, Trash2, Edit, 
@@ -21,25 +20,19 @@ import {
   BookOpen, Sparkles, Save
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface ElementActionResult {
-  success: boolean;
-  error?: string;
-}
-
-interface ScriptInfo {
-  name: string;
-  path: string;
-  created_at: string;
-}
-
-interface ScriptPreview {
-  name: string;
-  path: string;
-  target_app: string;
-  step_count: number;
-  is_multi_step: boolean;
-}
+import {
+  listAutomationScripts,
+  loadAutomationScript,
+  runAutomationScript,
+  deleteAutomationScript,
+  updateAutomationScript,
+  getScriptPreview,
+  createScriptFromTemplate as createFromTemplate,
+  ScriptTemplateType,
+  ElementActionResult,
+  ScriptInfo,
+  ScriptPreview
+} from "@/lib/automation";
 
 const container = {
   hidden: { opacity: 0 },
@@ -57,273 +50,295 @@ const item = {
 };
 
 export default function ScriptManager() {
-  const [savedScripts, setSavedScripts] = useState<ScriptInfo[]>([]);
-  const [scriptPreviews, setScriptPreviews] = useState<Record<string, ScriptPreview>>({});
-  const [isLoadingScripts, setIsLoadingScripts] = useState(false);
-  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
-  const [selectedScriptPath, setSelectedScriptPath] = useState<string>("");
-  const [currentScriptContent, setCurrentScriptContent] = useState<string>("");
-  const [editScriptContent, setEditScriptContent] = useState<string>("");
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [actionResult, setActionResult] = useState<ElementActionResult | null>(null);
-  const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<"basic" | "app_launch" | "multi_step" | "text_input">("basic");
-  const [isBusy, setIsBusy] = useState(false);
   const { toast } = useToast();
-
-  // 加载已保存的脚本列表
+  
+  const [scripts, setScripts] = useState<ScriptInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedScriptPath, setSelectedScriptPath] = useState<string | null>(null);
+  const [scriptContent, setScriptContent] = useState("");
+  const [scriptPreview, setScriptPreview] = useState<ScriptPreview | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [runResult, setRunResult] = useState<ElementActionResult | null>(null);
+  
+  // 编辑相关状态
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editedContent, setEditedContent] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // 删除相关状态
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // 模板相关状态
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<ScriptTemplateType>(ScriptTemplateType.Basic);
+  const [isCreatingFromTemplate, setIsCreatingFromTemplate] = useState(false);
+  
+  // 加载保存的脚本列表
   useEffect(() => {
     loadSavedScripts();
   }, []);
-
-  // 加载已保存的脚本列表
+  
+  // 加载保存的脚本列表
   const loadSavedScripts = async () => {
     try {
-      setIsLoadingScripts(true);
-      const scripts = await invoke<ScriptInfo[]>("list_automation_scripts");
-      setSavedScripts(scripts);
+      setIsLoading(true);
       
-      // 加载每个脚本的预览信息
-      for (const script of scripts) {
-        loadScriptPreview(script.path);
+      // 使用新的JS库获取脚本列表
+      const scriptList = await listAutomationScripts();
+      setScripts(scriptList);
+      
+      // 如果有脚本，默认选择第一个
+      if (scriptList.length > 0) {
+        setSelectedScriptPath(scriptList[0].path);
+        await loadScriptPreview(scriptList[0].path);
+        await loadScriptContent(scriptList[0].path);
       }
     } catch (error) {
-      console.error("无法加载自动化脚本列表:", error);
+      console.error("加载脚本列表失败:", error);
       toast({
         title: "错误",
-        description: "无法加载自动化脚本列表",
+        description: "无法加载保存的脚本列表",
         variant: "destructive",
       });
     } finally {
-      setIsLoadingScripts(false);
+      setIsLoading(false);
     }
   };
-
+  
   // 加载脚本预览信息
   const loadScriptPreview = async (path: string) => {
     try {
-      setIsLoadingPreview(true);
-      const preview = await invoke<ScriptPreview>("get_script_preview", { path });
-      
-      setScriptPreviews(prev => ({
-        ...prev,
-        [path]: preview
-      }));
+      // 使用新的JS库获取脚本预览
+      const preview = await getScriptPreview(path);
+      setScriptPreview(preview);
     } catch (error) {
-      console.error("无法加载脚本预览:", error);
-    } finally {
-      setIsLoadingPreview(false);
+      console.error("加载脚本预览失败:", error);
+      toast({
+        title: "错误",
+        description: "无法加载脚本预览信息",
+        variant: "destructive",
+      });
     }
   };
-
+  
   // 从模板创建新脚本
   const createScriptFromTemplate = async () => {
     try {
-      setIsBusy(true);
-      const scriptContent = await invoke<string>("create_script_from_template", {
-        templateType: selectedTemplate
-      });
+      setIsCreatingFromTemplate(true);
+      
+      // 使用新的JS库创建模板脚本
+      await createFromTemplate(selectedTemplate);
       
       toast({
-        title: "模板脚本已创建",
-        description: "已根据模板成功创建新脚本",
+        title: "创建成功",
+        description: "已从模板创建新脚本",
       });
       
-      // 刷新脚本列表
+      // 重新加载脚本列表
       await loadSavedScripts();
       
       // 关闭模板对话框
-      setIsCreateTemplateDialogOpen(false);
+      setIsTemplateDialogOpen(false);
     } catch (error) {
       console.error("创建模板脚本失败:", error);
       toast({
         title: "错误",
-        description: `创建模板脚本失败: ${error}`,
+        description: "无法创建模板脚本",
         variant: "destructive",
       });
     } finally {
-      setIsBusy(false);
+      setIsCreatingFromTemplate(false);
     }
   };
   
-  // 加载特定脚本的内容
+  // 加载脚本内容
   const loadScriptContent = async (path: string) => {
     if (!path) return;
     
     try {
-      setIsBusy(true);
-      const content = await invoke<string>("load_automation_script", { path });
-      setCurrentScriptContent(content);
+      // 使用新的JS库加载脚本内容
+      const content = await loadAutomationScript(path);
+      setScriptContent(content);
       
-      toast({
-        title: "脚本已加载",
-        description: "成功加载自动化脚本",
-      });
+      // 格式化JSON以便显示
+      try {
+        const formattedContent = JSON.stringify(JSON.parse(content), null, 2);
+        setScriptContent(formattedContent);
+      } catch (formatError) {
+        console.warn("无法格式化脚本内容:", formatError);
+        setScriptContent(content);
+      }
     } catch (error) {
       console.error("加载脚本内容失败:", error);
       toast({
         title: "错误",
-        description: `加载脚本内容失败: ${error}`,
+        description: "无法加载脚本内容",
         variant: "destructive",
       });
-    } finally {
-      setIsBusy(false);
     }
   };
-
+  
   // 打开编辑对话框
   const openEditDialog = async (path: string) => {
     try {
-      setIsBusy(true);
-      const content = await invoke<string>("load_automation_script", { path });
+      // 使用新的JS库加载脚本内容
+      const content = await loadAutomationScript(path);
       
-      // 美化 JSON
+      // 格式化JSON以便编辑
       try {
-        const parsed = JSON.parse(content);
-        setEditScriptContent(JSON.stringify(parsed, null, 2));
-      } catch {
-        setEditScriptContent(content);
+        const formattedContent = JSON.stringify(JSON.parse(content), null, 2);
+        setEditedContent(formattedContent);
+      } catch (formatError) {
+        console.warn("无法格式化脚本内容:", formatError);
+        setEditedContent(content);
       }
       
+      // 打开编辑对话框
       setIsEditDialogOpen(true);
     } catch (error) {
-      console.error("加载脚本内容失败:", error);
+      console.error("准备编辑脚本失败:", error);
       toast({
         title: "错误",
-        description: `加载脚本内容失败: ${error}`,
+        description: "无法加载脚本内容进行编辑",
         variant: "destructive",
       });
-    } finally {
-      setIsBusy(false);
     }
   };
-
+  
   // 保存编辑后的脚本
   const saveEditedScript = async () => {
     if (!selectedScriptPath) return;
     
     try {
-      // 验证 JSON 格式
-      JSON.parse(editScriptContent);
+      setIsEditing(true);
       
-      setIsBusy(true);
-      await invoke("update_automation_script", { 
-        path: selectedScriptPath, 
-        content: editScriptContent 
-      });
+      // 验证JSON格式
+      try {
+        JSON.parse(editedContent);
+      } catch (parseError) {
+        toast({
+          title: "无效的JSON",
+          description: "脚本内容不是有效的JSON格式",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // 使用新的JS库更新脚本
+      await updateAutomationScript(selectedScriptPath, editedContent);
       
       toast({
-        title: "脚本已更新",
-        description: "自动化脚本已成功更新",
+        title: "保存成功",
+        description: "脚本已成功更新",
       });
       
       // 关闭编辑对话框
       setIsEditDialogOpen(false);
       
-      // 刷新脚本列表和预览
-      await loadSavedScripts();
-      
-      // 如果当前已加载了该脚本，更新当前脚本内容
-      if (currentScriptContent) {
-        await loadScriptContent(selectedScriptPath);
-      }
+      // 重新加载脚本内容和预览
+      await loadScriptContent(selectedScriptPath);
+      await loadScriptPreview(selectedScriptPath);
     } catch (error) {
-      console.error("更新脚本失败:", error);
+      console.error("保存编辑后的脚本失败:", error);
       toast({
         title: "错误",
-        description: `更新脚本失败: ${error}`,
+        description: "无法保存编辑后的脚本",
         variant: "destructive",
       });
     } finally {
-      setIsBusy(false);
+      setIsEditing(false);
     }
   };
-
+  
   // 删除脚本
   const deleteScript = async () => {
     if (!selectedScriptPath) return;
     
     try {
-      setIsBusy(true);
-      await invoke("delete_automation_script", { path: selectedScriptPath });
+      setIsDeleting(true);
+      
+      // 使用新的JS库删除脚本
+      await deleteAutomationScript(selectedScriptPath);
       
       toast({
-        title: "脚本已删除",
-        description: "自动化脚本已成功删除",
+        title: "删除成功",
+        description: "脚本已成功删除",
       });
       
       // 关闭删除对话框
       setIsDeleteDialogOpen(false);
       
-      // 清空当前选中的脚本
-      if (selectedScriptPath === selectedScriptPath) {
-        setCurrentScriptContent("");
-      }
-      
-      // 刷新脚本列表
+      // 重新加载脚本列表
       await loadSavedScripts();
       
-      // 重置选择
-      setSelectedScriptPath("");
+      // 清空选中的脚本
+      setSelectedScriptPath(null);
+      setScriptContent("");
+      setScriptPreview(null);
     } catch (error) {
       console.error("删除脚本失败:", error);
       toast({
         title: "错误",
-        description: `删除脚本失败: ${error}`,
+        description: "无法删除脚本",
         variant: "destructive",
       });
     } finally {
-      setIsBusy(false);
+      setIsDeleting(false);
     }
   };
-
-  // 运行已加载的脚本
+  
+  // 运行加载的脚本
   const runLoadedScript = async () => {
-    if (!currentScriptContent) {
+    if (!scriptContent) {
       toast({
-        title: "请先加载脚本",
-        description: "需要先加载脚本才能运行",
+        title: "没有脚本内容",
+        description: "请先选择一个脚本",
         variant: "destructive",
       });
       return;
     }
-
+    
     try {
-      setIsBusy(true);
-      const result = await invoke<ElementActionResult>("run_automation_script", {
-        script: currentScriptContent
-      });
-
-      setActionResult(result);
-
+      setIsRunning(true);
+      setRunResult(null);
+      
+      // 使用新的JS库运行脚本
+      const result = await runAutomationScript(scriptContent);
+      setRunResult(result);
+      
       if (result.success) {
         toast({
-          title: "脚本执行成功",
-          description: "自动化脚本已成功运行",
+          title: "执行成功",
+          description: "脚本已成功执行",
         });
       } else {
         toast({
-          title: "脚本执行失败",
+          title: "执行失败",
           description: result.error || "未知错误",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("脚本执行失败:", error);
+      console.error("运行脚本失败:", error);
       toast({
         title: "错误",
-        description: `脚本执行失败: ${error}`,
+        description: `运行脚本失败: ${error}`,
         variant: "destructive",
       });
+      
+      setRunResult({
+        success: false,
+        error: `运行脚本失败: ${error}`
+      });
     } finally {
-      setIsBusy(false);
+      setIsRunning(false);
     }
   };
 
   // 渲染脚本预览信息
   const renderScriptPreviewInfo = (path: string) => {
-    const preview = scriptPreviews[path];
+    const preview = scriptPreview;
     if (!preview) return null;
     
     return (
@@ -445,10 +460,10 @@ export default function ScriptManager() {
                   variant="outline" 
                   size="sm"
                   onClick={loadSavedScripts}
-                  disabled={isLoadingScripts}
+                  disabled={isLoading}
                   className="bg-muted/30 border-muted/50 hover:bg-primary/5"
                 >
-                  {isLoadingScripts ? 
+                  {isLoading ? 
                     <Loader2 className="h-4 w-4 animate-spin mr-2" /> : 
                     <ArrowDownToLine className="h-4 w-4 mr-2" />
                   }
@@ -457,7 +472,7 @@ export default function ScriptManager() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => setIsCreateTemplateDialogOpen(true)}
+                  onClick={() => setIsTemplateDialogOpen(true)}
                   className="bg-muted/30 border-muted/50 hover:bg-primary/5"
                 >
                   <FilePlus className="h-4 w-4 mr-2" />
@@ -466,19 +481,19 @@ export default function ScriptManager() {
               </div>
               
               <ScrollArea className="h-[500px] rounded-md border border-muted/40 p-4">
-                {isLoadingScripts ? (
+                {isLoading ? (
                   <div className="flex flex-col items-center justify-center h-full space-y-4">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     <div className="text-sm text-muted-foreground">正在加载脚本列表...</div>
                   </div>
-                ) : savedScripts.length > 0 ? (
+                ) : scripts.length > 0 ? (
                   <motion.div 
                     className="space-y-3"
                     variants={container}
                     initial="hidden"
                     animate="show"
                   >
-                    {savedScripts.map((script, index) => (
+                    {scripts.map((script, index) => (
                       <motion.div 
                         key={script.path}
                         variants={item}
@@ -546,7 +561,7 @@ export default function ScriptManager() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => setIsCreateTemplateDialogOpen(true)}
+                      onClick={() => setIsTemplateDialogOpen(true)}
                       className="mt-2 bg-muted/30 border-muted/50 hover:bg-primary/5"
                     >
                       <FilePlus className="h-4 w-4 mr-2" />
@@ -574,18 +589,19 @@ export default function ScriptManager() {
             <CardContent>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => selectedScriptPath && loadScriptContent(selectedScriptPath)}
+                    disabled={!selectedScriptPath || isRunning}
                     className="bg-muted/30 border-muted/50 hover:bg-primary/5 relative overflow-hidden group"
-                    onClick={() => loadScriptContent(selectedScriptPath)}
-                    disabled={!selectedScriptPath || isBusy}
                   >
                     <span className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                    {isBusy ? 
+                    {isRunning ? 
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : 
                       <FileText className="h-4 w-4 mr-2" />
                     }
-                    加载选中脚本
+                    <span>加载脚本</span>
                   </Button>
                   
                   <motion.div
@@ -596,10 +612,10 @@ export default function ScriptManager() {
                       variant="default" 
                       className="w-full relative overflow-hidden group"
                       onClick={runLoadedScript}
-                      disabled={!currentScriptContent || isBusy}
+                      disabled={!scriptContent || isRunning}
                     >
                       <span className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                      {isBusy ? 
+                      {isRunning ? 
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : 
                         <PlayIcon className="h-4 w-4 mr-2" />
                       }
@@ -608,7 +624,7 @@ export default function ScriptManager() {
                   </motion.div>
                 </div>
                 
-                {currentScriptContent ? (
+                {scriptContent ? (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -624,7 +640,7 @@ export default function ScriptManager() {
                     <div className="relative">
                       <ScrollArea className="h-[350px] rounded-md border border-muted/40 bg-muted/10">
                         <pre className="font-mono text-xs p-4 whitespace-pre overflow-x-auto">
-                          {JSON.stringify(JSON.parse(currentScriptContent), null, 2)}
+                          {JSON.stringify(JSON.parse(scriptContent), null, 2)}
                         </pre>
                       </ScrollArea>
                       <div className="absolute top-3 right-3">
@@ -646,7 +662,7 @@ export default function ScriptManager() {
                   </div>
                 )}
                 
-                {actionResult && (
+                {runResult && (
                   <motion.div 
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -654,19 +670,19 @@ export default function ScriptManager() {
                     transition={{ duration: 0.3 }}
                     className={cn(
                       "p-4 rounded-md text-sm border",
-                      actionResult.success 
+                      runResult.success 
                         ? "bg-green-50/50 text-green-800 border-green-200 dark:bg-green-950/20 dark:text-green-300 dark:border-green-800/30" 
                         : "bg-red-50/50 text-red-800 border-red-200 dark:bg-red-950/20 dark:text-red-300 dark:border-red-800/30"
                     )}
                   >
                     <div className="flex items-start">
-                      {actionResult.success 
+                      {runResult.success 
                         ? <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0 text-green-500" /> 
                         : <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 text-red-500" />}
                       <div>
-                        {actionResult.success 
+                        {runResult.success 
                           ? "操作成功执行！" 
-                          : `操作失败: ${actionResult.error || "未知错误"}`}
+                          : `操作失败: ${runResult.error || "未知错误"}`}
                       </div>
                     </div>
                   </motion.div>
@@ -693,8 +709,8 @@ export default function ScriptManager() {
             <div className="border rounded-md relative overflow-hidden">
               <Textarea 
                 className="font-mono text-sm h-[400px] w-full resize-none border-0 bg-muted/10 focus-visible:ring-0 focus-visible:ring-offset-0"
-                value={editScriptContent}
-                onChange={(e) => setEditScriptContent(e.target.value)}
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
               />
               <div className="absolute top-2 right-2">
                 <Badge variant="outline" className="text-xs bg-muted/60 backdrop-blur-sm">
@@ -713,11 +729,11 @@ export default function ScriptManager() {
             </Button>
             <Button
               onClick={saveEditedScript}
-              disabled={isBusy}
+              disabled={isEditing}
               className="relative overflow-hidden group"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></span>
-              {isBusy ? 
+              {isEditing ? 
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : 
                 <Save className="h-4 w-4 mr-2" />
               }
@@ -750,11 +766,11 @@ export default function ScriptManager() {
             <Button
               variant="destructive"
               onClick={deleteScript}
-              disabled={isBusy}
+              disabled={isDeleting}
               className="relative overflow-hidden group"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-destructive/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></span>
-              {isBusy ? 
+              {isDeleting ? 
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : 
                 <Trash2 className="h-4 w-4 mr-2" />
               }
@@ -765,7 +781,7 @@ export default function ScriptManager() {
       </Dialog>
       
       {/* 从模板创建脚本对话框 */}
-      <Dialog open={isCreateTemplateDialogOpen} onOpenChange={setIsCreateTemplateDialogOpen}>
+      <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -785,18 +801,18 @@ export default function ScriptManager() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsCreateTemplateDialogOpen(false)}
+              onClick={() => setIsTemplateDialogOpen(false)}
               className="border-muted/50"
             >
               取消
             </Button>
             <Button
               onClick={createScriptFromTemplate}
-              disabled={isBusy}
+              disabled={isCreatingFromTemplate}
               className="relative overflow-hidden group"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></span>
-              {isBusy ? 
+              {isCreatingFromTemplate ? 
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : 
                 <Save className="h-4 w-4 mr-2" />
               }

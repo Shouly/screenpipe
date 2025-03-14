@@ -3,8 +3,8 @@ use serde::Serialize;
 use serde_json::Value;
 use tauri::Manager;
 use tracing::{error, info};
-use tauri::AppHandle;
-use crate::automation;  // 导入新模块
+// use tauri::AppHandle;
+// use crate::automation;  // 导入新模块 - 已迁移到JS实现
 
 #[tauri::command]
 pub fn set_tray_unhealth_icon(app_handle: tauri::AppHandle<tauri::Wry>) {
@@ -299,9 +299,8 @@ pub async fn get_disk_usage(
     }
 }
 
-// 以下是自动化相关的tauri命令，转发到automation模块
-
-/// 获取所有运行的应用程序名称
+// 以下自动化相关的函数已迁移到JavaScript实现
+/*
 #[tauri::command]
 pub async fn get_applications() -> Result<Vec<String>, String> {
     automation::get_applications().await
@@ -390,3 +389,4 @@ pub async fn create_script_from_template(
 ) -> Result<String, String> {
     automation::create_script_from_template(&app, template_type).await
 }
+*/

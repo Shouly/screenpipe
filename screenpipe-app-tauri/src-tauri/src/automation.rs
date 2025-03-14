@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use tauri::AppHandle;
-use tracing::info;
+use tracing::{info, error};
 use screenpipe_core::operator::{Desktop, Selector, UIElement};
 use std::process::Command;
 use std::collections::HashSet;
@@ -208,6 +208,8 @@ pub async fn get_applications() -> Result<Vec<String>, String> {
 
 /// 获取应用程序的顶层元素，不包含子元素
 pub async fn get_app_elements(app_name: String) -> Result<Vec<UIElementProps>, String> {
+    info!("获取应用程序 '{}' 的顶层元素", app_name);
+    
     let desktop = Desktop::new(true, true)
         .map_err(|e| format!("无法初始化桌面自动化: {}", e))?;
         
@@ -216,6 +218,8 @@ pub async fn get_app_elements(app_name: String) -> Result<Vec<UIElementProps>, S
         
     let children = app.children()
         .map_err(|e| format!("无法获取应用程序元素: {}", e))?;
+    
+    info!("找到 {} 个顶层元素", children.len());
         
     let element_props = children.into_iter()
         .map(|element| element.into())
@@ -230,37 +234,153 @@ pub async fn get_element_children(
     selector_type: String,
     selector_value: String
 ) -> Result<Vec<UIElementProps>, String> {
+    info!("获取应用程序 '{}' 中元素的子元素，选择器类型: {}, 值: {}", 
+          app_name, selector_type, selector_value);
+    
     // 初始化桌面自动化
     let desktop = Desktop::new(true, true)
-        .map_err(|e| format!("无法初始化桌面自动化: {}", e))?;
+        .map_err(|e| {
+            error!("无法初始化桌面自动化: {}", e);
+            format!("无法初始化桌面自动化: {}", e)
+        })?;
         
     // 获取应用
     let app = desktop.application(&app_name)
-        .map_err(|e| format!("无法找到应用程序 '{}': {}", app_name, e))?;
+        .map_err(|e| {
+            error!("无法找到应用程序 '{}': {}", app_name, e);
+            format!("无法找到应用程序 '{}': {}", app_name, e)
+        })?;
     
     // 创建选择器
     let sel = match selector_type.as_str() {
-        "role" => Selector::Role { 
-            role: selector_value.clone(), 
-            name: None 
+        "role" => {
+            info!("使用角色选择器: {}", selector_value);
+            Selector::Role { 
+                role: selector_value.clone(), 
+                name: None 
+            }
         },
-        "id" => Selector::Id(selector_value.clone()),
-        "name" => Selector::Name(selector_value.clone()),
-        "text" => Selector::Text(selector_value.clone()),
-        _ => return Err(format!("不支持的选择器类型: {}", selector_type)),
+        "id" => {
+            info!("使用ID选择器: {}", selector_value);
+            Selector::Id(selector_value.clone())
+        },
+        "name" => {
+            info!("使用名称选择器: {}", selector_value);
+            Selector::Name(selector_value.clone())
+        },
+        "text" => {
+            info!("使用文本选择器: {}", selector_value);
+            Selector::Text(selector_value.clone())
+        },
+        "element_id" => {
+            // 使用element_id查找元素
+            // 由于element_id是我们自己生成的，需要遍历所有元素来查找
+            info!("使用element_id选择器: {}", selector_value);
+            
+            // 获取所有顶层元素
+            let top_elements = app.children()
+                .map_err(|e| {
+                    error!("无法获取应用程序元素: {}", e);
+                    format!("无法获取应用程序元素: {}", e)
+                })?;
+            
+            info!("找到 {} 个顶层元素，开始递归查找", top_elements.len());
+                
+            // 递归查找具有指定element_id的元素
+            let mut found_element = None;
+            for element in top_elements {
+                if let Some(found) = find_element_by_id(&element, &selector_value) {
+                    found_element = Some(found);
+                    info!("找到匹配的元素，element_id: {}", selector_value);
+                    break;
+                }
+            }
+            
+            // 如果找到了元素，直接返回其子元素
+            if let Some(element) = found_element {
+                let children = element.children()
+                    .map_err(|e| {
+                        error!("无法获取子元素: {}", e);
+                        format!("无法获取子元素: {}", e)
+                    })?;
+                
+                info!("找到 {} 个子元素", children.len());
+                
+                let child_props = children.into_iter()
+                    .map(|element| element.into())
+                    .collect();
+                
+                return Ok(child_props);
+            } else {
+                error!("未找到element_id为{}的元素", selector_value);
+                return Err(format!("未找到element_id为{}的元素", selector_value));
+            }
+        },
+        "combined" => {
+            // 解析组合选择器
+            info!("使用组合选择器: {}", selector_value);
+            let combined: serde_json::Value = serde_json::from_str(&selector_value)
+                .map_err(|e| {
+                    error!("无法解析组合选择器: {}", e);
+                    format!("无法解析组合选择器: {}", e)
+                })?;
+            
+            let role = combined.get("role")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| {
+                    let err = "组合选择器缺少role字段".to_string();
+                    error!("{}", err);
+                    err
+                })?;
+                
+            let label = combined.get("label")
+                .and_then(|v| v.as_str());
+            
+            info!("组合选择器解析为 role: {}, label: {:?}", role, label);
+                
+            Selector::Role { 
+                role: role.to_string(), 
+                name: label.map(|s| s.to_string()) 
+            }
+        },
+        _ => {
+            let err = format!("不支持的选择器类型: {}", selector_type);
+            error!("{}", err);
+            return Err(err);
+        },
     };
+    
+    // 如果是element_id选择器，前面已经处理过了
+    if selector_type == "element_id" {
+        return Err("未找到匹配的元素".to_string());
+    }
     
     // 查找指定元素
     let locator = app.locator(sel)
-        .map_err(|e| format!("无法创建定位器: {}", e))?;
+        .map_err(|e| {
+            error!("无法创建定位器: {}", e);
+            format!("无法创建定位器: {}", e)
+        })?;
     
     let parent_element = locator.first()
-        .map_err(|e| format!("无法找到元素: {}", e))?
-        .ok_or_else(|| "未找到匹配的元素".to_string())?;
+        .map_err(|e| {
+            error!("无法找到元素: {}", e);
+            format!("无法找到元素: {}", e)
+        })?
+        .ok_or_else(|| {
+            let err = "未找到匹配的元素".to_string();
+            error!("{}", err);
+            err
+        })?;
     
     // 获取该元素的子元素
     let children = parent_element.children()
-        .map_err(|e| format!("无法获取子元素: {}", e))?;
+        .map_err(|e| {
+            error!("无法获取子元素: {}", e);
+            format!("无法获取子元素: {}", e)
+        })?;
+    
+    info!("找到 {} 个子元素", children.len());
     
     // 转换为前端格式
     let child_props = children.into_iter()
@@ -268,6 +388,28 @@ pub async fn get_element_children(
         .collect();
     
     Ok(child_props)
+}
+
+/// 递归查找具有指定element_id的元素
+fn find_element_by_id(element: &UIElement, target_id: &str) -> Option<UIElement> {
+    // 检查当前元素
+    let element_props: UIElementProps = element.clone().into();
+    if let Some(id) = element_props.element_id {
+        if id == target_id {
+            return Some(element.clone());
+        }
+    }
+    
+    // 检查子元素
+    if let Ok(children) = element.children() {
+        for child in children {
+            if let Some(found) = find_element_by_id(&child, target_id) {
+                return Some(found);
+            }
+        }
+    }
+    
+    None
 }
 
 /// 对元素执行操作

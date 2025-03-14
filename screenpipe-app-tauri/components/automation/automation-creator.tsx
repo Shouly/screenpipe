@@ -10,7 +10,6 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { Textarea } from "@/components/ui/textarea";
-import { invoke } from "@tauri-apps/api/core";
 import { 
   Loader2, Search, MousePointer, MousePointerClick, 
   Type, EyeIcon, PlayIcon, Save, ChevronRight, 
@@ -20,6 +19,17 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import {
+  getApplications,
+  getAppElements,
+  getElementChildren,
+  performElementAction,
+  saveAutomationScript as saveScript,
+  runAutomationScript,
+  UIElementProps as AutomationElementProps,
+  ElementActionResult as AutomationActionResult,
+  SelectorInput
+} from "@/lib/automation";
 
 interface UIElementProps {
   role: string;
@@ -81,8 +91,8 @@ export default function AutomationCreator() {
     async function loadApplications() {
       try {
         setIsLoadingApps(true);
-        // 调用 Tauri 函数获取应用程序列表
-        const apps = await invoke<string[]>("get_applications");
+        // 使用新的JS库获取应用程序列表
+        const apps = await getApplications();
         setApplications(apps);
       } catch (error) {
         console.error("无法加载应用程序列表:", error);
@@ -105,17 +115,15 @@ export default function AutomationCreator() {
 
     try {
       setIsLoadingElements(true);
-      // 调用 Tauri 函数获取应用程序顶层元素
-      const elements = await invoke<UIElementProps[]>("get_app_elements", {
-        appName: selectedApp
-      });
+      // 使用新的JS库获取应用程序顶层元素
+      const elements = await getAppElements(selectedApp);
       
-      // 添加前端状态属性
+      // 添加前端状态属性并转换为组件内部类型
       const elementsWithState = elements.map(el => ({
         ...el,
         isExpanded: false,
         isLoading: false
-      }));
+      })) as UIElementProps[];
       
       setElementTree(elementsWithState);
     } catch (error) {
@@ -132,52 +140,42 @@ export default function AutomationCreator() {
 
   // 懒加载元素的子元素
   const loadElementChildren = async (element: UIElementProps, path: number[]) => {
-    if (!element.has_children || !selectedApp) return;
-    
-    // 更新元素状态为加载中
-    updateElementInTree(path, { isLoading: true });
+    if (!element.has_children || !selectedApp || !element.element_id) return;
     
     try {
-      // 确定选择器类型和值
-      let selectorType = "role";
-      let selectorValue = element.role;
+      // 更新元素状态为加载中
+      updateElementInTree(path, { isLoading: true });
       
-      // 如果有ID，优先使用ID选择器
-      if (element.id) {
-        selectorType = "id";
-        selectorValue = element.id;
-      }
+      // 使用新的JS库获取子元素
+      const children = await getElementChildren(
+        selectedApp,
+        "element_id",
+        element.element_id
+      );
       
-      // 调用后端API获取子元素
-      const childElements = await invoke<UIElementProps[]>("get_element_children", {
-        appName: selectedApp,
-        selectorType,
-        selectorValue
-      });
-      
-      // 添加前端状态属性
-      const childrenWithState = childElements.map(el => ({
-        ...el,
+      // 添加前端状态属性并转换为组件内部类型
+      const childrenWithState = children.map(child => ({
+        ...child,
         isExpanded: false,
         isLoading: false
-      }));
+      })) as UIElementProps[];
       
-      // 更新元素状态
-      updateElementInTree(path, { 
-        isLoading: false, 
-        isExpanded: true,
-        children: childrenWithState
+      // 更新元素树
+      updateElementInTree(path, {
+        children: childrenWithState,
+        isLoading: false,
+        isExpanded: true
       });
     } catch (error) {
       console.error("无法加载子元素:", error);
-      // 更新元素状态，取消加载中
-      updateElementInTree(path, { isLoading: false });
-      
       toast({
         title: "错误",
-        description: "无法加载子元素",
+        description: `无法加载子元素: ${error}`,
         variant: "destructive",
       });
+      
+      // 重置加载状态
+      updateElementInTree(path, { isLoading: false });
     }
   };
 
@@ -442,7 +440,7 @@ export default function AutomationCreator() {
     try {
       setIsBusy(true);
       // 构建选择器
-      const selector = {
+      const selector: SelectorInput = {
         type_: selectorType,
         value: selectorValue
       };
@@ -450,15 +448,15 @@ export default function AutomationCreator() {
       // 可选的文本参数
       const text = action === "input_text" || action === "key_press" ? inputText : undefined;
 
-      // 调用 Tauri 函数执行操作
-      const result = await invoke<ElementActionResult>("perform_element_action", {
-        appName: selectedApp,
+      // 使用新的JS库执行操作
+      const result = await performElementAction(
+        selectedApp,
         selector,
         action,
         text
-      });
+      );
 
-      setActionResult(result);
+      setActionResult(result as ElementActionResult);
 
       if (result.success) {
         toast({
@@ -486,93 +484,57 @@ export default function AutomationCreator() {
 
   // 保存自动化脚本
   const saveAutomationScript = async () => {
-    if (isMultiStep) {
-      if (scriptSteps.length === 0) {
+    try {
+      setIsBusy(true);
+      
+      // 使用新的JS库保存脚本
+      await saveScript(jsonScript);
+      
+      toast({
+        title: "保存成功",
+        description: "自动化脚本已保存",
+      });
+    } catch (error) {
+      console.error("保存脚本失败:", error);
+      toast({
+        title: "保存失败",
+        description: `无法保存脚本: ${error}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  // 运行自动化脚本
+  const runScript = async () => {
+    try {
+      setIsBusy(true);
+      
+      // 使用新的JS库运行脚本
+      const result = await runAutomationScript(jsonScript);
+      
+      if (result.success) {
         toast({
-          title: "请添加脚本步骤",
-          description: "多步骤脚本至少需要一个步骤",
+          title: "执行成功",
+          description: "自动化脚本已成功执行",
+        });
+      } else {
+        toast({
+          title: "执行失败",
+          description: result.error || "未知错误",
           variant: "destructive",
         });
-        return;
       }
-
-      try {
-        setIsBusy(true);
-        // 构建多步骤脚本
-        const script = {
-          steps: scriptSteps
-        };
-
-        // 调用 Tauri 函数保存脚本
-        await invoke("save_automation_script", {
-          script: JSON.stringify(script)
-        });
-
-        toast({
-          title: "脚本已保存",
-          description: "多步骤自动化脚本已成功保存",
-        });
-        
-        // 清空步骤列表以便创建新脚本
-        setScriptSteps([]);
-        setJsonScript("");
-      } catch (error) {
-        console.error("保存自动化脚本失败:", error);
-        toast({
-          title: "错误",
-          description: `保存自动化脚本失败: ${error}`,
-          variant: "destructive",
-        });
-      } finally {
-        setIsBusy(false);
-      }
-    } else {
-      // 单步骤脚本（原有逻辑）
-      if (!selectedApp || !selectorValue) {
-        toast({
-          title: "请选择应用程序和设置选择器",
-          description: "需要应用程序名称和选择器值才能保存脚本",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      try {
-        setIsBusy(true);
-        // 构建单步骤自动化脚本
-        const script = {
-          app: selectedApp,
-          selector: {
-            type_: selectorType,
-            value: selectorValue
-          },
-          action: selectedAction
-        };
-
-        // 如果是输入文本操作，添加文本字段
-        if (selectedAction === "input_text" && inputText) {
-          (script as any).text = inputText;
-        }
-
-        // 调用 Tauri 函数保存脚本
-        await invoke("save_automation_script", {
-          script: JSON.stringify(script)
-        });
-
-        toast({
-          title: "脚本已保存",
-          description: "自动化脚本已成功保存",
-        });
-      } catch (error) {
-        console.error("保存自动化脚本失败:", error);
-        toast({
-          title: "错误",
-          description: `保存自动化脚本失败: ${error}`,
-          variant: "destructive",
-        });
-      } finally {
-        setIsBusy(false);
-      }
+    } catch (error) {
+      console.error("运行脚本失败:", error);
+      toast({
+        title: "运行失败",
+        description: `无法运行脚本: ${error}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsBusy(false);
     }
   };
 

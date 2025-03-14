@@ -29,7 +29,8 @@ use tracing_subscriber::prelude::*;
 use tracing_subscriber::EnvFilter;
 use updates::start_update_check;
 mod analytics;
-mod automation;
+// 注释掉automation模块
+// mod automation;
 mod icons;
 use crate::analytics::start_analytics;
 
@@ -704,19 +705,19 @@ async fn main() {
             upload_file_to_s3,
             update_global_shortcuts,
             get_env,
-            commands::get_applications,
-            commands::get_app_elements,
-            commands::get_element_children,
-            commands::perform_element_action,
-            commands::save_automation_script,
-            commands::list_automation_scripts,
-            commands::load_automation_script,
-            commands::run_automation_script,
-            commands::delete_automation_script,
-            commands::update_automation_script,
-            commands::get_script_preview,
-            commands::get_script_template,
-            commands::create_script_from_template,
+            // 注释掉automation相关的命令
+            // get_applications,
+            // get_app_elements,
+            // get_element_children,
+            // perform_element_action,
+            // list_automation_scripts,
+            // load_automation_script,
+            // save_automation_script,
+            // run_automation_script,
+            // delete_automation_script,
+            // update_automation_script,
+            // get_script_preview,
+            // create_script_from_template,
         ])
         .setup(|app| {
             //deep link register_all

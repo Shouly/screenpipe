@@ -35,7 +35,6 @@
     "@sentry/react": "^8.52.0",
     "@supabase/supabase-js": "^2.47.3",
     "@tanstack/react-virtual": "^3.11.0",
-    "@tauri-apps/api": "^2.1.1",
     "@tauri-apps/plugin-deep-link": "~2",
     "@tauri-apps/plugin-dialog": "2.0.0",
     "@tauri-apps/plugin-fs": "2.0.0",
@@ -76,6 +75,7 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.13",
+    "@tauri-apps/api": "^2.3.0",
     "@tauri-apps/cli": "^2.1.0",
     "@types/lodash": "^4.17.7",
     "@types/node": "^20",
